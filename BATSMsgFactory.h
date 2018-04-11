@@ -1,0 +1,27 @@
+//
+// Created by Uncle Chu on 10/4/18.
+//
+
+#ifndef PITCH_SPIRIT_BATSMSGFACTORY_H
+#define PITCH_SPIRIT_BATSMSGFACTORY_H
+
+//namespace std {
+//    class string;
+//    class shared_ptr;
+//}
+
+#include <string>
+#include <memory>
+//#include "BATSMessageBase.h"
+class BATSMessageBase;
+
+class BATSMsgFactory
+{
+public:
+
+    static std::shared_ptr<BATSMessageBase> createMsg( int timestamp, char msgtype, std::string msg );
+
+};
+
+
+#endif //PITCH_SPIRIT_BATSMSGFACTORY_H
