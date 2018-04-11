@@ -5,9 +5,9 @@
 #ifndef PITCH_SPIRIT_BATSORDEREXECUTEDMSG_HPP
 #define PITCH_SPIRIT_BATSORDEREXECUTEDMSG_HPP
 
-#include "BATSMessageBase.h"
 #include <boost/spirit/include/qi.hpp>
 #include <boost/fusion/adapted/struct/adapt_struct.hpp>
+#include "BATSMessageBase.h"
 
 namespace qi = boost::spirit::qi;
 
@@ -60,6 +60,5 @@ BATSOrderExecutedMsg::order_executed_decoder<Iterator>::order_executed_decoder()
     m_wire_msg  = p_orderId >> p_shares >> p_execId;
 
 }
-
 
 #endif //PITCH_SPIRIT_BATSORDEREXECUTEDMSG_HPP

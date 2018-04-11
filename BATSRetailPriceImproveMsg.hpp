@@ -5,10 +5,11 @@
 #ifndef PITCH_SPIRIT_BATSRETAILPRICEIMPROVEMSG_H
 #define PITCH_SPIRIT_BATSRETAILPRICEIMPROVEMSG_H
 
-#include "BATSMessageBase.h"
+
 #include <boost/spirit/include/qi.hpp>
 #include <boost/fusion/adapted/struct/adapt_struct.hpp>
 #include <string>
+#include "BATSMessageBase.h"
 
 namespace qi = boost::spirit::qi;
 

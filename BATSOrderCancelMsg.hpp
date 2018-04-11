@@ -5,7 +5,6 @@
 #ifndef PITCH_SPIRIT_BATSORDERCANCELMSG_HPP
 #define PITCH_SPIRIT_BATSORDERCANCELMSG_HPP
 
-
 #include "BATSMessageBase.h"
 #include <boost/spirit/include/qi.hpp>
 #include <boost/fusion/adapted/struct/adapt_struct.hpp>

@@ -32,7 +32,6 @@ public:
     template<typename Iterator>
     struct trade_decoder : qi::grammar<Iterator, trade_wire()>
     {
-        //add_order_decoder(bool isLong); // default ctor
         trade_decoder(bool isLong); // default ctor
 
         qi::rule<Iterator, trade_wire()> m_wire_msg; // member variables
@@ -72,7 +71,6 @@ BATSTradeMsg::trade_decoder<Iterator>::trade_decoder(bool isLong) :
     // order and execution ids are 12 characters base 36
     qi::uint_parser<uint64_t, 36, 12, 12> p_orderId;
     qi::uint_parser<uint32_t, 10,  6, 6 > p_shares;
-    qi::uint_parser<uint64_t, 10, 10, 10> p_price;
     qi::uint_parser<uint32_t, 10,  6, 6 > int_part;
     qi::uint_parser<uint32_t, 10,  4, 4 > dec_part;
 

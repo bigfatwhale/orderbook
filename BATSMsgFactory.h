@@ -5,14 +5,9 @@
 #ifndef PITCH_SPIRIT_BATSMSGFACTORY_H
 #define PITCH_SPIRIT_BATSMSGFACTORY_H
 
-//namespace std {
-//    class string;
-//    class shared_ptr;
-//}
-
 #include <string>
 #include <memory>
-//#include "BATSMessageBase.h"
+
 class BATSMessageBase;
 
 class BATSMsgFactory

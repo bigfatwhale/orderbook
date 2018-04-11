@@ -5,10 +5,10 @@
 #ifndef PITCH_SPIRIT_BATSTRADEBREAKMSG_HPP
 #define PITCH_SPIRIT_BATSTRADEBREAKMSG_HPP
 
-#include "BATSMessageBase.h"
 #include <boost/spirit/include/qi.hpp>
 #include <boost/fusion/adapted/struct/adapt_struct.hpp>
 #include <string>
+#include "BATSMessageBase.h"
 
 namespace qi = boost::spirit::qi;
 

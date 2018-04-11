@@ -18,7 +18,6 @@ BATSMessageBase::BATSMessageBase(int timestamp, char msgtype) :
 
 BATSMessageBase::~BATSMessageBase()
 {
-    std::cout << "calling dtor on " << this << std::endl;
 }
 
 

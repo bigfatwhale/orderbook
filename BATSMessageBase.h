@@ -5,11 +5,6 @@
 #ifndef PITCH_SPIRIT_BATSMESSAGEBASE_H
 #define PITCH_SPIRIT_BATSMESSAGEBASE_H
 
-//#include <boost/fusion/adapted/struct/adapt_struct.hpp>
-//#include <boost/phoenix/function.hpp>
-
-//namespace qi = boost::spirit::qi;
-
 class BATSMessageBase {
 
 public:
@@ -19,7 +14,5 @@ public:
     int  m_timestamp;
     char m_msgtype;
 };
-
-
 
 #endif //PITCH_SPIRIT_BATSMESSAGEBASE_H
