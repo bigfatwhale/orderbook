@@ -6,31 +6,29 @@
 #define PITCH_SPIRIT_BATSTRADEBREAKMSG_HPP
 
 #include <boost/spirit/include/qi.hpp>
-#include <boost/fusion/adapted/struct/adapt_struct.hpp>
+#include <boost/spirit/include/phoenix.hpp>
 #include <string>
+#include <iostream>
 #include "BATSMessageBase.h"
 
 namespace qi = boost::spirit::qi;
-
-struct trade_break_wire
-{
-    uint64_t execId;
-};
-
-BOOST_FUSION_ADAPT_STRUCT( trade_break_wire, execId )
+namespace phi = boost::phoenix;
 
 class BATSTradeBreakMsg : public BATSMessageBase
 {
 public:
     // nested class for decoding the wire msg
     template<typename Iterator>
-    struct trade_break_decoder : qi::grammar<Iterator, trade_break_wire()>
+    struct trade_break_decoder : qi::grammar<Iterator, BATSTradeBreakMsg()>
     {
-        trade_break_decoder(); // default ctor
-        qi::rule<Iterator, trade_break_wire()> m_wire_msg; // member variables
+        trade_break_decoder(int timestamp, char msgtype);
+        qi::rule<Iterator, BATSTradeBreakMsg()> m_wire_msg; // member variables
+        int  m_ts;
+        char m_mtype;
     };
 
 public:
+    BATSTradeBreakMsg(): BATSMessageBase() {}
     BATSTradeBreakMsg(int timestamp, char msgtype, uint64_t execId );
 
     uint64_t m_execId;
@@ -43,12 +41,14 @@ BATSTradeBreakMsg::BATSTradeBreakMsg(int timestamp, char msgtype, uint64_t execI
 }
 
 template<typename Iterator>
-BATSTradeBreakMsg::trade_break_decoder<Iterator>::trade_break_decoder() :
-        BATSTradeBreakMsg::trade_break_decoder<Iterator>::base_type(m_wire_msg)
+BATSTradeBreakMsg::trade_break_decoder<Iterator>::trade_break_decoder(int timestamp, char msgtype) :
+        BATSTradeBreakMsg::trade_break_decoder<Iterator>::base_type(m_wire_msg),
+        m_ts(timestamp), m_mtype(msgtype)
 {
     // order and execution ids are 12 characters base 36
     qi::uint_parser<uint64_t, 36, 12, 12> p_execId;
-    m_wire_msg  = p_execId;
+    m_wire_msg  = p_execId[
+            qi::_val = phi::construct<BATSTradeBreakMsg>(m_ts, m_mtype, qi::_1)];
 }
 
 #endif //PITCH_SPIRIT_BATSTRADEBREAKMSG_HPP

@@ -87,14 +87,14 @@ BATSMsgFactory::createMsg(int timestamp, char msgtype, std::string msg)
             break;
         }
         case 'B': {
-            TradeBreakMsgDecoder decoder;
-            trade_break_wire wire_data;
+            TradeBreakMsgDecoder decoder(timestamp, msgtype);
+            shared_ptr<BATSTradeBreakMsg> data = make_shared<BATSTradeBreakMsg>();
 
-            bool ret = qi::parse(msg.begin(), msg.end(), decoder, wire_data);
+            bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
 
             if (ret)
-                return make_shared<BATSTradeBreakMsg>(
-                        timestamp, msgtype, wire_data.execId);
+                return data;
+
             break;
         }
         case 'H':{

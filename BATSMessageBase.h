@@ -8,6 +8,7 @@
 class BATSMessageBase {
 
 public:
+    BATSMessageBase();
     BATSMessageBase(int timestamp, char msgtype);
     virtual ~BATSMessageBase();
 

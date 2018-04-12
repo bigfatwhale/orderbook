@@ -8,3 +8,4 @@ set(SOURCE_FILES main.cpp BATSUtil.h BATSTradeBreakMsg.hpp BATSTradeMsg.hpp BATS
         BATSMessageBase.h BATSMsgFactory.cpp BATSMsgFactory.h BATSAddOrderMsg.hpp BATSAuctionSummaryMsg.hpp
         BATSAuctionUpdateMsg.hpp)
 add_executable(bats_pitch_parser ${SOURCE_FILES})
+include_directories($ENV{BOOST_ROOT})

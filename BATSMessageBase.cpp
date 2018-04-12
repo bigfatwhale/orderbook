@@ -16,6 +16,10 @@ BATSMessageBase::BATSMessageBase(int timestamp, char msgtype) :
 {
 }
 
+BATSMessageBase::BATSMessageBase() : m_timestamp(0), m_msgtype(0)
+{
+}
+
 BATSMessageBase::~BATSMessageBase()
 {
 }
