@@ -88,7 +88,7 @@ BATSMsgFactory::createMsg(int timestamp, char msgtype, std::string msg)
         }
         case 'B': {
             TradeBreakMsgDecoder decoder(timestamp, msgtype);
-            shared_ptr<BATSTradeBreakMsg> data = make_shared<BATSTradeBreakMsg>();
+            auto data = make_shared<BATSTradeBreakMsg>();
 
             bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
 
@@ -98,15 +98,13 @@ BATSMsgFactory::createMsg(int timestamp, char msgtype, std::string msg)
             break;
         }
         case 'H':{
-            TradingStatusMsgDecoder decoder;
-            trading_status_wire wire_data;
+            TradingStatusMsgDecoder decoder(timestamp, msgtype);
+            auto data = make_shared<BATSTradingStatusMsg>();
 
-            bool ret = qi::parse(msg.begin(), msg.end(), decoder, wire_data);
+            bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
 
             if (ret)
-                return make_shared<BATSTradingStatusMsg>(
-                        timestamp, msgtype, wire_data.symbol, wire_data.halt_status,
-                        wire_data.reg_sho_action, wire_data.reserved1, wire_data.reserved2);
+               return data;
             break;
 
         }
