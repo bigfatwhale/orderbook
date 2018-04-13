@@ -29,16 +29,14 @@ public:
 
 public:
     BATSTradeBreakMsg(): BATSMessageBase() {}
-    BATSTradeBreakMsg(int timestamp, char msgtype, uint64_t execId );
+    BATSTradeBreakMsg(int timestamp, char msgtype, uint64_t execId ) :
+            BATSMessageBase(timestamp, msgtype),
+            m_execId(execId)
+    {
+    }
 
     uint64_t m_execId;
 };
-
-BATSTradeBreakMsg::BATSTradeBreakMsg(int timestamp, char msgtype, uint64_t execId ) :
-        BATSMessageBase(timestamp, msgtype),
-        m_execId(execId)
-{
-}
 
 template<typename Iterator>
 BATSTradeBreakMsg::trade_break_decoder<Iterator>::trade_break_decoder(int timestamp, char msgtype) :

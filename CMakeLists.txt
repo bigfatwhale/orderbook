@@ -6,6 +6,6 @@ set(CMAKE_CXX_STANDARD 14)
 set(SOURCE_FILES main.cpp BATSUtil.h BATSTradeBreakMsg.hpp BATSTradeMsg.hpp BATSTradingStatusMsg.hpp
         BATSOrderCancelMsg.hpp BATSOrderExecutedMsg.hpp BATSRetailPriceImproveMsg.hpp BATSMessageBase.cpp
         BATSMessageBase.h BATSMsgFactory.cpp BATSMsgFactory.h BATSAddOrderMsg.hpp BATSAuctionSummaryMsg.hpp
-        BATSAuctionUpdateMsg.hpp)
+        BATSAuctionUpdateMsg.hpp tests/pitch_parser_test.cpp BATSPitchMsgParser.cpp BATSPitchMsgParser.h)
 add_executable(bats_pitch_parser ${SOURCE_FILES})
 include_directories($ENV{BOOST_ROOT})
