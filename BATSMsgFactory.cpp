@@ -37,16 +37,15 @@ BATSMsgFactory::createMsg(int timestamp, char msgtype, std::string msg)
     {
         case 'A':
         case 'd': {
-            add_order_wire wire_data;
-            AddOrderMsgDecoder decoder(msgtype == 'd' ? true : false);
 
-            bool ret = qi::parse(msg.begin(), msg.end(), decoder, wire_data);
+            AddOrderMsgDecoder decoder( timestamp, msgtype,
+                                        msgtype == 'd' ? true : false);
+            auto data = make_shared<BATSAddOrderMsg>();
+
+            bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
 
             if (ret)
-                return make_shared<BATSAddOrderMsg>(
-                        timestamp, msgtype, wire_data.oid, wire_data.side,
-                        wire_data.numShares, wire_data.symbol,
-                        wire_data.price, wire_data.display, wire_data.partId);
+                return data;
 
             break;
         }

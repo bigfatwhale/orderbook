@@ -15,6 +15,7 @@
 #include "../BATSOrderExecutedMsg.hpp"
 #include "../BATSAuctionSummaryMsg.hpp"
 #include "../BATSAuctionUpdateMsg.hpp"
+#include "../BATSAddOrderMsg.hpp"
 
 using namespace std;
 
@@ -126,4 +127,35 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
         BOOST_TEST( auctionUpdateMsg->m_auction_only_price == 130.9800);
     }
 
+    BOOST_AUTO_TEST_CASE( test_parse_add_order, * boost::unit_test::tolerance(0.0001)  )
+    {
+        auto msg = parse("S28800168A1K27GA00000YS000100AAPL  0001831900Y");
+
+        BOOST_TEST( msg->m_timestamp == 28800168 );
+        BOOST_TEST( msg->m_msgtype == 'A');
+
+        auto addOrderMsg = dynamic_pointer_cast<BATSAddOrderMsg>(msg);
+
+        BOOST_TEST( addOrderMsg->m_orderId == 204969015920664610);
+        BOOST_TEST( addOrderMsg->m_side == 'S');
+        BOOST_TEST( addOrderMsg->m_shares == 100);
+        BOOST_TEST( addOrderMsg->m_symbol == "AAPL  ");
+        BOOST_TEST( addOrderMsg->m_price == 183.19);
+        BOOST_TEST( addOrderMsg->m_display == 'Y');
+
+        msg = parse("S28800168d1K27GA00000YS000100AAPL  0001831900YBAML");
+
+        BOOST_TEST( msg->m_timestamp == 28800168 );
+        BOOST_TEST( msg->m_msgtype == 'd');
+
+        addOrderMsg = dynamic_pointer_cast<BATSAddOrderMsg>(msg);
+
+        BOOST_TEST( addOrderMsg->m_orderId == 204969015920664610);
+        BOOST_TEST( addOrderMsg->m_side == 'S');
+        BOOST_TEST( addOrderMsg->m_shares == 100);
+        BOOST_TEST( addOrderMsg->m_symbol == "AAPL  ");
+        BOOST_TEST( addOrderMsg->m_price == 183.19);
+        BOOST_TEST( addOrderMsg->m_display == 'Y');
+        BOOST_TEST( addOrderMsg->m_partId == "BAML");
+    }
 BOOST_AUTO_TEST_SUITE_END()
