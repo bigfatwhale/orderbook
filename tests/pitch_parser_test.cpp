@@ -8,7 +8,6 @@
 #include <string>
 #include <boost/test/included/unit_test.hpp>
 #include "../BATSPitchMsgParser.h"
-//#include "../BATSAddOrderMsg.hpp"
 #include "../BATSTradeBreakMsg.hpp"
 
 
@@ -20,12 +19,13 @@ std::shared_ptr<BATSMessageBase> parse( string const& input )
     return parser->parse_msg(input);
 }
 
-BOOST_AUTO_TEST_CASE( free_test_function )
-/* Compare with void free_test_function() */
+BOOST_AUTO_TEST_CASE( test_parse_trade_break )
 {
-//    BOOST_TEST( dynamic_cast<BATSAddOrderMsg*>(
-//                        parse( "S28800168A1K27GA00000YS000100AAPL  0001831900Y" ).get() )
-//                != nullptr );
+    auto msg = parse( "S28800168B1K27GA00000Y" );
 
-    BOOST_TEST(true);
+    BOOST_TEST( msg->m_timestamp == 28800168 );
+    BOOST_TEST( msg->m_msgtype == 'B');
+
+    auto addOrderMsg = dynamic_pointer_cast<BATSTradeBreakMsg>(msg);
+    BOOST_TEST( addOrderMsg->m_execId == 204969015920664610 );
 }

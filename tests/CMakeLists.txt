@@ -6,6 +6,6 @@ include_directories(${BOOST_ROOT} )
 
 add_executable(pitch_parser_test pitch_parser_test.cpp)
 
-#target_link_libraries( pitch_parser_test bats_pitch_parser )
-target_link_libraries(pitch_parser_test)
+target_link_libraries( pitch_parser_test bats_pitch_parser )
+#target_link_libraries(pitch_parser_test)
 #include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
