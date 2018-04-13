@@ -73,16 +73,15 @@ BATSMsgFactory::createMsg(int timestamp, char msgtype, std::string msg)
         }
         case 'P':
         case 'r': {
-            TradeMsgDecoder decoder(msgtype == 'r' ? true : false);
-            trade_wire wire_data;
+            TradeMsgDecoder decoder(timestamp, msgtype,
+                                    msgtype == 'r' ? true : false);
+            auto data = make_shared<BATSTradeMsg>();
 
-            bool ret = qi::parse(msg.begin(), msg.end(), decoder, wire_data);
+            bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
 
             if (ret)
-                return make_shared<BATSTradeMsg>(
-                        timestamp, msgtype, wire_data.oid, wire_data.side,
-                        wire_data.numShares, wire_data.symbol,
-                        wire_data.price, wire_data.execId);
+                return data;
+
             break;
         }
         case 'B': {

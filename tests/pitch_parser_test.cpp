@@ -16,6 +16,7 @@
 #include "../BATSAuctionSummaryMsg.hpp"
 #include "../BATSAuctionUpdateMsg.hpp"
 #include "../BATSAddOrderMsg.hpp"
+#include "../BATSTradeMsg.hpp"
 
 using namespace std;
 
@@ -158,4 +159,35 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
         BOOST_TEST( addOrderMsg->m_display == 'Y');
         BOOST_TEST( addOrderMsg->m_partId == "BAML");
     }
+
+    BOOST_AUTO_TEST_CASE( test_parse_trade, * boost::unit_test::tolerance(0.0001)  )
+    {
+        auto msg = parse("S28800168P1K27GA00000YS000300AAPL  00018319001K27GA00000Z");
+
+        BOOST_TEST( msg->m_timestamp == 28800168 );
+        BOOST_TEST( msg->m_msgtype == 'P');
+
+        auto tradeMsg = dynamic_pointer_cast<BATSTradeMsg>(msg);
+        BOOST_TEST( tradeMsg->m_orderId == 204969015920664610);
+        BOOST_TEST( tradeMsg->m_side == 'S');
+        BOOST_TEST( tradeMsg->m_shares == 300);
+        BOOST_TEST( tradeMsg->m_symbol == "AAPL  ");
+        BOOST_TEST( tradeMsg->m_price == 183.19);
+        BOOST_TEST( tradeMsg->m_execId == "1K27GA00000Z");
+
+        msg = parse("S28800168r1K27GA00000YS000300AAPLSPOT00018319001K27GA00000Z");
+
+        BOOST_TEST( msg->m_timestamp == 28800168 );
+        BOOST_TEST( msg->m_msgtype == 'r');
+
+        tradeMsg = dynamic_pointer_cast<BATSTradeMsg>(msg);
+        BOOST_TEST( tradeMsg->m_orderId == 204969015920664610);
+        BOOST_TEST( tradeMsg->m_side == 'S');
+        BOOST_TEST( tradeMsg->m_shares == 300);
+        BOOST_TEST( tradeMsg->m_symbol == "AAPLSPOT");
+        BOOST_TEST( tradeMsg->m_price == 183.19);
+        BOOST_TEST( tradeMsg->m_execId == "1K27GA00000Z");
+
+    }
+
 BOOST_AUTO_TEST_SUITE_END()
