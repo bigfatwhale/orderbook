@@ -5,8 +5,8 @@
 #ifndef PITCH_SPIRIT_BATSRETAILPRICEIMPROVEMSG_H
 #define PITCH_SPIRIT_BATSRETAILPRICEIMPROVEMSG_H
 
-
 #include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/include/phoenix.hpp>
 #include <string>
 #include "BATSMessageBase.h"
 
