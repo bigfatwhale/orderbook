@@ -7,52 +7,46 @@
 
 
 #include <boost/spirit/include/qi.hpp>
-#include <boost/fusion/adapted/struct/adapt_struct.hpp>
 #include <string>
 #include "BATSMessageBase.h"
 
 namespace qi = boost::spirit::qi;
-
-struct retail_price_improve_wire
-{
-    std::string symbol;
-    char retail_price_improve;
-};
-
-BOOST_FUSION_ADAPT_STRUCT( retail_price_improve_wire, symbol, retail_price_improve )
 
 class BATSRetailPriceImproveMsg : public BATSMessageBase
 {
 public:
     // nested class for decoding the wire msg
     template<typename Iterator>
-    struct retail_price_improve_decoder : qi::grammar<Iterator, retail_price_improve_wire()>
+    struct retail_price_improve_decoder : qi::grammar<Iterator, BATSRetailPriceImproveMsg()>
     {
-        retail_price_improve_decoder(); // default ctor
-        qi::rule<Iterator, retail_price_improve_wire()> m_wire_msg; // member variables
+        retail_price_improve_decoder(int timestamp, char msgtype); // default ctor
+        qi::rule<Iterator, BATSRetailPriceImproveMsg()> m_wire_msg; // member variables
+        int  m_ts;
+        char m_mtype;
     };
 
 public:
+    BATSRetailPriceImproveMsg() : BATSMessageBase() {}
     BATSRetailPriceImproveMsg(int timestamp, char msgtype, std::string const& symbol,
-                              char retail_price_improve );
+                              char retail_price_improve ) :
+                              BATSMessageBase(timestamp, msgtype),
+                              m_symbol(symbol),
+                              m_retail_price_improve(retail_price_improve)
+    {
+    }
 
     std::string m_symbol;
     char m_retail_price_improve;
 };
 
-BATSRetailPriceImproveMsg::BATSRetailPriceImproveMsg(int timestamp, char msgtype, std::string const& symbol,
-                                                     char retail_price_improve) :
-        BATSMessageBase(timestamp, msgtype),
-        m_symbol(symbol),
-        m_retail_price_improve(retail_price_improve)
-{
-}
-
 template<typename Iterator>
-BATSRetailPriceImproveMsg::retail_price_improve_decoder<Iterator>::retail_price_improve_decoder() :
-        BATSRetailPriceImproveMsg::retail_price_improve_decoder<Iterator>::base_type(m_wire_msg)
+BATSRetailPriceImproveMsg::retail_price_improve_decoder<Iterator>::retail_price_improve_decoder
+        (int timestamp, char msgtype) :
+        BATSRetailPriceImproveMsg::retail_price_improve_decoder<Iterator>::base_type(m_wire_msg),
+        m_ts(timestamp), m_mtype(msgtype)
 {
-    m_wire_msg  = qi::repeat(8)[qi::char_] >> qi::char_("BASN");
+    m_wire_msg  = ( qi::as_string[qi::repeat(8)[qi::char_]] >> qi::char_("BASN") )
+        [qi::_val = phi::construct<BATSRetailPriceImproveMsg>(m_ts, m_mtype, qi::_1, qi::_2)];
 }
 
 #endif //PITCH_SPIRIT_BATSRETAILPRICEIMPROVEMSG_H

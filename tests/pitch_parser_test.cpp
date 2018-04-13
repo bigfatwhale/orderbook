@@ -10,7 +10,7 @@
 #include "../BATSPitchMsgParser.h"
 #include "../BATSTradeBreakMsg.hpp"
 #include "../BATSTradingStatusMsg.hpp"
-
+#include "../BATSRetailPriceImproveMsg.hpp"
 
 using namespace std;
 
@@ -19,6 +19,7 @@ std::shared_ptr<BATSMessageBase> parse( string const& input )
     auto parser = std::make_unique<BATSPitchMsgParser>();
     return parser->parse_msg(input);
 }
+
 BOOST_AUTO_TEST_SUITE( test_parse_suite )
 
     BOOST_AUTO_TEST_CASE( test_parse_trade_break )
@@ -47,4 +48,16 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
         BOOST_TEST( tradeStatusMsg->m_reserved2 == 'Y');
     }
 
+    BOOST_AUTO_TEST_CASE( test_parse_retail_price_improve )
+    {
+        auto msg = parse( "S28800168RAAPLSPOTS" );
+
+        BOOST_TEST( msg->m_timestamp == 28800168 );
+        BOOST_TEST( msg->m_msgtype == 'R');
+
+        auto retailMsg = dynamic_pointer_cast<BATSRetailPriceImproveMsg>(msg);
+        BOOST_TEST( retailMsg->m_symbol == "AAPLSPOT"); // ticker symbol
+        BOOST_TEST( retailMsg->m_retail_price_improve == 'S'); // S : sell-side RPI
+
+    }
 BOOST_AUTO_TEST_SUITE_END()
