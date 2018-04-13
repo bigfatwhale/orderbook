@@ -11,6 +11,7 @@
 #include "BATSMessageBase.h"
 
 namespace qi = boost::spirit::qi;
+namespace phi = boost::phoenix;
 
 class BATSRetailPriceImproveMsg : public BATSMessageBase
 {
