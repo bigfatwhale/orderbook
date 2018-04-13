@@ -11,6 +11,7 @@
 #include "../BATSTradeBreakMsg.hpp"
 #include "../BATSTradingStatusMsg.hpp"
 #include "../BATSRetailPriceImproveMsg.hpp"
+#include "../BATSOrderCancelMsg.hpp"
 
 using namespace std;
 
@@ -60,4 +61,18 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
         BOOST_TEST( retailMsg->m_retail_price_improve == 'S'); // S : sell-side RPI
 
     }
+
+    BOOST_AUTO_TEST_CASE( test_parse_order_cancel )
+    {
+        auto msg = parse("S28800168X1K27GA00000Y000500");
+
+        BOOST_TEST( msg->m_timestamp == 28800168 );
+        BOOST_TEST( msg->m_msgtype == 'X');
+
+        auto cancelMsg = dynamic_pointer_cast<BATSOrderCancelMsg>(msg);
+
+        BOOST_TEST( cancelMsg->m_orderId == 204969015920664610); // ticker symbol
+        BOOST_TEST( cancelMsg->m_shares == 500); // S : sell-side RPI
+    }
+
 BOOST_AUTO_TEST_SUITE_END()
