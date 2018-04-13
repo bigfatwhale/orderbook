@@ -12,6 +12,7 @@
 #include "../BATSTradingStatusMsg.hpp"
 #include "../BATSRetailPriceImproveMsg.hpp"
 #include "../BATSOrderCancelMsg.hpp"
+#include "../BATSOrderExecutedMsg.hpp"
 
 using namespace std;
 
@@ -73,6 +74,20 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
 
         BOOST_TEST( cancelMsg->m_orderId == 204969015920664610); // ticker symbol
         BOOST_TEST( cancelMsg->m_shares == 500); // S : sell-side RPI
+    }
+
+    BOOST_AUTO_TEST_CASE( test_parse_order_execute )
+    {
+        auto msg = parse("S28800168E1K27GA00000Y0001001K27GA00000K");
+
+        BOOST_TEST( msg->m_timestamp == 28800168 );
+        BOOST_TEST( msg->m_msgtype == 'E');
+
+        auto execMsg = dynamic_pointer_cast<BATSOrderExecutedMsg>(msg);
+        BOOST_TEST( execMsg->m_orderId == 204969015920664610); // ticker symbol
+        BOOST_TEST( execMsg->m_shares == 100); // S : sell-side RPI
+        BOOST_TEST( execMsg->m_execId == 204969015920664596); // S : sell-side RPI
+
     }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -51,14 +51,14 @@ BATSMsgFactory::createMsg(int timestamp, char msgtype, std::string msg)
             break;
         }
         case 'E': {
-            OrderExecutedMsgDecoder decoder;
-            order_executed_wire wire_data;
+            OrderExecutedMsgDecoder decoder( timestamp, msgtype );
+            auto data = make_shared<BATSOrderExecutedMsg>();
 
-            bool ret = qi::parse(msg.begin(), msg.end(), decoder, wire_data);
+            bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
 
             if (ret)
-                return make_shared<BATSOrderExecutedMsg>(
-                        timestamp, msgtype, wire_data.oid, wire_data.numShares, wire_data.execId);
+                return data;
+
             break;
         }
         case'X':{
