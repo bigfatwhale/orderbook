@@ -109,16 +109,13 @@ BATSMsgFactory::createMsg(int timestamp, char msgtype, std::string msg)
 
         }
         case 'I':{
-            AuctionUpdateMsgDecoder decoder;
-            auction_update_wire wire_data;
+            AuctionUpdateMsgDecoder decoder(timestamp, msgtype);
+            auto data = make_shared<BATSAuctionUpdateMsg>();
 
-            bool ret = qi::parse(msg.begin(), msg.end(), decoder, wire_data);
+            bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
 
             if (ret)
-                return make_shared<BATSAuctionUpdateMsg>(
-                        timestamp, msgtype, wire_data.symbol, wire_data.auction_type,
-                        wire_data.reference_price, wire_data.buyshares, wire_data.sellshares,
-                        wire_data.indicative_price, wire_data.auction_only_price);
+                return data;
             break;
 
         }

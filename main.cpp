@@ -29,13 +29,5 @@ int test() {
     input = "S28800168P1K27GA00000YS000300AAPL  00018319001K27GA00000Z";
     msg = parser->parse_msg(input);
 
-    // test auction update msg
-    input = "S28800168IAAPLSPOTC00010068000000020000000001000000015034000001309800";
-    msg = parser->parse_msg(input);
-
-    // test auction summary msg
-    input = "S28800168JAAPLSPOTC00010068000000020000";
-    msg = parser->parse_msg(input);
-
     return 0;
 }

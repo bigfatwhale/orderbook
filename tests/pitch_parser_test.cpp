@@ -14,6 +14,7 @@
 #include "../BATSOrderCancelMsg.hpp"
 #include "../BATSOrderExecutedMsg.hpp"
 #include "../BATSAuctionSummaryMsg.hpp"
+#include "../BATSAuctionUpdateMsg.hpp"
 
 using namespace std;
 
@@ -105,6 +106,24 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
         BOOST_TEST( auctionSummaryMsg->m_price == 100.68);
         BOOST_TEST( auctionSummaryMsg->m_shares == 20000);
 
+    }
+
+    BOOST_AUTO_TEST_CASE( test_parse_auction_update, * boost::unit_test::tolerance(0.0001)  )
+    {
+        auto msg = parse("S28800168IAAPLSPOTC00010068000000020000000001000000015034000001309800");
+
+        BOOST_TEST( msg->m_timestamp == 28800168 );
+        BOOST_TEST( msg->m_msgtype == 'I');
+
+        auto auctionUpdateMsg = dynamic_pointer_cast<BATSAuctionUpdateMsg>(msg);
+
+        BOOST_TEST( auctionUpdateMsg->m_symbol == "AAPLSPOT");
+        BOOST_TEST( auctionUpdateMsg->m_auction_type == 'C');
+        BOOST_TEST( auctionUpdateMsg->m_reference_price == 100.68);
+        BOOST_TEST( auctionUpdateMsg->m_buyshares == 20000);
+        BOOST_TEST( auctionUpdateMsg->m_sellshares == 10000);
+        BOOST_TEST( auctionUpdateMsg->m_indicative_price == 150.3400);
+        BOOST_TEST( auctionUpdateMsg->m_auction_only_price == 130.9800);
     }
 
 BOOST_AUTO_TEST_SUITE_END()
