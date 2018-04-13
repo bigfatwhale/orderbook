@@ -123,15 +123,13 @@ BATSMsgFactory::createMsg(int timestamp, char msgtype, std::string msg)
 
         }
         case 'J':{
-            AuctionSummaryMsgDecoder decoder;
-            auction_summary_wire wire_data;
+            AuctionSummaryMsgDecoder decoder(timestamp, msgtype);
+            auto data = make_shared<BATSAuctionSummaryMsg>();
 
-            bool ret = qi::parse(msg.begin(), msg.end(), decoder, wire_data);
+            bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
 
             if (ret)
-                return make_shared<BATSAuctionSummaryMsg>(
-                        timestamp, msgtype, wire_data.symbol, wire_data.auction_type,
-                        wire_data.price, wire_data.shares);
+                return data;
             break;
         }
         case 'R':{

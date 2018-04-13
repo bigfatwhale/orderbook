@@ -6,22 +6,13 @@
 #define PITCH_SPIRIT_BATSAUCTIONSUMMARYMSG_HPP
 
 
-#include <boost/fusion/adapted/struct/adapt_struct.hpp>
 #include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/include/phoenix.hpp>
 #include "BATSMessageBase.h"
 #include "BATSUtil.h"
 
 namespace qi = boost::spirit::qi;
-
-struct auction_summary_wire
-{
-    std::string symbol;
-    char auction_type;
-    double price;
-    uint32_t shares;
-};
-
-BOOST_FUSION_ADAPT_STRUCT( auction_summary_wire, symbol, auction_type, price, shares )
+namespace phi = boost::phoenix;
 
 class BATSAuctionSummaryMsg : public BATSMessageBase
 {
@@ -29,18 +20,28 @@ class BATSAuctionSummaryMsg : public BATSMessageBase
 public:
     // nested class for decoding the wire msg
     template<typename Iterator>
-    struct auction_summary_decoder : qi::grammar<Iterator, auction_summary_wire()>
+    struct auction_summary_decoder : qi::grammar<Iterator, BATSAuctionSummaryMsg()>
     {
-        auction_summary_decoder(); // default ctor
+        auction_summary_decoder(int timestamp, char msgtype); // default ctor
 
-        qi::rule<Iterator, auction_summary_wire()> m_wire_msg; // member variables
+        qi::rule<Iterator, BATSAuctionSummaryMsg()> m_wire_msg; // member variables
         qi::rule<Iterator, double> m_price;
         qi::rule<Iterator, fixed_point() > m_fixed_point;
+        int  m_ts;
+        char m_mtype;
     };
 
 public:
+    BATSAuctionSummaryMsg() : BATSMessageBase() {}
     BATSAuctionSummaryMsg(int timestamp, char msgtype, std::string const& symbol, char auction_type,
-                          double price, uint32_t shares);
+                          double price, uint32_t shares) :
+            BATSMessageBase(timestamp, msgtype),
+            m_symbol(symbol),
+            m_auction_type(auction_type),
+            m_price(price),
+            m_shares(shares)
+    {
+    }
 
     std::string m_symbol;
     char m_auction_type;
@@ -48,19 +49,10 @@ public:
     uint32_t m_shares;
 };
 
-BATSAuctionSummaryMsg::BATSAuctionSummaryMsg(int timestamp, char msgtype, std::string const& symbol,
-                                             char auction_type, double price, uint32_t shares) :
-        BATSMessageBase(timestamp, msgtype),
-        m_symbol(symbol),
-        m_auction_type(auction_type),
-        m_price(price),
-        m_shares(shares)
-{
-}
-
 template<typename Iterator>
-BATSAuctionSummaryMsg::auction_summary_decoder<Iterator>::auction_summary_decoder() :
-        BATSAuctionSummaryMsg::auction_summary_decoder<Iterator>::base_type(m_wire_msg)
+BATSAuctionSummaryMsg::auction_summary_decoder<Iterator>::auction_summary_decoder(int timestamp, char msgtype) :
+        BATSAuctionSummaryMsg::auction_summary_decoder<Iterator>::base_type(m_wire_msg),
+        m_ts(timestamp), m_mtype(msgtype)
 {
     // order and execution ids are 12 characters base 36
     qi::uint_parser<uint32_t, 10,  10, 10 > p_shares;
@@ -70,10 +62,11 @@ BATSAuctionSummaryMsg::auction_summary_decoder<Iterator>::auction_summary_decode
     m_price       = m_fixed_point; // this converts to double from fixed point
     m_fixed_point = int_part >> dec_part;
 
-    m_wire_msg    = qi::repeat(8)[qi::char_]
+    m_wire_msg = ( qi::as_string[qi::repeat(8)[qi::char_]]
                     >> qi::char_("OCHI")
                     >> m_price
-                    >> p_shares;
+                    >> p_shares )
+            [qi::_val = phi::construct<BATSAuctionSummaryMsg>(m_ts, m_mtype, qi::_1, qi::_2, qi::_3, qi::_4)];
 
 }
 

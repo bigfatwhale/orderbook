@@ -13,6 +13,7 @@
 #include "../BATSRetailPriceImproveMsg.hpp"
 #include "../BATSOrderCancelMsg.hpp"
 #include "../BATSOrderExecutedMsg.hpp"
+#include "../BATSAuctionSummaryMsg.hpp"
 
 using namespace std;
 
@@ -87,6 +88,22 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
         BOOST_TEST( execMsg->m_orderId == 204969015920664610); // ticker symbol
         BOOST_TEST( execMsg->m_shares == 100); // S : sell-side RPI
         BOOST_TEST( execMsg->m_execId == 204969015920664596); // S : sell-side RPI
+
+    }
+
+    BOOST_AUTO_TEST_CASE( test_parse_auction_summary, * boost::unit_test::tolerance(0.0001) )
+    {
+        auto msg = parse("S28800168JAAPLSPOTC00010068000000020000");
+
+        BOOST_TEST( msg->m_timestamp == 28800168 );
+        BOOST_TEST( msg->m_msgtype == 'J');
+
+        auto auctionSummaryMsg = dynamic_pointer_cast<BATSAuctionSummaryMsg>(msg);
+
+        BOOST_TEST( auctionSummaryMsg->m_symbol == "AAPLSPOT");
+        BOOST_TEST( auctionSummaryMsg->m_auction_type == 'C');
+        BOOST_TEST( auctionSummaryMsg->m_price == 100.68);
+        BOOST_TEST( auctionSummaryMsg->m_shares == 20000);
 
     }
 
