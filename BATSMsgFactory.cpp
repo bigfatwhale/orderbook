@@ -29,78 +29,85 @@ using AuctionUpdateMsgDecoder      = BATSAuctionUpdateMsg::auction_update_decode
 using AuctionSummaryMsgDecoder     = BATSAuctionSummaryMsg::auction_summary_decoder<string::iterator>;
 using RetailPriceImproveMsgDecoder = BATSRetailPriceImproveMsg::retail_price_improve_decoder<string::iterator>;
 
-template<typename DecodeT, typename MsgT>
-shared_ptr<BATSMessageBase> decode(int timestamp, char msgtype, string msg)
-{
-    DecodeT decoder(timestamp, msgtype);
-    auto data = make_shared<MsgT>();
+struct DecodeHelper {
 
-    bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
-    if (ret)
-        return data;
-    else
-        return nullptr;
+    template<typename DecodeT> static
+    shared_ptr<DecodeT> make_decoder( int timestamp, char msgtype, bool isLong)
+    {
+        return std::make_shared<DecodeT>(timestamp, msgtype);
+    }
+
+    template<typename DecodeT, typename MsgT> static
+    shared_ptr<BATSMessageBase> decode(int timestamp, char msgtype, string msg, bool isLong=false)
+    {
+        shared_ptr<DecodeT>  decoder = DecodeHelper::make_decoder<DecodeT>( timestamp, msgtype, isLong );
+        auto data = make_shared<MsgT>();
+
+        bool ret = qi::parse(msg.begin(), msg.end(), *decoder, *data);
+        if (ret)
+            return data;
+        else
+            return nullptr;
+    }
+};
+
+// specialise for three param AddOrderMsgDecoder constructor types
+template<>
+shared_ptr<AddOrderMsgDecoder> DecodeHelper::make_decoder<AddOrderMsgDecoder>( int timestamp, char msgtype, bool isLong)
+{
+    return std::make_shared<AddOrderMsgDecoder>(timestamp, msgtype, isLong);
+};
+
+// specialise for three param TradeMsgDecoder constructor
+template<>
+shared_ptr<TradeMsgDecoder> DecodeHelper::make_decoder<TradeMsgDecoder>( int timestamp, char msgtype, bool isLong)
+{
+    return std::make_shared<TradeMsgDecoder>(timestamp, msgtype, isLong);
 };
 
 shared_ptr<BATSMessageBase>
 BATSMsgFactory::createMsg(int timestamp, char msgtype, std::string msg)
 {
-
     switch (msgtype)
     {
         case 'A':
         case 'd': {
-
-            AddOrderMsgDecoder decoder( timestamp, msgtype,
-                                        msgtype == 'd' ? true : false);
-            auto data = make_shared<BATSAddOrderMsg>();
-
-            bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
-
-            if (ret)
-                return data;
-
+            return DecodeHelper::decode<AddOrderMsgDecoder, BATSAddOrderMsg>
+                    (timestamp, msgtype, msg, msgtype == 'd' ? true : false);
             break;
         }
         case 'E': {
-            return decode<OrderExecutedMsgDecoder, BATSOrderExecutedMsg>(timestamp, msgtype, msg);
+            return DecodeHelper::decode<OrderExecutedMsgDecoder, BATSOrderExecutedMsg>(timestamp, msgtype, msg);
             break;
         }
         case'X':{
-            return decode<OrderCancelMsgDecoder, BATSOrderCancelMsg>(timestamp, msgtype, msg);
+            return DecodeHelper::decode<OrderCancelMsgDecoder, BATSOrderCancelMsg>(timestamp, msgtype, msg);
             break;
         }
         case 'P':
         case 'r': {
-            TradeMsgDecoder decoder(timestamp, msgtype,
-                                    msgtype == 'r' ? true : false);
-            auto data = make_shared<BATSTradeMsg>();
-
-            bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
-
-            if (ret)
-                return data;
-
+            return DecodeHelper::decode<TradeMsgDecoder, BATSTradeMsg>
+                    (timestamp, msgtype, msg, msgtype == 'r' ? true : false);
             break;
         }
         case 'B': {
-            return decode<TradeBreakMsgDecoder, BATSTradeBreakMsg>(timestamp, msgtype, msg);
+            return DecodeHelper::decode<TradeBreakMsgDecoder, BATSTradeBreakMsg>(timestamp, msgtype, msg);
             break;
         }
         case 'H':{
-            return decode<TradingStatusMsgDecoder, BATSTradingStatusMsg>(timestamp, msgtype, msg);
+            return DecodeHelper::decode<TradingStatusMsgDecoder, BATSTradingStatusMsg>(timestamp, msgtype, msg);
             break;
         }
         case 'I':{
-            return decode<AuctionUpdateMsgDecoder, BATSAuctionUpdateMsg>(timestamp, msgtype, msg);
+            return DecodeHelper::decode<AuctionUpdateMsgDecoder, BATSAuctionUpdateMsg>(timestamp, msgtype, msg);
             break;
         }
         case 'J':{
-            return decode<AuctionSummaryMsgDecoder, BATSAuctionSummaryMsg>(timestamp, msgtype, msg);
+            return DecodeHelper::decode<AuctionSummaryMsgDecoder, BATSAuctionSummaryMsg>(timestamp, msgtype, msg);
             break;
         }
         case 'R':{
-            return decode<RetailPriceImproveMsgDecoder, BATSRetailPriceImproveMsg>(timestamp, msgtype, msg);
+            return DecodeHelper::decode<RetailPriceImproveMsgDecoder, BATSRetailPriceImproveMsg>(timestamp, msgtype, msg);
             break;
         }
         default:
