@@ -10,6 +10,7 @@
 #include <string>
 #include <iostream>
 #include "BATSMessageBase.h"
+#include "BATSUtil.h"
 
 namespace qi = boost::spirit::qi;
 namespace phi = boost::phoenix;
@@ -19,12 +20,10 @@ class BATSTradeBreakMsg : public BATSMessageBase
 public:
     // nested class for decoding the wire msg
     template<typename Iterator>
-    struct trade_break_decoder : qi::grammar<Iterator, BATSTradeBreakMsg()>
+    struct trade_break_decoder : decoder_base, qi::grammar<Iterator, BATSTradeBreakMsg()>
     {
         trade_break_decoder(int timestamp, char msgtype);
         qi::rule<Iterator, BATSTradeBreakMsg()> m_wire_msg; // member variables
-        int  m_ts;
-        char m_mtype;
     };
 
 public:
@@ -40,8 +39,8 @@ public:
 
 template<typename Iterator>
 BATSTradeBreakMsg::trade_break_decoder<Iterator>::trade_break_decoder(int timestamp, char msgtype) :
-        BATSTradeBreakMsg::trade_break_decoder<Iterator>::base_type(m_wire_msg),
-        m_ts(timestamp), m_mtype(msgtype)
+        decoder_base(timestamp, msgtype),
+        BATSTradeBreakMsg::trade_break_decoder<Iterator>::base_type(m_wire_msg)
 {
     // order and execution ids are 12 characters base 36
     qi::uint_parser<uint64_t, 36, 12, 12> p_execId;
