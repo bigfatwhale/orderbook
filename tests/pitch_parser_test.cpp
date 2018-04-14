@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string>
+#include <fstream>
 #include <boost/test/included/unit_test.hpp>
 #include "../BATSPitchMsgParser.h"
 #include "../BATSTradeBreakMsg.hpp"
@@ -188,6 +189,23 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
         BOOST_TEST( tradeMsg->m_price == 183.19);
         BOOST_TEST( tradeMsg->m_execId == "1K27GA00000Z");
 
+    }
+
+    BOOST_AUTO_TEST_CASE( test_load_datafile )
+    {
+        // this is like a smoke test. mass load a large number of messages from file.
+
+        auto parser = std::make_unique<BATSPitchMsgParser>();
+        string line;
+
+        ifstream myfile("../pitch_example_data");
+        BOOST_TEST(myfile.is_open());
+
+        while (getline(myfile, line))
+        {
+            parser->parse_msg(line);
+        }
+        myfile.close();
     }
 
 BOOST_AUTO_TEST_SUITE_END()
