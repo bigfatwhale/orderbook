@@ -21,7 +21,7 @@ public:
     template<typename Iterator>
     struct order_cancel_decoder : decoder_base, qi::grammar<Iterator, BATSOrderCancelMsg()>
     {
-        order_cancel_decoder(int timestamp, char msgtype); // default ctor
+        order_cancel_decoder(int timestamp, char msgtype);
         qi::rule<Iterator, BATSOrderCancelMsg()> m_wire_msg; // member variables
     };
 

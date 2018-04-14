@@ -21,7 +21,7 @@ public:
     template<typename Iterator>
     struct trade_decoder : decoder_base, qi::grammar<Iterator, BATSTradeMsg()>
     {
-        trade_decoder(int timestamp, char msgtype, bool isLong); // default ctor
+        trade_decoder(int timestamp, char msgtype, bool isLong);
 
         qi::rule<Iterator, BATSTradeMsg()> m_wire_msg; // member variables
         qi::rule<Iterator, double> m_price;

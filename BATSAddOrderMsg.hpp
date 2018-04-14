@@ -21,7 +21,7 @@ public:
     template<typename Iterator>
     struct add_order_decoder : decoder_base, qi::grammar<Iterator, BATSAddOrderMsg()>
     {
-        add_order_decoder(int timestamp, char msgtype, bool isLong); // default ctor
+        add_order_decoder(int timestamp, char msgtype, bool isLong);
 
         qi::rule<Iterator, BATSAddOrderMsg()> m_wire_msg; // member variables
         qi::rule<Iterator, double> m_price;
@@ -66,7 +66,6 @@ BATSAddOrderMsg::add_order_decoder<Iterator>::add_order_decoder(int timestamp, c
     m_price       = m_fixed_point; // this converts to double from fixed point
     m_fixed_point = int_part >> dec_part;
 
-    //empty_str = "";
     if (isLong)
         m_wire_msg    = ( p_orderId >> qi::char_("BS")
                                   >> p_shares

@@ -20,7 +20,7 @@ public:
     template<typename Iterator>
     struct order_executed_decoder : decoder_base, qi::grammar<Iterator, BATSOrderExecutedMsg()>
     {
-        order_executed_decoder(int timestamp, char msgtype); // default ctor
+        order_executed_decoder(int timestamp, char msgtype);
         qi::rule<Iterator, BATSOrderExecutedMsg()> m_wire_msg; // member variables
     };
 

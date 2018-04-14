@@ -22,7 +22,7 @@ public:
     template<typename Iterator>
     struct auction_summary_decoder : decoder_base, qi::grammar<Iterator, BATSAuctionSummaryMsg()>
     {
-        auction_summary_decoder(int timestamp, char msgtype); // default ctor
+        auction_summary_decoder(int timestamp, char msgtype);
 
         qi::rule<Iterator, BATSAuctionSummaryMsg()> m_wire_msg; // member variables
         qi::rule<Iterator, double> m_price;

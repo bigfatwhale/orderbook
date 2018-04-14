@@ -21,7 +21,7 @@ public:
     template<typename Iterator>
     struct retail_price_improve_decoder : decoder_base, qi::grammar<Iterator, BATSRetailPriceImproveMsg()>
     {
-        retail_price_improve_decoder(int timestamp, char msgtype); // default ctor
+        retail_price_improve_decoder(int timestamp, char msgtype);
         qi::rule<Iterator, BATSRetailPriceImproveMsg()> m_wire_msg; // member variables
     };
 

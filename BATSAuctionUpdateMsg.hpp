@@ -21,7 +21,7 @@ public:
     template<typename Iterator>
     struct auction_update_decoder : decoder_base, qi::grammar<Iterator, BATSAuctionUpdateMsg()>
     {
-        auction_update_decoder(int timestamp, char msgtype); // default ctor
+        auction_update_decoder(int timestamp, char msgtype);
 
         qi::rule<Iterator, BATSAuctionUpdateMsg()> m_wire_msg; // member variables
         qi::rule<Iterator, double> m_price;
