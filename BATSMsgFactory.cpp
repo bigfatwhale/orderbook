@@ -19,15 +19,28 @@
 using namespace std;
 
 // syntatic sugar...
-using AddOrderMsgDecoder       = BATSAddOrderMsg::add_order_decoder<string::iterator>;
-using OrderExecutedMsgDecoder  = BATSOrderExecutedMsg::order_executed_decoder<string::iterator>;
-using OrderCancelMsgDecoder    = BATSOrderCancelMsg::order_cancel_decoder<string::iterator>;
-using TradeMsgDecoder          = BATSTradeMsg::trade_decoder<string::iterator>;
-using TradeBreakMsgDecoder     = BATSTradeBreakMsg::trade_break_decoder<string::iterator>;
-using TradingStatusMsgDecoder  = BATSTradingStatusMsg::trading_status_decoder<string::iterator>;
-using AuctionUpdateMsgDecoder  = BATSAuctionUpdateMsg::auction_update_decoder<string::iterator>;
-using AuctionSummaryMsgDecoder = BATSAuctionSummaryMsg::auction_summary_decoder<string::iterator>;
+using AddOrderMsgDecoder           = BATSAddOrderMsg::add_order_decoder<string::iterator>;
+using OrderExecutedMsgDecoder      = BATSOrderExecutedMsg::order_executed_decoder<string::iterator>;
+using OrderCancelMsgDecoder        = BATSOrderCancelMsg::order_cancel_decoder<string::iterator>;
+using TradeMsgDecoder              = BATSTradeMsg::trade_decoder<string::iterator>;
+using TradeBreakMsgDecoder         = BATSTradeBreakMsg::trade_break_decoder<string::iterator>;
+using TradingStatusMsgDecoder      = BATSTradingStatusMsg::trading_status_decoder<string::iterator>;
+using AuctionUpdateMsgDecoder      = BATSAuctionUpdateMsg::auction_update_decoder<string::iterator>;
+using AuctionSummaryMsgDecoder     = BATSAuctionSummaryMsg::auction_summary_decoder<string::iterator>;
 using RetailPriceImproveMsgDecoder = BATSRetailPriceImproveMsg::retail_price_improve_decoder<string::iterator>;
+
+template<typename DecodeT, typename MsgT>
+shared_ptr<BATSMessageBase> decode(int timestamp, char msgtype, string msg)
+{
+    DecodeT decoder(timestamp, msgtype);
+    auto data = make_shared<MsgT>();
+
+    bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
+    if (ret)
+        return data;
+    else
+        return nullptr;
+};
 
 shared_ptr<BATSMessageBase>
 BATSMsgFactory::createMsg(int timestamp, char msgtype, std::string msg)
@@ -50,25 +63,11 @@ BATSMsgFactory::createMsg(int timestamp, char msgtype, std::string msg)
             break;
         }
         case 'E': {
-            OrderExecutedMsgDecoder decoder( timestamp, msgtype );
-            auto data = make_shared<BATSOrderExecutedMsg>();
-
-            bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
-
-            if (ret)
-                return data;
-
+            return decode<OrderExecutedMsgDecoder, BATSOrderExecutedMsg>(timestamp, msgtype, msg);
             break;
         }
         case'X':{
-            OrderCancelMsgDecoder decoder(timestamp, msgtype);
-            auto data = make_shared<BATSOrderCancelMsg>();
-
-            bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
-
-            if (ret)
-                return data;
-
+            return decode<OrderCancelMsgDecoder, BATSOrderCancelMsg>(timestamp, msgtype, msg);
             break;
         }
         case 'P':
@@ -85,56 +84,23 @@ BATSMsgFactory::createMsg(int timestamp, char msgtype, std::string msg)
             break;
         }
         case 'B': {
-            TradeBreakMsgDecoder decoder(timestamp, msgtype);
-            auto data = make_shared<BATSTradeBreakMsg>();
-
-            bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
-
-            if (ret)
-                return data;
-
+            return decode<TradeBreakMsgDecoder, BATSTradeBreakMsg>(timestamp, msgtype, msg);
             break;
         }
         case 'H':{
-            TradingStatusMsgDecoder decoder(timestamp, msgtype);
-            auto data = make_shared<BATSTradingStatusMsg>();
-
-            bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
-
-            if (ret)
-               return data;
+            return decode<TradingStatusMsgDecoder, BATSTradingStatusMsg>(timestamp, msgtype, msg);
             break;
-
         }
         case 'I':{
-            AuctionUpdateMsgDecoder decoder(timestamp, msgtype);
-            auto data = make_shared<BATSAuctionUpdateMsg>();
-
-            bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
-
-            if (ret)
-                return data;
+            return decode<AuctionUpdateMsgDecoder, BATSAuctionUpdateMsg>(timestamp, msgtype, msg);
             break;
-
         }
         case 'J':{
-            AuctionSummaryMsgDecoder decoder(timestamp, msgtype);
-            auto data = make_shared<BATSAuctionSummaryMsg>();
-
-            bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
-
-            if (ret)
-                return data;
+            return decode<AuctionSummaryMsgDecoder, BATSAuctionSummaryMsg>(timestamp, msgtype, msg);
             break;
         }
         case 'R':{
-            RetailPriceImproveMsgDecoder decoder(timestamp, msgtype);
-            auto data = make_shared<BATSRetailPriceImproveMsg>();
-
-            bool ret = qi::parse(msg.begin(), msg.end(), decoder, *data);
-
-            if (ret)
-                return data;
+            return decode<RetailPriceImproveMsgDecoder, BATSRetailPriceImproveMsg>(timestamp, msgtype, msg);
             break;
         }
         default:
