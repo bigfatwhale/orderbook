@@ -20,15 +20,13 @@ class BATSAuctionSummaryMsg : public BATSMessageBase
 public:
     // nested class for decoding the wire msg
     template<typename Iterator>
-    struct auction_summary_decoder : qi::grammar<Iterator, BATSAuctionSummaryMsg()>
+    struct auction_summary_decoder : decoder_base, qi::grammar<Iterator, BATSAuctionSummaryMsg()>
     {
-        auction_summary_decoder(int timestamp, char msgtype); // default ctor
+        auction_summary_decoder(int timestamp, char msgtype);
 
         qi::rule<Iterator, BATSAuctionSummaryMsg()> m_wire_msg; // member variables
         qi::rule<Iterator, double> m_price;
         qi::rule<Iterator, fixed_point() > m_fixed_point;
-        int  m_ts;
-        char m_mtype;
     };
 
 public:
@@ -51,8 +49,8 @@ public:
 
 template<typename Iterator>
 BATSAuctionSummaryMsg::auction_summary_decoder<Iterator>::auction_summary_decoder(int timestamp, char msgtype) :
-        BATSAuctionSummaryMsg::auction_summary_decoder<Iterator>::base_type(m_wire_msg),
-        m_ts(timestamp), m_mtype(msgtype)
+        decoder_base(timestamp, msgtype),
+        BATSAuctionSummaryMsg::auction_summary_decoder<Iterator>::base_type(m_wire_msg)
 {
     // order and execution ids are 12 characters base 36
     qi::uint_parser<uint32_t, 10,  10, 10 > p_shares;
@@ -69,6 +67,5 @@ BATSAuctionSummaryMsg::auction_summary_decoder<Iterator>::auction_summary_decode
             [qi::_val = phi::construct<BATSAuctionSummaryMsg>(m_ts, m_mtype, qi::_1, qi::_2, qi::_3, qi::_4)];
 
 }
-
 
 #endif //PITCH_SPIRIT_BATSAUCTIONSUMMARYMSG_HPP

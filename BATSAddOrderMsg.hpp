@@ -19,15 +19,13 @@ class BATSAddOrderMsg : public BATSMessageBase
 public:
     // nested class for decoding the wire msg
     template<typename Iterator>
-    struct add_order_decoder : qi::grammar<Iterator, BATSAddOrderMsg()>
+    struct add_order_decoder : decoder_base, qi::grammar<Iterator, BATSAddOrderMsg()>
     {
-        add_order_decoder(int timestamp, char msgtype, bool isLong); // default ctor
+        add_order_decoder(int timestamp, char msgtype, bool isLong);
 
         qi::rule<Iterator, BATSAddOrderMsg()> m_wire_msg; // member variables
         qi::rule<Iterator, double> m_price;
         qi::rule<Iterator, fixed_point() > m_fixed_point;
-        int  m_ts;
-        char m_mtype;
     };
 
 public:
@@ -56,7 +54,8 @@ public:
 
 template<typename Iterator>
 BATSAddOrderMsg::add_order_decoder<Iterator>::add_order_decoder(int timestamp, char msgtype, bool isLong) :
-        BATSAddOrderMsg::add_order_decoder<Iterator>::base_type(m_wire_msg), m_ts(timestamp), m_mtype(msgtype)
+        decoder_base(timestamp, msgtype),
+        BATSAddOrderMsg::add_order_decoder<Iterator>::base_type(m_wire_msg)
 {
     // order and execution ids are 12 characters base 36
     qi::uint_parser<uint64_t, 36, 12, 12> p_orderId;
@@ -67,7 +66,6 @@ BATSAddOrderMsg::add_order_decoder<Iterator>::add_order_decoder(int timestamp, c
     m_price       = m_fixed_point; // this converts to double from fixed point
     m_fixed_point = int_part >> dec_part;
 
-    //empty_str = "";
     if (isLong)
         m_wire_msg    = ( p_orderId >> qi::char_("BS")
                                   >> p_shares

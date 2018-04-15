@@ -8,6 +8,7 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 #include "BATSMessageBase.h"
+#include "BATSUtil.h"
 
 namespace qi = boost::spirit::qi;
 namespace phi = boost::phoenix;
@@ -17,12 +18,10 @@ class BATSOrderExecutedMsg : public BATSMessageBase
 public:
     // nested class for decoding the wire msg
     template<typename Iterator>
-    struct order_executed_decoder : qi::grammar<Iterator, BATSOrderExecutedMsg()>
+    struct order_executed_decoder : decoder_base, qi::grammar<Iterator, BATSOrderExecutedMsg()>
     {
-        order_executed_decoder(int timestamp, char msgtype); // default ctor
+        order_executed_decoder(int timestamp, char msgtype);
         qi::rule<Iterator, BATSOrderExecutedMsg()> m_wire_msg; // member variables
-        int  m_ts;
-        char m_mtype;
     };
 
 public:
@@ -43,8 +42,8 @@ public:
 
 template<typename Iterator>
 BATSOrderExecutedMsg::order_executed_decoder<Iterator>::order_executed_decoder(int timestamp, char msgtype) :
-        BATSOrderExecutedMsg::order_executed_decoder<Iterator>::base_type(m_wire_msg),
-        m_ts(timestamp), m_mtype(msgtype)
+        decoder_base(timestamp, msgtype),
+        BATSOrderExecutedMsg::order_executed_decoder<Iterator>::base_type(m_wire_msg)
 {
     // order and execution ids are 12 characters base 36
     qi::uint_parser<uint64_t, 36, 12, 12> p_orderId;
