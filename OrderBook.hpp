@@ -8,19 +8,23 @@
 #include <list>
 #include <string>
 
+#define MAX_PRICE 100000000 // 10000.0000 in fixed point format
+                            // reasonable for most stocks except berkshire
+
 // 1. need to have order struct
 // 2. order book struct
 
 struct Order
 {
     uint64_t orderId;
-    double price;
+    uint64_t price; // 6.4 fixed point representation
     uint32_t volume;
     std::string origId; // the id of the participant this order originated from.
 };
 
 class PriceBucket
 {
+public:
     PriceBucket() {}
 
 private:
@@ -30,10 +34,20 @@ private:
     double pricePoint;
 };
 
+
 class OrderBook
 {
+public:
+    OrderBook() : m_priceBuckets(new PriceBucket[MAX_PRICE + 1]),
+                  m_maxBid{0}, m_minAsk{MAX_PRICE} {}
+    ~OrderBook() { delete [] m_priceBuckets; }
     void addOrder( Order &order );
     void removeOrder( Order &order );
+
+private:
+    PriceBucket *m_priceBuckets;
+    uint64_t m_minAsk;
+    uint64_t m_maxBid;
 };
 
 

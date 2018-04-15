@@ -5,6 +5,6 @@
 
 int main()
 {
-
+    auto b = OrderBook();
     return 0;
 }
