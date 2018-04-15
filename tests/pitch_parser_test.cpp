@@ -208,4 +208,21 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
         myfile.close();
     }
 
+    BOOST_AUTO_TEST_CASE( test_load_data_100k )
+    {
+        // this is like a smoke test. mass load a large number of messages from file.
+
+        auto parser = std::make_unique<BATSPitchMsgParser>();
+        string line;
+
+        ifstream myfile("../pitch_data_100k");
+        BOOST_TEST(myfile.is_open());
+
+        while (getline(myfile, line))
+        {
+            parser->parse_msg(line);
+        }
+        myfile.close();
+    }
+
 BOOST_AUTO_TEST_SUITE_END()
