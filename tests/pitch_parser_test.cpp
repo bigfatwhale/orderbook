@@ -8,7 +8,7 @@
 #include <memory>
 #include <string>
 #include <fstream>
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include "../BATSPitchMsgParser.h"
 #include "../BATSTradeBreakMsg.hpp"
 #include "../BATSTradingStatusMsg.hpp"
