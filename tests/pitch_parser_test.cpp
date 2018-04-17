@@ -3,6 +3,7 @@
 //
 
 #define BOOST_TEST_MODULE pitch_parser_test
+#define BOOST_TEST_DYN_LINK
 
 #include <memory>
 #include <string>
@@ -198,7 +199,7 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
         auto parser = std::make_unique<BATSPitchMsgParser>();
         string line;
 
-        ifstream myfile("../pitch_example_data");
+        ifstream myfile("pitch_example_data");
         BOOST_TEST(myfile.is_open());
 
         while (getline(myfile, line))
@@ -215,7 +216,7 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
         auto parser = std::make_unique<BATSPitchMsgParser>();
         string line;
 
-        ifstream myfile("../pitch_data_100k");
+        ifstream myfile("pitch_data_100k");
         BOOST_TEST(myfile.is_open());
 
         while (getline(myfile, line))
