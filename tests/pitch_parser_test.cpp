@@ -9,16 +9,16 @@
 #include <string>
 #include <fstream>
 #include <boost/test/unit_test.hpp>
-#include "../BATSPitchMsgParser.h"
-#include "../BATSTradeBreakMsg.hpp"
-#include "../BATSTradingStatusMsg.hpp"
-#include "../BATSRetailPriceImproveMsg.hpp"
-#include "../BATSOrderCancelMsg.hpp"
-#include "../BATSOrderExecutedMsg.hpp"
-#include "../BATSAuctionSummaryMsg.hpp"
-#include "../BATSAuctionUpdateMsg.hpp"
-#include "../BATSAddOrderMsg.hpp"
-#include "../BATSTradeMsg.hpp"
+#include "BATSPitchMsgParser.h"
+#include "BATSTradeBreakMsg.hpp"
+#include "BATSTradingStatusMsg.hpp"
+#include "BATSRetailPriceImproveMsg.hpp"
+#include "BATSOrderCancelMsg.hpp"
+#include "BATSOrderExecutedMsg.hpp"
+#include "BATSAuctionSummaryMsg.hpp"
+#include "BATSAuctionUpdateMsg.hpp"
+#include "BATSAddOrderMsg.hpp"
+#include "BATSTradeMsg.hpp"
 
 using namespace std;
 

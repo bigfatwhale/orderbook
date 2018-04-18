@@ -16,7 +16,7 @@ add_library(bats_pitch_parser SHARED ${SOURCE_FILES})
 
 enable_testing()
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
-include_directories (${Boost_INCLUDE_DIRS})
+include_directories (${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR} ) 
 
 file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tests/*.cpp)
 foreach(testSrc ${TEST_SRCS})
