@@ -24,15 +24,15 @@ public:
         auction_update_decoder(int timestamp, char msgtype);
 
         qi::rule<Iterator, BATSAuctionUpdateMsg()> m_wire_msg; // member variables
-        qi::rule<Iterator, double> m_price;
+        qi::rule<Iterator, uint64_t> m_price;
         qi::rule<Iterator, fixed_point() > m_fixed_point;
     };
 
 public:
     BATSAuctionUpdateMsg() : BATSMessageBase() {}
     BATSAuctionUpdateMsg(int timestamp, char msgtype, std::string const& symbol, char auction_type,
-                         double reference_price, uint32_t buyshares, uint32_t sellshares, double indicative_price,
-                         double auction_only_price) :
+                         uint64_t reference_price, uint32_t buyshares, uint32_t sellshares, uint64_t indicative_price,
+                         uint64_t auction_only_price) :
             BATSMessageBase(timestamp, msgtype),
             m_symbol(symbol),
             m_auction_type(auction_type),
@@ -46,11 +46,11 @@ public:
 
     std::string m_symbol;
     char m_auction_type;
-    double m_reference_price;
+    uint64_t m_reference_price;
     uint32_t m_buyshares;
     uint32_t m_sellshares;
-    double m_indicative_price;
-    double m_auction_only_price;
+    uint64_t m_indicative_price;
+    uint64_t m_auction_only_price;
 };
 
 template<typename Iterator>
@@ -60,11 +60,7 @@ BATSAuctionUpdateMsg::auction_update_decoder<Iterator>::auction_update_decoder(i
 {
     // order and execution ids are 12 characters base 36
     qi::uint_parser<uint32_t, 10, 10, 10 > p_shares;
-    qi::uint_parser<uint32_t, 10,  6, 6 > int_part;
-    qi::uint_parser<uint32_t, 10,  4, 4 > dec_part;
-
-    m_price       = m_fixed_point; // this converts to double from fixed point
-    m_fixed_point = int_part >> dec_part;
+    qi::uint_parser<uint32_t, 10,  10, 10 > m_price;
 
     m_wire_msg    = ( qi::as_string[ qi::repeat(8)[qi::char_] ]
                     >> qi::char_("OCHI")
