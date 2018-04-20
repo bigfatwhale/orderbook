@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
         BOOST_TEST( addOrderMsg->m_side == 'S');
         BOOST_TEST( addOrderMsg->m_shares == 100);
         BOOST_TEST( addOrderMsg->m_symbol == "AAPL  ");
-        BOOST_TEST( addOrderMsg->m_price == 183.19);
+        BOOST_TEST( addOrderMsg->m_price == 1831900);
         BOOST_TEST( addOrderMsg->m_display == 'Y');
 
         msg = parse("S28800168d1K27GA00000YS000100AAPL  0001831900YBAML");
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
         BOOST_TEST( addOrderMsg->m_side == 'S');
         BOOST_TEST( addOrderMsg->m_shares == 100);
         BOOST_TEST( addOrderMsg->m_symbol == "AAPL  ");
-        BOOST_TEST( addOrderMsg->m_price == 183.19);
+        BOOST_TEST( addOrderMsg->m_price == 1831900);
         BOOST_TEST( addOrderMsg->m_display == 'Y');
         BOOST_TEST( addOrderMsg->m_partId == "BAML");
     }
