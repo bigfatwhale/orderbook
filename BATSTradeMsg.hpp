@@ -24,14 +24,12 @@ public:
         trade_decoder(int timestamp, char msgtype, bool isLong);
 
         qi::rule<Iterator, BATSTradeMsg()> m_wire_msg; // member variables
-        qi::rule<Iterator, double> m_price;
-        qi::rule<Iterator, fixed_point() > m_fixed_point;
     };
 
 public:
     BATSTradeMsg() : BATSMessageBase() {}
     BATSTradeMsg(int timestamp, char msgtype, uint64_t orderId, char side, uint32_t shares,
-                    std::string const &symbol, double price, std::string const &execId) :
+                    std::string const &symbol, uint64_t price, std::string const &execId) :
             BATSMessageBase(timestamp, msgtype),
             m_orderId(orderId),
             m_side(side),
@@ -46,7 +44,7 @@ public:
     char        m_side;
     uint32_t    m_shares;
     std::string m_symbol;
-    double      m_price;
+    uint64_t    m_price;
     std::string m_execId;
 };
 
@@ -58,11 +56,7 @@ BATSTradeMsg::trade_decoder<Iterator>::trade_decoder(int timestamp, char msgtype
     // order and execution ids are 12 characters base 36
     qi::uint_parser<uint64_t, 36, 12, 12> p_orderId;
     qi::uint_parser<uint32_t, 10,  6, 6 > p_shares;
-    qi::uint_parser<uint32_t, 10,  6, 6 > int_part;
-    qi::uint_parser<uint32_t, 10,  4, 4 > dec_part;
-
-    m_price       = m_fixed_point; // this converts to double from fixed point
-    m_fixed_point = int_part >> dec_part;
+    qi::uint_parser<uint32_t, 10,  10, 10 > m_price;
 
     if (isLong)
         m_wire_msg = ( p_orderId >> qi::char_('B'|'S')
