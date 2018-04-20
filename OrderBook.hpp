@@ -19,13 +19,14 @@ struct Order
     uint64_t orderId;
     uint64_t price; // 6.4 fixed point representation
     uint32_t volume;
-    std::string origId; // the id of the participant this order originated from.
+    uint8_t  side; // ask or bid?
+    std::string partId; // the id of the participant this order originated from.
 };
 
 class PriceBucket
 {
 public:
-    PriceBucket() {}
+    PriceBucket(): m_nextBucket{nullptr}, m_previousBucket{nullptr} {}
 
 private:
     PriceBucket *m_nextBucket;
@@ -39,7 +40,7 @@ class OrderBook
 {
 public:
     OrderBook() : m_priceBuckets(new PriceBucket[MAX_PRICE + 1]),
-                  m_maxBid{0}, m_minAsk{MAX_PRICE} {}
+                  m_minAsk{MAX_PRICE}, m_maxBid{0} {}
     ~OrderBook() { delete [] m_priceBuckets; }
     void addOrder( Order &order );
     void removeOrder( Order &order );
