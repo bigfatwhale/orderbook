@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
 
     }
 
-    BOOST_AUTO_TEST_CASE( test_parse_auction_summary, * boost::unit_test::tolerance(0.0001) )
+    BOOST_AUTO_TEST_CASE( test_parse_auction_summary )
     {
         auto msg = parse("S28800168JAAPLSPOTC00010068000000020000");
 
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
 
         BOOST_TEST( auctionSummaryMsg->m_symbol == "AAPLSPOT");
         BOOST_TEST( auctionSummaryMsg->m_auction_type == 'C');
-        BOOST_TEST( auctionSummaryMsg->m_price == 100.68);
+        BOOST_TEST( auctionSummaryMsg->m_price == 1006800);
         BOOST_TEST( auctionSummaryMsg->m_shares == 20000);
 
     }
