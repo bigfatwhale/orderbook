@@ -60,9 +60,9 @@ BATSAddOrderMsg::add_order_decoder<Iterator>::add_order_decoder(int timestamp, c
         BATSAddOrderMsg::add_order_decoder<Iterator>::base_type(m_wire_msg)
 {
     // order and execution ids are 12 characters base 36
-    qi::uint_parser<uint64_t, 36, 12, 12> p_orderId;
-    qi::uint_parser<uint32_t, 10,  6, 6 > p_shares;
-    qi::uint_parser<uint32_t, 10,  10, 10 > m_price;
+    qi::uint_parser< uint64_t, 36, 12, 12 > p_orderId;
+    qi::uint_parser< uint32_t, 10,  6, 6  > p_shares;
+    qi::uint_parser< uint32_t, 10, 10, 10 > m_price;
 
     // leaving the below for reference on how to convert fixed_point to double using boost spirit
     // qi::uint_parser<uint32_t, 10,  6, 6 > int_part;
@@ -70,15 +70,14 @@ BATSAddOrderMsg::add_order_decoder<Iterator>::add_order_decoder(int timestamp, c
     // m_price       = m_fixed_point; // this converts to double from fixed point
     // m_fixed_point = int_part >> dec_part;
 
-    m_wire_msg    = ( p_orderId >> qi::char_("BS")
-                                  >> p_shares
-                                  >> qi::as_string[qi::repeat(6)[qi::char_]]
-                                  >> m_price
-                                  >> qi::char_('Y')
-                                  >> (qi::as_string[qi::repeat(4)[qi::char_]] | qi::as_string[qi::eps])
-
-                                  ) [qi::_val = phi::construct<BATSAddOrderMsg>(
-                        m_ts, m_mtype, qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7)];
+    m_wire_msg = (p_orderId >> qi::char_("BS")
+                            >> p_shares
+                            >> qi::as_string[qi::repeat(6)[qi::char_]]
+                            >> m_price
+                            >> qi::char_('Y')
+                            >> (qi::as_string[qi::repeat(4)[qi::char_]] | qi::as_string[qi::eps]))
+                [qi::_val = phi::construct<BATSAddOrderMsg>(
+                    m_ts, m_mtype, qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7)];
 }
 
 #endif //PITCH_SPIRIT_BATSADDORDERMSG_HPP
