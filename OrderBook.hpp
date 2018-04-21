@@ -7,6 +7,7 @@
 
 #include <deque>
 #include <string>
+#include <unordered_map>
 
 //#define MAX_PRICE 100000000 // 10000.0000 in fixed point format
 // reasonable for most stocks except berkshire
@@ -20,29 +21,33 @@ enum class BookType {BUY, SELL};
 struct Order
 {
     Order(uint64_t id, uint64_t price, uint32_t volume, BookType side, std::string const &partId) :
-            orderId{id}, price{price}, volume{volume}, side{side}, partId{partId} {};
+            orderId{id}, price{price}, volume{volume}, side{side}, partId{partId}, active{true} {};
     uint64_t orderId;
     uint64_t price; // 6.4 fixed point representation
     uint32_t volume;
     BookType  side; // ask or bid?
     std::string partId; // the id of the participant this order originated from.
+    bool active; // for logical delete when in price bucket.
 };
 
 class PriceBucket
 {
 public:
     PriceBucket() : m_nextBucket{nullptr}, m_previousBucket{nullptr} {}
-    PriceBucket(uint64_t pricePoint, Order const& order) :
-            m_nextBucket{nullptr}, m_previousBucket{nullptr}, m_pricePoint{pricePoint}
-    {
-        m_orders.push_back(order);
-    }
+    PriceBucket(uint64_t pricePoint, Order const& order);
+    void addOrder( Order const& order);
+    void removeOrder( Order const& order);
+    uint32_t totalVolume();
+    uint32_t numOrders();
 
 private:
     PriceBucket *m_nextBucket;     // brings us to the next/prev non-empty price bucket.
     PriceBucket *m_previousBucket; // needs to maintain.
     std::deque<Order> m_orders;
+    std::unordered_map<uint64_t, uint32_t> m_orderLookup;
     uint64_t m_pricePoint;
+    uint32_t m_deletedCount;
+    uint32_t m_volume;
 };
 
 class Book
@@ -64,6 +69,7 @@ public:
     void addOrder( Order &order );
     void removeOrder( Order &order );
     uint64_t bestPrice() { return m_bestPrice; }
+    uint32_t volumeForPricePoint( uint64_t price );
 
 private:
     BookType m_bookType;
@@ -89,6 +95,7 @@ public:
     LimitOrderBook() : m_buyBook{BookType::BUY}, m_sellBook{BookType::SELL} {}
     void addOrder( Order &order );
     void removeOrder( Order &order );
+    uint32_t volumeForPricePoint( uint64_t price, BookType t);
     uint64_t bestAsk();
     uint64_t bestBid();
 
