@@ -70,24 +70,15 @@ BATSAddOrderMsg::add_order_decoder<Iterator>::add_order_decoder(int timestamp, c
     // m_price       = m_fixed_point; // this converts to double from fixed point
     // m_fixed_point = int_part >> dec_part;
 
-    if (isLong)
-        m_wire_msg    = ( p_orderId >> qi::char_("BS")
+    m_wire_msg    = ( p_orderId >> qi::char_("BS")
                                   >> p_shares
                                   >> qi::as_string[qi::repeat(6)[qi::char_]]
                                   >> m_price
                                   >> qi::char_('Y')
-                                  >> qi::as_string[qi::repeat(4)[qi::char_]] )
-                [qi::_val = phi::construct<BATSAddOrderMsg>(
-                        m_ts, m_mtype, qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7)];
-    else
-        m_wire_msg    = ( p_orderId >> qi::char_("BS")
-                                  >> p_shares
-                                  >> qi::as_string[qi::repeat(6)[qi::char_]]
-                                  >> m_price
-                                  >> qi::char_('Y') )
-                [qi::_val = phi::construct<BATSAddOrderMsg>(
-                        m_ts, m_mtype, qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, std::string())];
+                                  >> (qi::as_string[qi::repeat(4)[qi::char_]] | qi::as_string[qi::eps])
 
+                                  ) [qi::_val = phi::construct<BATSAddOrderMsg>(
+                        m_ts, m_mtype, qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7)];
 }
 
 #endif //PITCH_SPIRIT_BATSADDORDERMSG_HPP
