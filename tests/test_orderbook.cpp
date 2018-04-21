@@ -10,7 +10,7 @@
 #include <string>
 #include <fstream>
 #include <boost/test/unit_test.hpp>
-#include "OrderBook.hpp"
+#include "OrderBook.h"
 
 BOOST_AUTO_TEST_SUITE( test_parse_suite )
 
