@@ -37,15 +37,11 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
 
     BOOST_AUTO_TEST_CASE( test_veb )
     {
-//        int n = 10000;
-//        boost::dynamic_bitset<> x(n);
-//        x[100] = 1;
-//
-//        cout << x[99] << x[100] << endl;
+        veb v{5}; // universe of 2^5 possible integer values
+        v.insert(19);
+        BOOST_TEST( v.isMember(19) );
+        BOOST_TEST( v.isMember(7)==false );
 
-        veb v{18};
-        int k = 200;
-        //cout << v.m_clusters.size() << endl;
     }
 
 BOOST_AUTO_TEST_SUITE_END()
