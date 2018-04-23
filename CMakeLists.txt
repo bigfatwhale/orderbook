@@ -5,7 +5,7 @@ project(orderbook VERSION 0.01 DESCRIPTION "Limit Order Book")
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "-O3 -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall")
-set(SOURCE_FILES OrderBook.hpp OrderBook.cpp)
+set(SOURCE_FILES OrderBook.h OrderBook.cpp veb.cpp veb.h)
 
 add_library(orderbook SHARED ${SOURCE_FILES})
 
