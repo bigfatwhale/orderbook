@@ -20,6 +20,8 @@ public:
 
     void insert(int x);
     void empty_insert( veb & v, int x);
+    bool isMember(int x);
+
 //private:
 public:
     int m_numBits;

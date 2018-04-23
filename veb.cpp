@@ -63,6 +63,16 @@ inline void veb::empty_insert(veb &v, int x)
     v.m_min = v.m_max = x;
 }
 
+bool veb::isMember(int x)
+{
+    if ( m_min == x || m_max == x )
+        return true;
+    else if ( m_numBits == 1 )
+        return false;
+    else
+        return m_cluster[ high(x) ]->isMember( low(x) );
+}
+
 void veb::insert(int x)
 {
     if ( m_min == -1 ) // m_min == -1 means current veb structure is empty
