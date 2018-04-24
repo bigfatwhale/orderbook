@@ -24,11 +24,8 @@ public:
     bool isMember(int x);
     int  successor( int x );
 
-//private:
 public:
     int m_numBits;
-    //std::vector< boost::dynamic_bitset<> > m_clusters;
-    //boost::dynamic_bitset<> m_summary;
 
     int m_min;
     int m_max;
