@@ -50,7 +50,7 @@ inline int veb::high(int x)
 
 inline int veb::low(int x)
 {
-    return x & ( 1 << ( m_lsb + 1 ) - 1 );
+    return x & ( ( 1 << ( m_lsb + 1 ) ) - 1 );
 }
 
 inline int veb::index(int i, int j)
