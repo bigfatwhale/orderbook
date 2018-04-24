@@ -187,3 +187,38 @@ int veb::successor(int x)
         }
     }
 }
+
+int veb::predecessor(int x)
+{
+    if ( m_numBits == 1 )
+        return ( x == 1 && m_min == 0 ) ? 0 : -1;
+    else if ( m_max != -1 && x > m_max )
+        return m_max;
+    else
+    {
+        int min_low = m_cluster[ high(x) ]->m_min;
+        if ( min_low != -1 && low(x) > min_low )
+        {
+            // if we are in here, we know that x's predecessor must be in the same cluster
+            // as x. we recursively search inside that cluster to get the offset.
+            int offset = m_cluster[ high(x) ]->predecessor( low(x) );
+            return index( high(x), offset );
+        }
+        else
+        {
+            int pred_cluster = m_summary->predecessor( high(x) );
+            if ( pred_cluster == -1 )
+            {
+                if ( m_min != -1 && x > m_min )
+                    return m_min;
+                else
+                    return -1;
+            }
+            else
+            {
+                int offset = m_cluster[ pred_cluster ]->m_min;
+                return index( pred_cluster, offset );
+            }
+        }
+    }
+}

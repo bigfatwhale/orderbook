@@ -23,6 +23,7 @@ public:
     void remove(int x);
     bool isMember(int x);
     int  successor( int x );
+    int  predecessor( int x );
 
 public:
     int m_numBits;
