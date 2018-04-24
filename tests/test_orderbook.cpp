@@ -10,6 +10,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <deque>
 #include <boost/test/unit_test.hpp>
 #include <boost/dynamic_bitset.hpp>
 #include "OrderBook.h"
@@ -76,16 +77,23 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
             {
                 veb v{bits};
                 boost::dynamic_bitset<> b(bits, j);
+                deque<int> items;
+
+                cout << "b="<< b << endl;
 
                 auto p = b.find_first();
 
                 // populate the veb
                 v.insert(p);
+                items.push_front(p);
                 while ( true )
                 {
                     p = b.find_next(p);
                     if (p != boost::dynamic_bitset<>::npos )
+                    {
                         v.insert(p);
+                        items.push_front(p);
+                    }
                     else
                         break;
                 }
@@ -106,10 +114,44 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
                     else
                         break;
                 }
+
+                // now check the predecessor calls
+                p = items.front();
+                items.pop_front();
+                for ( auto x : items )
+                {
+                    auto s = v.predecessor(p);
+                    cout << "p=" << p << " s="<< s << " x=" << x << endl;
+                    if (s != -1)
+                        assert( s == x );
+                    p = s;
+                }
+
             }
+
+
             return true;
         };
         BOOST_TEST( runall() == true );
+    }
+
+    BOOST_AUTO_TEST_CASE( test_veb_fail1 )
+    {
+        veb v{5};
+
+        v.insert(0);
+        v.insert(1);
+        v.insert(2);
+        v.insert(3);
+        v.insert(4);
+
+        BOOST_TEST( v.isMember(0) );
+        BOOST_TEST( v.isMember(1) );
+        BOOST_TEST( v.isMember(2) );
+        BOOST_TEST( v.isMember(3) );
+        BOOST_TEST( v.isMember(4) );
+
+        BOOST_TEST( v.predecessor(4) == 3 );
     }
 
 BOOST_AUTO_TEST_SUITE_END()
