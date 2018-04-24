@@ -66,4 +66,46 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
 
     }
 
+    BOOST_AUTO_TEST_CASE( test_veb_exhaustive )
+    {
+
+        int bits = 11;
+
+        for (int j=1; j < 1 << bits; j++)
+        {
+            veb v{bits};
+            boost::dynamic_bitset<> b(bits, j);
+
+            auto p = b.find_first();
+
+            // populate the veb
+            v.insert(p);
+            while ( true )
+            {
+                p = b.find_next(p);
+                if (p != boost::dynamic_bitset<>::npos )
+                    v.insert(p);
+                else
+                    break;
+            }
+
+            // now check the successor calls
+            p = b.find_first();
+            assert( v.isMember(p) );
+
+            while ( true )
+            {
+                auto s = b.find_next(p);
+                if (s != boost::dynamic_bitset<>::npos )
+                {
+                    assert( v.successor(p) == s );
+                    assert( v.isMember(s) );
+                    p = s;
+                }
+                else
+                    break;
+            }
+        }
+    }
+
 BOOST_AUTO_TEST_SUITE_END()
