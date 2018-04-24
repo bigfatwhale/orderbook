@@ -50,7 +50,7 @@ inline int veb::high(int x)
 
 inline int veb::low(int x)
 {
-    return x & ( ( 1 << ( m_lsb + 1 ) ) - 1 );
+    return x & ( ( 1 << m_lsb ) - 1 );
 }
 
 inline int veb::index(int i, int j)
@@ -63,14 +63,16 @@ inline void veb::empty_insert(veb &v, int x)
     v.m_min = v.m_max = x;
 }
 
-bool veb::isMember(int x)
-{
-    if ( m_min == x || m_max == x )
+bool veb::isMember(int x) {
+    if (m_min == x || m_max == x)
         return true;
-    else if ( m_numBits == 1 )
+    else if (m_numBits == 1)
         return false;
-    else
-        return m_cluster[ high(x) ]->isMember( low(x) );
+    else {
+        int h = high(x);
+        int l = low(x);
+        return m_cluster[h]->isMember(l);
+    }
 }
 
 void veb::insert(int x)
@@ -80,7 +82,7 @@ void veb::insert(int x)
     else
     {
         if (x < m_min)
-            swap( x, m_min );
+            swap( x, m_min ); // x becomes the new min. after which we need to do insert for old min
         if (m_numBits > 1)
         {
             if ( m_cluster[ high(x) ]->m_min == -1 )
