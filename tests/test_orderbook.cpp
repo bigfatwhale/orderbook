@@ -68,44 +68,48 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
 
     BOOST_AUTO_TEST_CASE( test_veb_exhaustive )
     {
-
-        int bits = 11;
-
-        for (int j=1; j < 1 << bits; j++)
+        auto runall = []()
         {
-            veb v{bits};
-            boost::dynamic_bitset<> b(bits, j);
+            int bits = 11;
 
-            auto p = b.find_first();
-
-            // populate the veb
-            v.insert(p);
-            while ( true )
+            for (int j=1; j < 1 << bits; j++)
             {
-                p = b.find_next(p);
-                if (p != boost::dynamic_bitset<>::npos )
-                    v.insert(p);
-                else
-                    break;
-            }
+                veb v{bits};
+                boost::dynamic_bitset<> b(bits, j);
 
-            // now check the successor calls
-            p = b.find_first();
-            assert( v.isMember(p) );
+                auto p = b.find_first();
 
-            while ( true )
-            {
-                auto s = b.find_next(p);
-                if (s != boost::dynamic_bitset<>::npos )
+                // populate the veb
+                v.insert(p);
+                while ( true )
                 {
-                    assert( v.successor(p) == s );
-                    assert( v.isMember(s) );
-                    p = s;
+                    p = b.find_next(p);
+                    if (p != boost::dynamic_bitset<>::npos )
+                        v.insert(p);
+                    else
+                        break;
                 }
-                else
-                    break;
+
+                // now check the successor calls
+                p = b.find_first();
+                assert( v.isMember(p) );
+
+                while ( true )
+                {
+                    auto s = b.find_next(p);
+                    if (s != boost::dynamic_bitset<>::npos )
+                    {
+                        assert( v.successor(p) == s );
+                        assert( v.isMember(s) );
+                        p = s;
+                    }
+                    else
+                        break;
+                }
             }
-        }
+            return true;
+        };
+        BOOST_TEST( runall() == true );
     }
 
 BOOST_AUTO_TEST_SUITE_END()
