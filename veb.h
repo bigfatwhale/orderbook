@@ -20,6 +20,7 @@ public:
 
     void insert(int x);
     void empty_insert( veb & v, int x);
+    void remove(int x);
     bool isMember(int x);
 
 //private:

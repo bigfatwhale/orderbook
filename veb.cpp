@@ -63,14 +63,14 @@ inline void veb::empty_insert(veb &v, int x)
     v.m_min = v.m_max = x;
 }
 
-bool veb::isMember(int x) {
+bool veb::isMember(int x)
+{
     if (m_min == x || m_max == x)
         return true;
     else if (m_numBits == 1)
         return false;
     else
         return m_cluster[high(x)]->isMember(low(x));
-
 }
 
 void veb::insert(int x)
@@ -93,4 +93,63 @@ void veb::insert(int x)
         if (x > m_max)
             m_max = x;
     }
+}
+
+void veb::remove(int x)
+{
+    // pre-condition : x is a member of the veb
+    if ( m_min == m_max ) // the member pre-cond, plus the fact that min and max are same,
+        m_min = m_max = -1; // it means x must be the value of min and max. so we remove it (set to -1)
+    else if ( m_numBits == 1 )
+    {
+        // if we are here, it means min and max values are different, and there are two values in veb
+        if (x == 0)
+            m_min = 1;
+        else
+            m_min = 0;
+        m_max = m_min; // now there's only 1 value in veb, so min and max have to be the same.
+    }
+    else
+    {
+        if ( x == m_min )
+        {
+            // if x is the min of the current veb, then we need to find the new min (call it k)
+            // to take its place, then delete k instead, and set m_min = k
+            int first_cluster = m_summary->m_min;
+
+            // get the lower significant bits of the new minimum value from the first cluster
+            int lower_bits = m_cluster[first_cluster]->m_min;
+
+            // next get the new value for x, which is the new min. the actual number is assembled
+            // from the msb value (=first_cluster) * lower sq root + lower_bits. this is what the
+            // veb::index method does.
+            x = index( first_cluster, lower_bits );
+            m_min = x; // update the new min the newly found min
+        }
+
+        // recursively delete x. at this point x can be the original value passed to remove, or the
+        // new minimum that was found.
+        m_cluster[ high(x) ]->remove( low(x) );
+
+        // now check if our remove operation on high(x) cluster above created an empty veb. if so we need
+        // to do more book-keeping.
+        if ( m_cluster[ high(x) ]->m_min == -1 )
+        {
+            m_summary->remove( high(x) ); // remove high(x) from the summary structure.
+
+            // after updating the summary in the above, we need to check if we deleted the max of the
+            // current veb, if so, more book keeping updates.
+            if ( x == m_max )
+            {
+                int summary_max = m_summary->m_max;
+                if ( summary_max == -1 )
+                    m_max = m_min;
+                else
+                    m_max = index( summary_max, m_cluster[summary_max]->m_max );
+            }
+        }
+        else if ( x == m_max )
+            m_max = index( high(x), m_cluster[ high(x) ]->m_max );
+    }
+
 }

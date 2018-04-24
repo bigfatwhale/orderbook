@@ -37,16 +37,24 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
 
     BOOST_AUTO_TEST_CASE( test_veb )
     {
-        int k = 100;
         veb v{5}; // universe of 2^5 = 32 possible integer values
         v.insert(19);
+        v.insert(5);
+        v.insert(30);
         BOOST_TEST( v.isMember(19) );
+        BOOST_TEST( v.isMember(7) == false );
 
-        boost::dynamic_bitset<> b(5, 7);
-        cout << "bit string " << b << endl;
+        v.remove(19);
+        BOOST_TEST( v.isMember(19) == false );
+        BOOST_TEST( v.isMember(5) );
+        BOOST_TEST( v.isMember(30) );
 
-        BOOST_TEST( v.isMember(7)==false );
-        cout << k << endl;
+        v.remove(30);
+        BOOST_TEST( v.isMember(5) );
+        BOOST_TEST( v.isMember(30) == false );
+
+        v.remove(5);
+        BOOST_TEST( v.isMember(5) == false );
     }
 
 BOOST_AUTO_TEST_SUITE_END()
