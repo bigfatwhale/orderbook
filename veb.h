@@ -22,6 +22,7 @@ public:
     void empty_insert( veb & v, int x);
     void remove(int x);
     bool isMember(int x);
+    int  successor( int x );
 
 //private:
 public:

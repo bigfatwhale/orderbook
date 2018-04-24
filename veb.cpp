@@ -153,3 +153,37 @@ void veb::remove(int x)
     }
 
 }
+
+int veb::successor(int x)
+{
+    // find the successor to x. returns -1 if there's no successor.
+    if (m_numBits == 1)
+        return ( x == 0 && m_max == 1 ) ? 1 : -1;
+    else if ( m_min != -1 && x < m_min )
+        return m_min;
+    else
+    {
+        // max_low is the max element in x's cluster
+        int max_low = m_cluster[ high(x) ]->m_max;
+        if ( max_low != -1 && low(x) < max_low )
+        {
+            // if we are in here, we know that x's successor must be in the same cluster
+            // as x. we recursively search inside that cluster to get the offset.
+            int offset = m_cluster[ high(x) ]->successor( low(x) );
+            return index( high(x), offset );
+        }
+        else
+        {
+            // else the successor for x must be in another successor-cluster. we consult the
+            // summary veb to find it.
+            int successor_cluster = m_summary->successor( high(x) );
+            if ( successor_cluster == -1 )
+                return -1;
+            else
+            {
+                int offset = m_cluster[ successor_cluster ]->m_min;
+                return index( successor_cluster, offset );
+            }
+        }
+    }
+}

@@ -44,6 +44,10 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
         BOOST_TEST( v.isMember(19) );
         BOOST_TEST( v.isMember(7) == false );
 
+        // some simple successor queries
+        BOOST_TEST( v.successor(5) == 19);
+        BOOST_TEST( v.successor(19) == 30);
+
         v.remove(19);
         BOOST_TEST( v.isMember(19) == false );
         BOOST_TEST( v.isMember(5) );
@@ -55,6 +59,8 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
 
         v.remove(5);
         BOOST_TEST( v.isMember(5) == false );
+
+
     }
 
 BOOST_AUTO_TEST_SUITE_END()
