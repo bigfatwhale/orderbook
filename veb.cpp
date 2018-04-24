@@ -68,11 +68,9 @@ bool veb::isMember(int x) {
         return true;
     else if (m_numBits == 1)
         return false;
-    else {
-        int h = high(x);
-        int l = low(x);
-        return m_cluster[h]->isMember(l);
-    }
+    else
+        return m_cluster[high(x)]->isMember(low(x));
+
 }
 
 void veb::insert(int x)
