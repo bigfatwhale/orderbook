@@ -71,6 +71,9 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
     {
         auto runall = []()
         {
+            // use the 1s and 0s of a 11-bit bitset to model 11 items that
+            // exists/not-exist in the set. dump it into the veb, then test
+            // that all the isMember, successor, and predecessor calls work.
             int bits = 11;
 
             for (int j=1; j < 1 << bits; j++)
@@ -78,8 +81,6 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
                 veb v{bits};
                 boost::dynamic_bitset<> b(bits, j);
                 deque<int> items;
-
-                cout << "b="<< b << endl;
 
                 auto p = b.find_first();
 
@@ -121,7 +122,6 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
                 for ( auto x : items )
                 {
                     auto s = v.predecessor(p);
-                    cout << "p=" << p << " s="<< s << " x=" << x << endl;
                     if (s != -1)
                         assert( s == x );
                     p = s;
