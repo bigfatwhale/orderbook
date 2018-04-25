@@ -216,7 +216,7 @@ int veb::predecessor(int x)
             }
             else
             {
-                int offset = m_cluster[ pred_cluster ]->m_min;
+                int offset = m_cluster[ pred_cluster ]->m_max;
                 return index( pred_cluster, offset );
             }
         }

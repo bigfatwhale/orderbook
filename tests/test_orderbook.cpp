@@ -137,6 +137,7 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
 
     BOOST_AUTO_TEST_CASE( test_veb_fail1 )
     {
+        // one single failure case observed in previous testing
         veb v{5};
 
         v.insert(0);
