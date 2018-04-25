@@ -69,19 +69,21 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
 
     BOOST_AUTO_TEST_CASE( test_veb_exhaustive )
     {
-        auto runall = []()
+        auto runall = [](int numItems, int universe_size)
         {
             // use the 1s and 0s of a 11-bit bitset to model 11 items that
             // exists/not-exist in the set. dump it into the veb, then test
             // that all the isMember, successor, and predecessor calls work.
-            int bits = 11;
+            // in the above, universe_size is the number of bits required.
+            int bits = numItems;
 
             for (int j=1; j < 1 << bits; j++)
             {
-                veb v{bits};
+                veb v{universe_size};
                 boost::dynamic_bitset<> b(bits, j);
                 deque<int> items;
 
+                //cout << "bits = " << b << endl;
                 auto p = b.find_first();
 
                 // populate the veb
@@ -128,11 +130,10 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
                 }
 
             }
-
-
             return true;
         };
-        BOOST_TEST( runall() == true );
+        BOOST_TEST( runall(16, 4) == true ); // 16 items representable with 4-bit veb
+        BOOST_TEST( runall(32, 5) == true ); // 32 items representable with 5-bit veb
     }
 
     BOOST_AUTO_TEST_CASE( test_veb_fail1 )
