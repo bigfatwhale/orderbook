@@ -7,6 +7,9 @@
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
+#include <boost/python.hpp>
+#include <Python.h>
+#include <string>
 #include "BATSMessageBase.h"
 #include "BATSUtil.h"
 
@@ -37,6 +40,14 @@ public:
             m_reserved1(reserved1),
             m_reserved2(reserved2)
     {}
+
+    static void export_to_python()
+    {
+        boost::python::class_<BATSTradingStatusMsg>("BATSTradingStatusMsg")
+               // .def( boost::python::init<>() )
+                .def_readwrite("symbol", &BATSTradingStatusMsg::m_symbol)
+        ;
+    }
 
     std::string m_symbol;
     char m_halt_status;
