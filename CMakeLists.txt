@@ -27,11 +27,15 @@ add_library(bats_pitch_parser SHARED ${SOURCE_FILES})
 target_link_libraries(bats_pitch_parser python2.7 boost_python)
 
 add_library(bats_api SHARED ${PYAPI_SOURCES})
+
+message( STATUS "CMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}")
 # fix for osx. python only loads .so
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set_target_properties(bats_api PROPERTIES PREFIX "")
     set_target_properties(bats_api PROPERTIES OUTPUT_NAME "bats_api")
     set_target_properties(bats_api PROPERTIES SUFFIX ".so")
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    set_target_properties(bats_api PROPERTIES PREFIX "")	
 endif()
 
 target_link_libraries(bats_api python2.7 boost_python bats_pitch_parser)
