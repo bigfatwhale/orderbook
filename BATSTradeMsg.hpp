@@ -43,25 +43,24 @@ public:
     std::string repr()
     {
         std::stringstream ss;
-        ss << "BATSTradeMsg(orderId=" << m_orderId << ", side=" << m_side 
-	   << ", shares=" << m_shares << ", symbol=" << m_symbol
-	   << ", price" << m_price << ", execId" << m_execId << ")";
-	return ss.str();
+        ss << "BATSTradeMsg(orderId=" << m_orderId << ", side=" << m_side
+           << ", shares=" << m_shares << ", symbol=" << m_symbol
+           << ", price" << m_price << ", execId" << m_execId << ")";
+        return ss.str();
     }
   
     static void export_to_python()
     {
         boost::python::class_<BATSTradeMsg>("BATSTradeMsg")
-	  .def( boost::python::init<>() )
-	  .def( boost::python::init<int, char, uint64_t, char, uint32_t, std::string, uint64_t, std::string>() )
-	  .def_readwrite("orderId", &BATSTradeMsg::m_orderId)
-	  .def_readwrite("side", &BATSTradeMsg::m_side)
-	  .def_readwrite("shares", &BATSTradeMsg::m_shares)
-	  .def_readwrite("symbol", &BATSTradeMsg::m_symbol)
-	  .def_readwrite("price", &BATSTradeMsg::m_price)
-	  .def_readwrite("execId", &BATSTradeMsg::m_execId)
-	  .def("__repr__", &BATSTradeMsg::repr)
-        ;
+                .def(boost::python::init<>())
+                .def(boost::python::init<int, char, uint64_t, char, uint32_t, std::string, uint64_t, std::string>())
+                .def_readwrite("orderId", &BATSTradeMsg::m_orderId)
+                .def_readwrite("side", &BATSTradeMsg::m_side)
+                .def_readwrite("shares", &BATSTradeMsg::m_shares)
+                .def_readwrite("symbol", &BATSTradeMsg::m_symbol)
+                .def_readwrite("price", &BATSTradeMsg::m_price)
+                .def_readwrite("execId", &BATSTradeMsg::m_execId)
+                .def("__repr__", &BATSTradeMsg::repr);
     }
 
     uint64_t    m_orderId;

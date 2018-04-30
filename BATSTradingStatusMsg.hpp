@@ -58,15 +58,14 @@ public:
     static void export_to_python()
     {
         boost::python::class_<BATSTradingStatusMsg>("BATSTradingStatusMsg")
-	  .def( boost::python::init<>() )
-	  .def( boost::python::init<int, char, std::string, char, uint8_t, char, char>() )
-	  .def_readwrite("symbol", &BATSTradingStatusMsg::m_symbol)
-	  .def_readwrite("halt_status", &BATSTradingStatusMsg::m_halt_status)
-	  .def_readwrite("reg_sho_action", &BATSTradingStatusMsg::m_reg_sho_action)
-	  .def_readwrite("reserved1", &BATSTradingStatusMsg::m_reserved1)
-	  .def_readwrite("reserved2", &BATSTradingStatusMsg::m_reserved2)
-	  .def("__repr__", &BATSTradingStatusMsg::repr)
-        ;
+                .def(boost::python::init<>())
+                .def(boost::python::init<int, char, std::string, char, uint8_t, char, char>())
+                .def_readwrite("symbol", &BATSTradingStatusMsg::m_symbol)
+                .def_readwrite("halt_status", &BATSTradingStatusMsg::m_halt_status)
+                .def_readwrite("reg_sho_action", &BATSTradingStatusMsg::m_reg_sho_action)
+                .def_readwrite("reserved1", &BATSTradingStatusMsg::m_reserved1)
+                .def_readwrite("reserved2", &BATSTradingStatusMsg::m_reserved2)
+                .def("__repr__", &BATSTradingStatusMsg::repr);
     }
 
     std::string m_symbol;
