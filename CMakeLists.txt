@@ -27,6 +27,7 @@ message( STATUS "Boost_LIBRARIES=${Boost_LIBRARIES}")
 message( STATUS "Boost Version=${Boost_VERSION}")
 
 include_directories (${PYTHON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR} )
+link_directories( ${Boost_LIBRARY_DIRS} )
 
 add_library(bats_pitch_parser SHARED ${SOURCE_FILES})
 target_link_libraries(bats_pitch_parser python2.7 boost_python)
