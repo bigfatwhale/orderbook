@@ -13,13 +13,18 @@ set(SOURCE_FILES BATSUtil.h BATSTradeBreakMsg.hpp BATSTradeMsg.hpp BATSTradingSt
 set(PYAPI_SOURCES BATSPythonAPI.cpp)
 set(PYTHON_LIBRARY $ENV{PYTHON_LIBRARY})
 set(PYTHON_INCLUDE_DIR $ENV{PYTHON_INCLUDE_DIR})
-message( STATUS "PYTHON_LIBRARY=${PYTHON_LIBRARY}")
-message( STATUS "PYTHON_INCLUDE_DIR=${PYTHON_INCLUDE_DIR}")
 
 enable_testing()
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 find_package(Boost COMPONENTS python REQUIRED)
 find_package(PythonLibs 2.7 REQUIRED)
+
+message( STATUS "PYTHON_LIBRARY=${PYTHON_LIBRARY}")
+message( STATUS "PYTHON_INCLUDE_DIR=${PYTHON_INCLUDE_DIR}")
+message( STATUS "Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}")
+message( STATUS "Boost_LIBRARY_DIRS=${Boost_LIBRARY_DIRS}")
+message( STATUS "Boost_LIBRARIES=${Boost_LIBRARIES}")
+message( STATUS "Boost Version=${Boost_VERSION}")
 
 include_directories (${PYTHON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR} )
 
