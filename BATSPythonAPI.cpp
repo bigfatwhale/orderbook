@@ -10,6 +10,7 @@
 #include "BATSOrderExecutedMsg.hpp"
 #include "BATSOrderCancelMsg.hpp"
 #include "BATSAuctionUpdateMsg.hpp"
+#include "BATSAuctionSummaryMsg.hpp"
 
 BOOST_PYTHON_MODULE(bats_api)
 {
@@ -22,4 +23,5 @@ BOOST_PYTHON_MODULE(bats_api)
 	BATSOrderExecutedMsg::export_to_python();
     BATSOrderCancelMsg::export_to_python();
     BATSAuctionUpdateMsg::export_to_python();
+    BATSAuctionSummaryMsg::export_to_python();
 }
