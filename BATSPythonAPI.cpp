@@ -7,6 +7,7 @@
 #include "BATSTradeMsg.hpp"
 #include "BATSRetailPriceImproveMsg.hpp"
 #include "BATSTradeBreakMsg.hpp"
+#include "BATSOrderExecutedMsg.hpp"
 
 BOOST_PYTHON_MODULE(bats_api)
 {
@@ -16,4 +17,5 @@ BOOST_PYTHON_MODULE(bats_api)
 	BATSTradeMsg::export_to_python();
 	BATSRetailPriceImproveMsg::export_to_python();
 	BATSTradeBreakMsg::export_to_python();
+	BATSOrderExecutedMsg::export_to_python();
 }
