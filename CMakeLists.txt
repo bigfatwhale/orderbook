@@ -10,17 +10,13 @@ set(SOURCE_FILES BATSUtil.h BATSTradeBreakMsg.hpp BATSTradeMsg.hpp BATSTradingSt
         BATSOrderCancelMsg.hpp BATSOrderExecutedMsg.hpp BATSRetailPriceImproveMsg.hpp BATSMessageBase.cpp
         BATSMessageBase.h BATSMsgFactory.cpp BATSMsgFactory.h BATSAddOrderMsg.hpp BATSAuctionSummaryMsg.hpp
         BATSAuctionUpdateMsg.hpp BATSPitchMsgParser.cpp BATSPitchMsgParser.h)
-<<<<<<< HEAD
-add_library(bats_pitch_parser SHARED ${SOURCE_FILES})
-=======
 set(PYAPI_SOURCES BATSPythonAPI.cpp)
 set(PYTHON_LIBRARY $ENV{PYTHON_LIBRARY})
 set(PYTHON_INCLUDE_DIR $ENV{PYTHON_INCLUDE_DIR})
->>>>>>> refs/remotes/upstream/master
 
 enable_testing()
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
-find_package(Boost COMPONENTS python REQUIRED)
+find_package(Boost COMPONENTS python27 REQUIRED)
 find_package(PythonLibs 2.7 REQUIRED)
 
 message( STATUS "PYTHON_LIBRARY=${PYTHON_LIBRARY}")
@@ -34,7 +30,7 @@ include_directories (${PYTHON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_
 link_directories( ${Boost_LIBRARY_DIRS} )
 
 add_library(bats_pitch_parser SHARED ${SOURCE_FILES})
-target_link_libraries(bats_pitch_parser python2.7 boost_python)
+target_link_libraries(bats_pitch_parser python2.7 boost_python27)
 
 add_library(bats_api SHARED ${PYAPI_SOURCES})
 
@@ -48,8 +44,7 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     set_target_properties(bats_api PROPERTIES PREFIX "")	
 endif()
 
-target_link_libraries(bats_api python2.7 boost_python bats_pitch_parser)
-
+target_link_libraries(bats_api python2.7 boost_python27 bats_pitch_parser)
 
 file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tests/*.cpp)
 foreach(testSrc ${TEST_SRCS})
