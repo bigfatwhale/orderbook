@@ -8,6 +8,8 @@
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
+#include <boost/python.hpp>
+#include <sstream>
 #include "BATSMessageBase.h"
 #include "BATSUtil.h"
 
@@ -37,6 +39,26 @@ public:
             m_price(price),
             m_shares(shares)
     {
+    }
+
+    std::string repr()
+    {
+        std::stringstream ss;
+        ss << "BATSAuctionSummaryMsg(symbol=" << m_symbol << ", auction_type=" << m_auction_type
+           << ", price=" << m_price << ", shares=" << m_shares << ")";
+        return ss.str();
+    }
+
+    static void export_to_python()
+    {
+        boost::python::class_<BATSAuctionSummaryMsg>("BATSAuctionSummaryMsg")
+                .def(boost::python::init<>())
+                .def(boost::python::init<int, char, std::string, char, uint64_t, uint32_t>())
+                .def_readwrite("symbol", &BATSAuctionSummaryMsg::m_symbol)
+                .def_readwrite("auction_type", &BATSAuctionSummaryMsg::m_auction_type)
+                .def_readwrite("price", &BATSAuctionSummaryMsg::m_price)
+                .def_readwrite("shares", &BATSAuctionSummaryMsg::m_shares)
+                .def("__repr__", &BATSAuctionSummaryMsg::repr);
     }
 
     std::string m_symbol;

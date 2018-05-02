@@ -7,6 +7,10 @@
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
+#include <boost/python.hpp>
+#include <Python.h>
+#include <string>
+#include <sstream>
 #include "BATSMessageBase.h"
 #include "BATSUtil.h"
 
@@ -27,6 +31,9 @@ public:
 
 public:
     BATSTradingStatusMsg() : BATSMessageBase() {}
+    BATSTradingStatusMsg(int timestamp, char msgtype, std::string const& symbol) :
+            BATSMessageBase(timestamp, msgtype), m_symbol(symbol) {}
+
     BATSTradingStatusMsg(int timestamp, char msgtype, std::string const& symbol,
                          char halt_status, uint8_t reg_sho_action,
                          char reserved1, char reserved2):
@@ -37,6 +44,29 @@ public:
             m_reserved1(reserved1),
             m_reserved2(reserved2)
     {}
+
+    std::string repr()
+    {
+        std::stringstream ss;
+        ss << "BATSTradingStatusMsg(symbol=" << m_symbol << ", halt_status=" << m_halt_status
+           << ", reg_sho_action=" << m_reg_sho_action
+           << ", reserved1=" << m_reserved1 << ", reserved2="
+           << m_reserved2 << ")";
+        return ss.str();
+    }
+  
+    static void export_to_python()
+    {
+        boost::python::class_<BATSTradingStatusMsg>("BATSTradingStatusMsg")
+                .def(boost::python::init<>())
+                .def(boost::python::init<int, char, std::string, char, uint8_t, char, char>())
+                .def_readwrite("symbol", &BATSTradingStatusMsg::m_symbol)
+                .def_readwrite("halt_status", &BATSTradingStatusMsg::m_halt_status)
+                .def_readwrite("reg_sho_action", &BATSTradingStatusMsg::m_reg_sho_action)
+                .def_readwrite("reserved1", &BATSTradingStatusMsg::m_reserved1)
+                .def_readwrite("reserved2", &BATSTradingStatusMsg::m_reserved2)
+                .def("__repr__", &BATSTradingStatusMsg::repr);
+    }
 
     std::string m_symbol;
     char m_halt_status;

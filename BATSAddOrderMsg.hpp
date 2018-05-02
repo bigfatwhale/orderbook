@@ -7,6 +7,8 @@
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
+#include <boost/python.hpp>
+#include <sstream>
 #include "BATSMessageBase.h"
 #include "BATSUtil.h"
 
@@ -45,6 +47,31 @@ public:
     {
     }
 
+    std::string repr()
+    {
+        std::stringstream ss;
+        ss << "BATSAddOrderMsg(orderId=" << m_orderId << ", side=" << m_side
+           << ", shares=" << m_shares << ", symbol=" << m_symbol << ", price="
+           << m_price << ", display=" << m_display << ", partId=" << m_partId << ")";
+        return ss.str();
+    }
+
+    static void export_to_python()
+    {
+        boost::python::class_<BATSAddOrderMsg>("BATSAddOrderMsg")
+                .def(boost::python::init<>())
+                .def(boost::python::init<int, char, uint64_t, char, uint32_t,
+                        std::string, uint64_t, char, std::string>())
+                .def_readwrite("orderId", &BATSAddOrderMsg::m_orderId)
+                .def_readwrite("side", &BATSAddOrderMsg::m_side)
+                .def_readwrite("shares", &BATSAddOrderMsg::m_shares)
+                .def_readwrite("symbol", &BATSAddOrderMsg::m_symbol)
+                .def_readwrite("price", &BATSAddOrderMsg::m_price)
+                .def_readwrite("display", &BATSAddOrderMsg::m_display)
+                .def_readwrite("partId", &BATSAddOrderMsg::m_partId)
+                .def("__repr__", &BATSAddOrderMsg::repr);
+    }
+    
     uint64_t    m_orderId;
     char        m_side;
     uint32_t    m_shares;
