@@ -57,7 +57,7 @@ public:
   
     static void export_to_python()
     {
-        boost::python::class_<BATSTradingStatusMsg>("BATSTradingStatusMsg")
+        boost::python::class_<BATSTradingStatusMsg, boost::python::bases<BATSMessageBase>>("BATSTradingStatusMsg")
                 .def(boost::python::init<>())
                 .def(boost::python::init<int, char, std::string, char, uint8_t, char, char>())
                 .def_readwrite("symbol", &BATSTradingStatusMsg::m_symbol)

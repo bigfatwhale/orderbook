@@ -18,6 +18,7 @@ BOOST_PYTHON_MODULE(bats_api)
 {
     PyEval_InitThreads(); // need this to mess around with GIL
 
+    BATSMessageBase::export_to_python(); // the base class needs to be registered first, otherwise python complains
     BATSTradingStatusMsg::export_to_python();
 	BATSTradeMsg::export_to_python();
 	BATSRetailPriceImproveMsg::export_to_python();
@@ -27,5 +28,4 @@ BOOST_PYTHON_MODULE(bats_api)
     BATSAuctionUpdateMsg::export_to_python();
     BATSAuctionSummaryMsg::export_to_python();
     BATSAddOrderMsg::export_to_python();
-    BATSMessageBase::export_to_python();
 }

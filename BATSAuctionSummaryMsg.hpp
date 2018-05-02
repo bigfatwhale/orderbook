@@ -51,7 +51,7 @@ public:
 
     static void export_to_python()
     {
-        boost::python::class_<BATSAuctionSummaryMsg>("BATSAuctionSummaryMsg")
+        boost::python::class_<BATSAuctionSummaryMsg, boost::python::bases<BATSMessageBase>>("BATSAuctionSummaryMsg")
                 .def(boost::python::init<>())
                 .def(boost::python::init<int, char, std::string, char, uint64_t, uint32_t>())
                 .def_readwrite("symbol", &BATSAuctionSummaryMsg::m_symbol)

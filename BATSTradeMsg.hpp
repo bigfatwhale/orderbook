@@ -52,7 +52,7 @@ public:
   
     static void export_to_python()
     {
-        boost::python::class_<BATSTradeMsg>("BATSTradeMsg")
+        boost::python::class_<BATSTradeMsg, boost::python::bases<BATSMessageBase>>("BATSTradeMsg")
                 .def(boost::python::init<>())
                 .def(boost::python::init<int, char, uint64_t, char, uint32_t, std::string, uint64_t, std::string>())
                 .def_readwrite("orderId", &BATSTradeMsg::m_orderId)

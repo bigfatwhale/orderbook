@@ -45,7 +45,7 @@ public:
 
     static void export_to_python()
     {
-        boost::python::class_<BATSOrderCancelMsg>("BATSOrderCancelMsg")
+        boost::python::class_<BATSOrderCancelMsg, boost::python::bases<BATSMessageBase>>("BATSOrderCancelMsg")
                 .def(boost::python::init<>())
                 .def(boost::python::init<int, char, uint64_t , uint32_t>())
                 .def_readwrite("orderId", &BATSOrderCancelMsg::m_orderId)

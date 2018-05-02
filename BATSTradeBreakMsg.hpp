@@ -44,7 +44,7 @@ public:
   
     static void export_to_python()
     {
-        boost::python::class_<BATSTradeBreakMsg>("BATSTradeBreakMsg")
+        boost::python::class_<BATSTradeBreakMsg, boost::python::bases<BATSMessageBase>>("BATSTradeBreakMsg")
                 .def(boost::python::init<>())
                 .def(boost::python::init<int, char, uint64_t>())
                 .def_readwrite("execId", &BATSTradeBreakMsg::m_execId)

@@ -47,7 +47,7 @@ public:
 
     static void export_to_python()
     {
-        boost::python::class_<BATSRetailPriceImproveMsg>("BATSRetailPriceImproveMsg")
+        boost::python::class_<BATSRetailPriceImproveMsg, boost::python::bases<BATSMessageBase>>("BATSRetailPriceImproveMsg")
                 .def(boost::python::init<>())
                 .def(boost::python::init<int, char, std::string, char>())
                 .def_readwrite("symbol", &BATSRetailPriceImproveMsg::m_symbol)

@@ -47,7 +47,7 @@ public:
 
     static void export_to_python()
     {
-        boost::python::class_<BATSOrderExecutedMsg>("BATSOrderExecutedMsg")
+        boost::python::class_<BATSOrderExecutedMsg, boost::python::bases<BATSMessageBase>>("BATSOrderExecutedMsg")
                 .def(boost::python::init<>())
                 .def(boost::python::init<int, char, uint64_t , uint32_t , uint64_t>())
                 .def_readwrite("orderId", &BATSOrderExecutedMsg::m_orderId)

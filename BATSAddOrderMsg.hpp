@@ -58,7 +58,7 @@ public:
 
     static void export_to_python()
     {
-        boost::python::class_<BATSAddOrderMsg>("BATSAddOrderMsg")
+        boost::python::class_<BATSAddOrderMsg, boost::python::bases<BATSMessageBase>>("BATSAddOrderMsg")
                 .def(boost::python::init<>())
                 .def(boost::python::init<int, char, uint64_t, char, uint32_t,
                         std::string, uint64_t, char, std::string>())
