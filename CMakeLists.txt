@@ -11,46 +11,64 @@ set(SOURCE_FILES BATSUtil.h BATSTradeBreakMsg.hpp BATSTradeMsg.hpp BATSTradingSt
         BATSMessageBase.h BATSMsgFactory.cpp BATSMsgFactory.h BATSAddOrderMsg.hpp BATSAuctionSummaryMsg.hpp
         BATSAuctionUpdateMsg.hpp BATSPitchMsgParser.cpp BATSPitchMsgParser.h)
 set(PYAPI_SOURCES BATSPythonAPI.cpp)
-set(PYTHON_LIBRARY $ENV{PYTHON_LIBRARY})
-set(PYTHON_INCLUDE_DIR $ENV{PYTHON_INCLUDE_DIR})
-
-enable_testing()
-find_package(Boost COMPONENTS unit_test_framework REQUIRED)
-find_package(Boost COMPONENTS python27 REQUIRED)
-find_package(PythonLibs 2.7 REQUIRED)
-
-message( STATUS "PYTHON_LIBRARY=${PYTHON_LIBRARY}")
-message( STATUS "PYTHON_INCLUDE_DIR=${PYTHON_INCLUDE_DIR}")
-message( STATUS "Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}")
-message( STATUS "Boost_LIBRARY_DIRS=${Boost_LIBRARY_DIRS}")
-message( STATUS "Boost_LIBRARIES=${Boost_LIBRARIES}")
-message( STATUS "Boost Version=${Boost_VERSION}")
-
-include_directories (${PYTHON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR} )
-link_directories( ${Boost_LIBRARY_DIRS} )
-
-add_library(bats_pitch_parser SHARED ${SOURCE_FILES})
-target_link_libraries(bats_pitch_parser python2.7 boost_python27)
-
-add_library(bats_api SHARED ${PYAPI_SOURCES})
 
 message( STATUS "CMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}")
+
+# python paths
+
+execute_process(COMMAND python-config "--prefix"
+	OUTPUT_VARIABLE PYTHON_PREFIX
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+set(PYTHON_INCLUDE_DIR "${PYTHON_PREFIX}/include/python2.7")
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	set(PYTHON_LIBRARY "${PYTHON_PREFIX}/lib/libpython2.7.dylib")
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+	set(PYTHON_LIBRARY "${PYTHON_PREFIX}/lib/libpython2.7.so")
+endif ()
+
+#message( STATUS "PYTHON_LIBRARY=${PYTHON_LIBRARY}")
+#message( STATUS "PYTHON_INCLUDE_DIR=${PYTHON_INCLUDE_DIR}")
+
+#find_package(Boost)
+#message( STATUS "Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}")
+
+message( STATUS "Generating global includes")
+
+find_package(PythonLibs REQUIRED)
+find_package(Boost COMPONENTS python27 REQUIRED)
+include_directories (${PYTHON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR} )
+
+message( STATUS "Generating bats_pitch_parser library")
+add_library(bats_pitch_parser SHARED ${SOURCE_FILES})
+target_link_libraries(bats_pitch_parser ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+
+message( STATUS "Generating bats_api library")
+add_library(bats_api SHARED ${PYAPI_SOURCES})
+
 # fix for osx. python only loads .so
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set_target_properties(bats_api PROPERTIES PREFIX "")
     set_target_properties(bats_api PROPERTIES OUTPUT_NAME "bats_api")
     set_target_properties(bats_api PROPERTIES SUFFIX ".so")
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    set_target_properties(bats_api PROPERTIES PREFIX "")	
+    set_target_properties(bats_api PROPERTIES PREFIX "")
 endif()
 
-target_link_libraries(bats_api python2.7 boost_python27 bats_pitch_parser)
+target_link_libraries(bats_api bats_pitch_parser)
+
+
+enable_testing()
+
+message( STATUS "Generating tests")
+find_package(Boost COMPONENTS python27 unit_test_framework REQUIRED)
+include_directories (${PYTHON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR} )
 
 file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tests/*.cpp)
 foreach(testSrc ${TEST_SRCS})
         get_filename_component(testName ${testSrc} NAME_WE)
         add_executable(${testName} ${testSrc})
-		target_link_libraries(${testName} ${Boost_LIBRARIES} bats_pitch_parser boost_unit_test_framework)
+		target_link_libraries(${testName} ${Boost_LIBRARIES} bats_pitch_parser)
         set_target_properties(${testName} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests)
 
