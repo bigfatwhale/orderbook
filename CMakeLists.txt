@@ -10,9 +10,7 @@ set(SOURCE_FILES BATSUtil.h BATSTradeBreakMsg.hpp BATSTradeMsg.hpp BATSTradingSt
         BATSOrderCancelMsg.hpp BATSOrderExecutedMsg.hpp BATSRetailPriceImproveMsg.hpp BATSMessageBase.cpp
         BATSMessageBase.h BATSMsgFactory.cpp BATSMsgFactory.h BATSAddOrderMsg.hpp BATSAuctionSummaryMsg.hpp
         BATSAuctionUpdateMsg.hpp BATSPitchMsgParser.cpp BATSPitchMsgParser.h)
-#add_executable(bats_pitch_parser ${SOURCE_FILES})
 add_library(bats_pitch_parser SHARED ${SOURCE_FILES})
-#include_directories($ENV{BOOST_ROOT})
 
 enable_testing()
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
