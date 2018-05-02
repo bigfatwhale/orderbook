@@ -12,6 +12,9 @@ public:
     BATSMessageBase(int timestamp, char msgtype);
     virtual ~BATSMessageBase();
 
+    std::string repr();
+    static void export_to_python();
+
     int  m_timestamp;
     char m_msgtype;
 };

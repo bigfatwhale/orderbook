@@ -12,6 +12,7 @@
 #include "BATSAuctionUpdateMsg.hpp"
 #include "BATSAuctionSummaryMsg.hpp"
 #include "BATSAddOrderMsg.hpp"
+#include "BATSMessageBase.h"
 
 BOOST_PYTHON_MODULE(bats_api)
 {
@@ -26,4 +27,5 @@ BOOST_PYTHON_MODULE(bats_api)
     BATSAuctionUpdateMsg::export_to_python();
     BATSAuctionSummaryMsg::export_to_python();
     BATSAddOrderMsg::export_to_python();
+    BATSMessageBase::export_to_python();
 }
