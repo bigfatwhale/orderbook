@@ -61,7 +61,7 @@ target_link_libraries(bats_api bats_pitch_parser)
 enable_testing()
 
 message( STATUS "Generating tests")
-find_package(Boost COMPONENTS python27 unit_test_framework REQUIRED)
+find_package(Boost COMPONENTS python27 iostreams unit_test_framework REQUIRED)
 include_directories (${PYTHON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR} )
 
 file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tests/*.cpp)
