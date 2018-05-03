@@ -44,9 +44,9 @@ public:
     std::string repr()
     {
         std::stringstream ss;
-        ss << "BATSTradeMsg(orderId=" << m_orderId << ", side=" << m_side
-           << ", shares=" << m_shares << ", symbol=" << m_symbol
-           << ", price" << m_price << ", execId" << m_execId << ")";
+        ss  << "BATSTradeMsg(timestamp=" << m_timestamp << ", msgtype=" << m_msgtype << ", orderId=" 
+            << m_orderId << ", side=" << m_side << ", shares=" << m_shares << ", symbol=" << m_symbol
+            << ", price" << m_price << ", execId" << m_execId << ")";
         return ss.str();
     }
   

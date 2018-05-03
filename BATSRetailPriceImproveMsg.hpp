@@ -40,8 +40,8 @@ public:
     std::string repr()
     {
         std::stringstream ss;
-        ss << "BATSRetailPriceImproveMsg(orderId=" << ", symbol=" << m_symbol
-           << ", retail_price_improve" << m_retail_price_improve << ")";
+        ss  << "BATSRetailPriceImproveMsg(timestamp=" << m_timestamp << ", msgtype=" << m_msgtype << ", orderId=" 
+            << ", symbol=" << m_symbol << ", retail_price_improve" << m_retail_price_improve << ")";
         return ss.str();
     }
 

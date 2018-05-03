@@ -39,7 +39,8 @@ public:
     std::string repr()
     {
         std::stringstream ss;
-        ss << "BATSOrderCancelMsg(orderId=" << m_orderId << ", shares=" << m_shares << ")";
+        ss  << "BATSOrderCancelMsg(timestamp=" << m_timestamp << ", msgtype=" << m_msgtype << ", orderId=" 
+            << m_orderId << ", shares=" << m_shares << ")";
         return ss.str();
     }
 

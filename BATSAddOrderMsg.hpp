@@ -50,7 +50,8 @@ public:
     std::string repr()
     {
         std::stringstream ss;
-        ss << "BATSAddOrderMsg(orderId=" << m_orderId << ", side=" << m_side
+        ss << "BATSAddOrderMsg(timestamp=" << m_timestamp << ", msgtype=" << m_msgtype
+           << ", orderId=" << m_orderId << ", side=" << m_side
            << ", shares=" << m_shares << ", symbol=" << m_symbol << ", price="
            << m_price << ", display=" << m_display << ", partId=" << m_partId << ")";
         return ss.str();

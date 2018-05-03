@@ -38,7 +38,8 @@ public:
     std::string repr()
     {
         std::stringstream ss;
-        ss << "BATSTradeBreakMsg(execId=" << m_execId << ")";
+        ss << "BATSTradeBreakMsg(timestamp=" << m_timestamp << ", msgtype=" << m_msgtype
+           << ", oexecId=" << m_execId << ")";
         return ss.str();
     }
   

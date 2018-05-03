@@ -48,10 +48,11 @@ public:
     std::string repr()
     {
         std::stringstream ss;
-        ss << "BATSTradingStatusMsg(symbol=" << m_symbol << ", halt_status=" << m_halt_status
-           << ", reg_sho_action=" << m_reg_sho_action
-           << ", reserved1=" << m_reserved1 << ", reserved2="
-           << m_reserved2 << ")";
+        ss << "BATSTradingStatusMsg(timestamp=" << m_timestamp << ", msgtype=" << m_msgtype << ", symbol=" 
+            << m_symbol << ", halt_status=" << m_halt_status
+            << ", reg_sho_action=" << m_reg_sho_action
+            << ", reserved1=" << m_reserved1 << ", reserved2="
+            << m_reserved2 << ")";
         return ss.str();
     }
   

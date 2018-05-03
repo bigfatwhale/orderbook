@@ -49,7 +49,8 @@ public:
     std::string repr()
     {
         std::stringstream ss;
-        ss << "BATSAuctionUpdateMsg(symbol=" << m_symbol << ", auction_type=" << m_auction_type
+        ss << "BATSAuctionUpdateMsg(timestamp=" << m_timestamp << ", msgtype=" << m_msgtype << ", symbol="
+           << m_symbol << ", auction_type=" << m_auction_type
            << ", reference_price=" << m_reference_price << ", buyshares=" << m_buyshares << ", sellshares="
            << m_sellshares << ", indicative_price=" << m_indicative_price
            << ", m_auction_only_price=" << m_auction_only_price << ")";
