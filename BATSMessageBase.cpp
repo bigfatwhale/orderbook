@@ -7,6 +7,7 @@
 #include <string>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/python.hpp>
+#include <boost/core/noncopyable.hpp>
 #include <sstream>
 #include "BATSMessageBase.h"
 
@@ -35,7 +36,10 @@ std::string BATSMessageBase::repr()
 
 void BATSMessageBase::export_to_python()
 {
-    boost::python::class_<BATSMessageBase>("BATSMessageBase")
+    //boost::python::register_ptr_to_python<std::shared_ptr<BATSMessageBase>>();
+    boost::python::class_<BATSMessageBase,
+                          std::shared_ptr<BATSMessageBase>,
+                          boost::noncopyable >("BATSMessageBase")
             .def(boost::python::init<>())
             .def(boost::python::init<int, char>())
             .def_readwrite("timestamp", &BATSMessageBase::m_timestamp)

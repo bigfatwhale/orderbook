@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <boost/spirit/include/qi.hpp>
+#include <boost/python.hpp>
 #include "BATSPitchMsgParser.h"
 #include "BATSMsgFactory.h"
 
@@ -34,4 +35,11 @@ shared_ptr<BATSMessageBase> BATSPitchMsgParser::parse_msg(const string &input)
         pMsg = BATSMsgFactory::createMsg(timestamp, msgCode, data);
     }
     return pMsg;
+}
+
+void BATSPitchMsgParser::export_to_python()
+{
+    boost::python::class_<BATSPitchMsgParser>("BATSPitchMsgParser")
+            .def("parse_msg", &BATSPitchMsgParser::parse_msg);
+
 }
