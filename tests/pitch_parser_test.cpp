@@ -7,8 +7,11 @@
 
 #include <memory>
 #include <string>
-#include <fstream>
+#include <iostream>
 #include <boost/test/unit_test.hpp>
+#include <boost/iostreams/device/mapped_file.hpp>
+#include <boost/iostreams/stream.hpp>
+
 #include "BATSPitchMsgParser.h"
 #include "BATSTradeBreakMsg.hpp"
 #include "BATSTradingStatusMsg.hpp"
@@ -21,6 +24,9 @@
 #include "BATSTradeMsg.hpp"
 
 using namespace std;
+
+using boost::iostreams::mapped_file_source;
+using boost::iostreams::stream;
 
 std::shared_ptr<BATSMessageBase> parse( string const& input )
 {
@@ -199,13 +205,15 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
         auto parser = std::make_unique<BATSPitchMsgParser>();
         string line;
 
-        ifstream myfile("pitch_example_data");
+        mapped_file_source myfile("pitch_example_data");
         BOOST_TEST(myfile.is_open());
 
-        while (getline(myfile, line))
+		stream<mapped_file_source> ifs(myfile, std::ios::binary);
+        while (getline(ifs, line))
         {
             parser->parse_msg(line);
         }
+		ifs.close();
         myfile.close();
     }
 
@@ -216,13 +224,15 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
         auto parser = std::make_unique<BATSPitchMsgParser>();
         string line;
 
-        ifstream myfile("pitch_data_100k");
+        mapped_file_source myfile("pitch_data_100k");
         BOOST_TEST(myfile.is_open());
 
-        while (getline(myfile, line))
+		stream<mapped_file_source> ifs(myfile, std::ios::binary);
+        while (getline(ifs, line))
         {
             parser->parse_msg(line);
         }
+		ifs.close();
         myfile.close();
     }
 
