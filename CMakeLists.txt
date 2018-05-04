@@ -80,10 +80,7 @@ endforeach(testSrc)
 
 file(GLOB PY_TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tests/*.py)
 foreach(pytestSrc ${PY_TEST_SRCS})
-    message(STATUS "pytestSrc=${pytestSrc}")
     get_filename_component(pytestName ${pytestSrc} NAME_WE)
-    message(STATUS "pytestName=${pytestName}")
-    message(STATUS "command=${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/${pytestSrc}")
     add_test(NAME ${pytestName} 
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/${pytestSrc} )
