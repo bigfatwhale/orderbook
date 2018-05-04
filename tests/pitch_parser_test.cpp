@@ -164,31 +164,31 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
 
     BOOST_AUTO_TEST_CASE( test_parse_trade )
     {
-        auto msg = parse("S28800168P1K27GA00000YS000300AAPL  00018319001K27GA00000Z");
+        auto msg = parse("S28800168P1K27GA00000YB000300AAPL  00018319001K27GA00000Z");
 
         BOOST_TEST( msg->m_timestamp == 28800168 );
         BOOST_TEST( msg->m_msgtype == 'P');
 
         auto tradeMsg = dynamic_pointer_cast<BATSTradeMsg>(msg);
         BOOST_TEST( tradeMsg->m_orderId == 204969015920664610);
-        BOOST_TEST( tradeMsg->m_side == 'S');
+        BOOST_TEST( tradeMsg->m_side == 'B');
         BOOST_TEST( tradeMsg->m_shares == 300);
         BOOST_TEST( tradeMsg->m_symbol == "AAPL  ");
         BOOST_TEST( tradeMsg->m_price == 1831900);
-        BOOST_TEST( tradeMsg->m_execId == "1K27GA00000Z");
+        BOOST_TEST( tradeMsg->m_execId == 204969015920664611); // python : int("1K27GA00000Z", 36) -> 204969015920664611
 
-        msg = parse("S28800168r1K27GA00000YS000300AAPLSPOT00018319001K27GA00000Z");
+        msg = parse("S28800168r1K27GA00000YB000300AAPLSPOT00018319001K27GA00000Z");
 
         BOOST_TEST( msg->m_timestamp == 28800168 );
         BOOST_TEST( msg->m_msgtype == 'r');
 
         tradeMsg = dynamic_pointer_cast<BATSTradeMsg>(msg);
         BOOST_TEST( tradeMsg->m_orderId == 204969015920664610);
-        BOOST_TEST( tradeMsg->m_side == 'S');
+        BOOST_TEST( tradeMsg->m_side == 'B');
         BOOST_TEST( tradeMsg->m_shares == 300);
         BOOST_TEST( tradeMsg->m_symbol == "AAPLSPOT");
         BOOST_TEST( tradeMsg->m_price == 1831900);
-        BOOST_TEST( tradeMsg->m_execId == "1K27GA00000Z");
+        BOOST_TEST( tradeMsg->m_execId == 204969015920664611 ); // python : int("1K27GA00000Z", 36) -> 204969015920664611
 
     }
 
