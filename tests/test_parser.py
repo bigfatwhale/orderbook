@@ -1,6 +1,7 @@
 
 import bats_api
 import unittest
+import pandas as pd
 
 class ParserTest( unittest.TestCase ):
 
@@ -139,12 +140,41 @@ class ParserTest( unittest.TestCase ):
         self.assertEqual( msg.execId, 204969015920664611 ); 
 
 
+    def test_pandas_aggregation(self):
 
+        columns = ['timestamp', 'symbol', 'shares', 'price']
+        data = []
 
+        orders_by_id = {}
 
+        with open( 'pitch_example_data' ) as f:
+            for line in f:
+                line = line.strip()
+                msg = self.parser.parse_msg(line)
 
+                if msg.msgtype in ['A', 'd']:
+                    orders_by_id[msg.orderId] = msg
+                elif msg.msgtype == 'E':
+                    order = orders_by_id[msg.orderId]
+                    data.append( ( msg.timestamp, 
+                                   order.symbol.strip(), 
+                                   msg.shares, order.price ) )        
+                elif msg.msgtype in ['P', 'r']:
+                    data.append( ( msg.timestamp, msg.symbol.strip(), msg.shares, msg.price ) )
 
+        df = pd.DataFrame( columns=columns, data=data )
+        df.set_index('timestamp', inplace=True)
+        df['price'] = df['price'] / 10000.
 
+        volume_df = df.groupby('symbol')['shares'].sum()
+        volume_df.sort_values(inplace=True, ascending=False)
+        print 'top symbols by volume'
+        print volume_df
+
+        # some simple test that aggregated volume is correct for the data set
+        self.assertEqual(volume_df['OIH'], 5000)
+        self.assertEqual(volume_df['SPY'], 2000)
+        self.assertEqual(volume_df['DRYS'], 1209)
 
 if __name__=='__main__':
     unittest.main()
