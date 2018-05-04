@@ -36,6 +36,7 @@ endif ()
 message( STATUS "Generating global includes")
 
 find_package(PythonLibs REQUIRED)
+find_package(PythonInterp REQUIRED)
 find_package(Boost COMPONENTS python27 REQUIRED)
 include_directories (${PYTHON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR} )
 
@@ -77,7 +78,25 @@ foreach(testSrc ${TEST_SRCS})
                  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/${testName} )
 endforeach(testSrc)
 
-set(TEST_FILES tests/pitch_data_100k tests/pitch_example_data)
+file(GLOB PY_TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tests/*.py)
+foreach(pytestSrc ${PY_TEST_SRCS})
+    message(STATUS "pytestSrc=${pytestSrc}")
+    get_filename_component(pytestName ${pytestSrc} NAME_WE)
+    message(STATUS "pytestName=${pytestName}")
+    message(STATUS "command=${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/${pytestSrc}")
+    add_test(NAME ${pytestName} 
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
+         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/${pytestSrc} )
+endforeach(pytestSrc)
+
+ADD_CUSTOM_COMMAND(
+    TARGET bats_api
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_CURRENT_BINARY_DIR}/bats_api.so 
+    ${CMAKE_CURRENT_BINARY_DIR}/tests/bats_api.so )
+
+set(TEST_FILES tests/pitch_data_100k tests/pitch_example_data ${PY_TEST_SRCS})
 foreach(testFile ${TEST_FILES})
         configure_file(${testFile} ${testFile} COPYONLY)
 endforeach(testFile)
