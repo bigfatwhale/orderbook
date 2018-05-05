@@ -236,4 +236,10 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
         myfile.close();
     }
 
+    BOOST_AUTO_TEST_CASE( test_fail_parse )
+    {
+        auto bad_msg = "S2880016adfadfihiwey8JAAPLSPOTC00010068000000020000";
+        BOOST_CHECK_THROW( parse( bad_msg ), std::runtime_error);
+    }
+
 BOOST_AUTO_TEST_SUITE_END()
