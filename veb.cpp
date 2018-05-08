@@ -23,23 +23,28 @@ veb::veb(int numBits) : m_numBits{numBits},
     if (m_numBits > 1)
     {
         // initialize recursive data structure.
-        m_cluster = new veb*[ m_cluster_size ];
+
+        // instantiate our custom deleter
+        auto deleter = ptr_array_deleter<veb*[]>(m_cluster_size);
+        m_cluster = unique_ptr<veb*[], decltype(deleter)>
+                (new veb*[ m_cluster_size ], deleter );
         for (int i=0; i<m_cluster_size; i++)
             m_cluster[i] = new veb(m_lsb);
-        m_summary = new veb(m_msb);
+        m_summary = std::make_unique<veb>( m_msb );
     }
 
 }
 
 veb::~veb()
 {
-    if (m_cluster != nullptr)
-    {
-        for (int i = 0; i < m_cluster_size; i++)
-            delete m_cluster[i];
-        delete[] m_cluster;
-        delete m_summary;
-    }
+//    if (m_cluster != nullptr)
+//    {
+//        for (int i = 0; i < m_cluster_size; i++)
+//            delete m_cluster[i];
+//        delete[] m_cluster;
+//        delete m_summary;
+//    }
+    // nothing to do here after using unique_ptr with custom deleter.
 }
 
 inline int veb::high(int x)
