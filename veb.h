@@ -9,25 +9,21 @@
 #include <boost/core/noncopyable.hpp>
 
 template <typename T>
-struct ptr_array_deleter
-{
-    void operator()(T* arr)
-    {
-        delete [] arr;
-    }
-};
+struct ptr_array_deleter; // just forward-declare, then specialize below
 
-template <typename T> // template specialization for T*[]
+template <typename T> // template specialization for T*[], an array of ptrs of type T
 struct ptr_array_deleter<T*[]>
 {
     ptr_array_deleter(int size=0) : m_size{size} {}
+
     void operator()(T* arr[])
     {
-        //for ( auto x : arr )
+        // need to delete each individual ptr in arr, then call delete [] on it.
         for (int i=0; i<m_size; i++)
             delete arr[i];
         delete [] arr;
     }
+
     int m_size;
 };
 
@@ -42,6 +38,7 @@ class veb : private boost::noncopyable
      */
 
 public:
+
     veb( int numBits ); // size of universe will be root_u ^ 2
     ~veb();
 
@@ -57,20 +54,17 @@ public:
     int  predecessor( int x );
 
 public:
-    int m_numBits;
 
+    int m_numBits;
     int m_min;
     int m_max;
     int m_lsb;
     int m_msb;
 
     int m_cluster_size; // cluster size is upper square root u
-    //veb **m_cluster{nullptr};
-    //veb *m_summary{nullptr};
     std::unique_ptr<veb*[], ptr_array_deleter<veb*[]>>
             m_cluster{nullptr, ptr_array_deleter<veb*[]>()}; // how to avoid this ugliness?
     std::unique_ptr<veb> m_summary{nullptr};
-
 
 };
 

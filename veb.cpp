@@ -16,18 +16,16 @@ veb::veb(int numBits) : m_numBits{numBits},
                         m_msb{m_lsb + (m_numBits % 2)},
                         m_cluster_size{1 << m_msb}
 {
-    //cout << "creating veb(" << m_numBits << "), msb=" << m_msb << " lsb=" << m_lsb << endl;
-
+    // initialize recursive data structure.
     // usr(u) : upper square root = 2^( ceil( ( lg u / 2 ) ) )
     // lsr(u) : lower square root = 2^( floor( ( lg u / 2 ) ) )
     if (m_numBits > 1)
     {
-        // initialize recursive data structure.
-
         // instantiate our custom deleter
         auto deleter = ptr_array_deleter<veb*[]>(m_cluster_size);
         m_cluster = unique_ptr<veb*[], decltype(deleter)>
                 (new veb*[ m_cluster_size ], deleter );
+
         for (int i=0; i<m_cluster_size; i++)
             m_cluster[i] = new veb(m_lsb);
         m_summary = std::make_unique<veb>( m_msb );
@@ -37,13 +35,6 @@ veb::veb(int numBits) : m_numBits{numBits},
 
 veb::~veb()
 {
-//    if (m_cluster != nullptr)
-//    {
-//        for (int i = 0; i < m_cluster_size; i++)
-//            delete m_cluster[i];
-//        delete[] m_cluster;
-//        delete m_summary;
-//    }
     // nothing to do here after using unique_ptr with custom deleter.
 }
 
