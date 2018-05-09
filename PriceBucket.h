@@ -14,6 +14,7 @@ class PriceBucket
 public:
     PriceBucket() : m_nextBucket{nullptr}, m_previousBucket{nullptr}, m_deletedCount{0} {}
     PriceBucket(uint64_t pricePoint, Order const& order);
+    PriceBucket(uint64_t pricePoint);
     void addOrder( Order const& order);
     void removeOrder( Order const& order);
     uint32_t totalVolume();

@@ -30,7 +30,7 @@ public:
 
     std::shared_ptr<PriceBucket> addBucket( uint64_t price )
     {
-        auto bucket = std::make_shared<PriceBucket>();
+        auto bucket = std::make_shared<PriceBucket>(price);
         m_buckets.insert(std::make_pair(price, bucket));
         return bucket;
     }
