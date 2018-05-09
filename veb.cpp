@@ -54,9 +54,20 @@ inline int veb::index(int i, int j)
     return ( i << m_lsb ) + j;
 }
 
+bool veb::isEmpty()
+{
+    return m_min == -1;
+}
+
 inline void veb::empty_insert(veb &v, int x)
 {
     v.m_min = v.m_max = x;
+}
+
+int veb::findMin()
+{
+    // returns the minimum element in the veb
+    return m_min;
 }
 
 bool veb::isMember(int x)

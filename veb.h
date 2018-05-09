@@ -46,12 +46,14 @@ public:
     int low( int x );
     int index(int i, int j);
 
+    bool isEmpty();
     void insert(int x);
     void empty_insert( veb & v, int x);
     void remove(int x);
     bool isMember(int x);
     int  successor( int x );
     int  predecessor( int x );
+    int  findMin();
 
 public:
 

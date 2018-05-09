@@ -67,7 +67,30 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
 
     }
 
-    BOOST_AUTO_TEST_CASE( test_veb_exhaustive )
+    BOOST_AUTO_TEST_CASE( test_veb_edge_cases )
+    {
+        veb v{5};
+        BOOST_TEST( v.isEmpty() );
+        BOOST_TEST( v.isMember(10) == false );
+        BOOST_TEST( v.successor(0) == -1 );
+
+        v.insert(0);
+        BOOST_TEST( v.findMin() == 0 );
+        v.insert(31);
+        BOOST_TEST( v.successor(0) == 31 );
+        BOOST_TEST( v.predecessor(31) == 0 );
+        v.remove(0);
+        BOOST_TEST( v.findMin() == 31 );
+        v.insert(0);
+        BOOST_TEST( v.findMin() == 0 );
+        v.remove(31);
+        BOOST_TEST( v.findMin() == 0 );
+        v.remove(0);
+        BOOST_TEST( v.isEmpty() );
+
+    }
+
+        BOOST_AUTO_TEST_CASE( test_veb_exhaustive )
     {
         auto runall = [](int numItems, int universe_size)
         {
