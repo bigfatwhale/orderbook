@@ -11,9 +11,12 @@
 #include <fstream>
 #include <iostream>
 #include <deque>
+#include <map>
+#include <utility>
 #include <boost/test/unit_test.hpp>
 #include <boost/dynamic_bitset.hpp>
 #include "OrderBook.h"
+#include "PriceBucketManager.hpp"
 #include "veb.h"
 
 using namespace std;
@@ -177,6 +180,15 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
         BOOST_TEST( v.isMember(4) );
 
         BOOST_TEST( v.predecessor(4) == 3 );
+    }
+
+
+    BOOST_AUTO_TEST_CASE( test_price_bucket_manager )
+    {
+        auto x = PriceBucketManager<map<uint64_t, shared_ptr<PriceBucket>>>();
+        //auto bucket = make_shared<PriceBucket>();
+        auto bucket = x.addBucket(10);
+        cout << "priceLevel="<< bucket->m_pricePoint<< ", volume=" << bucket->m_volume << endl;
     }
 
 BOOST_AUTO_TEST_SUITE_END()
