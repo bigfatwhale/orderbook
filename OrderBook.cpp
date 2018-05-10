@@ -9,19 +9,6 @@
 using namespace std;
 
 
-void Book::addOrder(Order &order)
-{
-    if (m_priceBuckets[order.price] == nullptr)
-        m_priceBuckets[order.price] = new PriceBucket(order.price, order);
-    else
-        m_priceBuckets[order.price]->addOrder(order);
-
-    if (order.side == BookType::BUY)
-        m_bestPrice = max(order.price, m_bestPrice);
-    else
-        m_bestPrice = min(order.price, m_bestPrice);
-
-}
 
 void Book::removeOrder(Order &order)
 {

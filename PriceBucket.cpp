@@ -5,14 +5,16 @@
 #include "PriceBucket.h"
 
 PriceBucket::PriceBucket(uint64_t pricePoint, Order const &order) :
-        m_nextBucket{nullptr}, m_previousBucket{nullptr}, m_pricePoint{pricePoint}, m_deletedCount{0},
+        //m_nextBucket{nullptr}, m_previousBucket{nullptr},
+        m_pricePoint{pricePoint}, m_deletedCount{0},
         m_volume{0}
 {
     addOrder(order);
 }
 
 PriceBucket::PriceBucket(uint64_t pricePoint) :
-        m_nextBucket{nullptr}, m_previousBucket{nullptr}, m_pricePoint{pricePoint}, m_deletedCount{0},
+        //m_nextBucket{nullptr}, m_previousBucket{nullptr},
+        m_pricePoint{pricePoint}, m_deletedCount{0},
         m_volume{0}
 {
 }
