@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
     BOOST_AUTO_TEST_CASE( test_simple )
     {
         int price = 51234;
-        auto b = LimitOrderBook();
+        auto b = LimitOrderBook<PriceBucketManager<>>();
 
         auto o = Order(2001, price, 100, BookType::BUY, "Acme Corp.");
 

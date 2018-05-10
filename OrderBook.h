@@ -18,8 +18,6 @@
 // reasonable for most stocks except berkshire
 #define MAX_PRICE 100000
 
-
-
 // 1. need to have order struct
 // 2. order book struct
 template <typename PriceBucketManagerT>
@@ -39,14 +37,27 @@ public:
 //            delete m_priceBuckets[i];
 //        delete [] m_priceBuckets;
     }
+
     void addOrder( Order &order )
     {
-        m_priceBucketManager.
+        auto bucket = m_priceBucketManager.findBucket(order.price);
+        if (bucket==nullptr)
+            bucket = m_priceBucketManager.addBucket(order.price);
+        bucket->addOrder(order);
     }
 
-    void removeOrder( Order &order );
+    void removeOrder( Order &order )
+    {
+        auto bucket = m_priceBucketManager.findBucket(order.price);
+        bucket->removeOrder(order);
+    }
+
     uint64_t bestPrice() { return m_bestPrice; }
-    uint32_t volumeForPricePoint( uint64_t price );
+    uint32_t volumeForPricePoint( uint64_t price )
+    {
+        auto bucket = m_priceBucketManager.findBucket(price);
+        return bucket->m_volume;
+    }
 
 private:
     BookType m_bookType;
@@ -65,32 +76,46 @@ private:
 
 };
 
-//void Book::addOrder(Order &order)
-//{
-//    if (m_priceBuckets[order.price] == nullptr)
-//        m_priceBuckets[order.price] = new PriceBucket(order.price, order);
-//    else
-//        m_priceBuckets[order.price]->addOrder(order);
-//
-//    if (order.side == BookType::BUY)
-//        m_bestPrice = max(order.price, m_bestPrice);
-//    else
-//        m_bestPrice = min(order.price, m_bestPrice);
-//
-//}
-
 template <typename PriceBucketManagerT>
-class LimitOrderBook
-{
+class LimitOrderBook {
     // class implementing the facilities for a "continuous double auction"
     // see https://arxiv.org/abs/1012.0349 for general survey of limit order books.
 public:
     LimitOrderBook() : m_buyBook{BookType::BUY}, m_sellBook{BookType::SELL} {}
-    void addOrder( Order &order );
-    void removeOrder( Order &order );
-    uint32_t volumeForPricePoint( uint64_t price, BookType t);
-    uint64_t bestAsk();
-    uint64_t bestBid();
+
+    void addOrder(Order &order)
+    {
+        if ( order.side == BookType::BUY )
+            m_buyBook.addOrder(order);
+        else
+            m_sellBook.addOrder(order);
+    }
+
+    void removeOrder( Order &order )
+    {
+        if ( order.side == BookType::BUY )
+            m_buyBook.removeOrder(order);
+        else
+            m_sellBook.removeOrder(order);
+    }
+
+    uint32_t volumeForPricePoint( uint64_t price, BookType t)
+    {
+        if (t == BookType::BUY)
+            return m_buyBook.volumeForPricePoint(price);
+        else
+            return m_sellBook.volumeForPricePoint(price);
+    }
+
+    uint64_t bestBid()
+    {
+        return m_buyBook.bestPrice();
+    }
+
+    uint64_t bestAsk()
+    {
+        return m_sellBook.bestPrice();
+    }
 
 private:
 
@@ -98,5 +123,6 @@ private:
     Book<PriceBucketManagerT> m_sellBook;
 
 };
+
 
 #endif //ORDERBOOK_ORDERBOOK_HPP
