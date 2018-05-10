@@ -19,15 +19,15 @@
 using namespace std;
 
 // syntatic sugar...
-using AddOrderMsgDecoder           = BATSAddOrderMsg::add_order_decoder<char *>;
-using OrderExecutedMsgDecoder      = BATSOrderExecutedMsg::order_executed_decoder<char *>;
-using OrderCancelMsgDecoder        = BATSOrderCancelMsg::order_cancel_decoder<char *>;
-using TradeMsgDecoder              = BATSTradeMsg::trade_decoder<char *>;
-using TradeBreakMsgDecoder         = BATSTradeBreakMsg::trade_break_decoder<char *>;
-using TradingStatusMsgDecoder      = BATSTradingStatusMsg::trading_status_decoder<char *>;
-using AuctionUpdateMsgDecoder      = BATSAuctionUpdateMsg::auction_update_decoder<char *>;
-using AuctionSummaryMsgDecoder     = BATSAuctionSummaryMsg::auction_summary_decoder<char *>;
-using RetailPriceImproveMsgDecoder = BATSRetailPriceImproveMsg::retail_price_improve_decoder<char *>;
+using AddOrderMsgDecoder           = BATSAddOrderMsg::add_order_decoder<const char*>;
+using OrderExecutedMsgDecoder      = BATSOrderExecutedMsg::order_executed_decoder<const char*>;
+using OrderCancelMsgDecoder        = BATSOrderCancelMsg::order_cancel_decoder<const char*>;
+using TradeMsgDecoder              = BATSTradeMsg::trade_decoder<const char*>;
+using TradeBreakMsgDecoder         = BATSTradeBreakMsg::trade_break_decoder<const char*>;
+using TradingStatusMsgDecoder      = BATSTradingStatusMsg::trading_status_decoder<const char*>;
+using AuctionUpdateMsgDecoder      = BATSAuctionUpdateMsg::auction_update_decoder<const char*>;
+using AuctionSummaryMsgDecoder     = BATSAuctionSummaryMsg::auction_summary_decoder<const char*>;
+using RetailPriceImproveMsgDecoder = BATSRetailPriceImproveMsg::retail_price_improve_decoder<const char*>;
 
 struct DecodeHelper {
 
@@ -38,7 +38,7 @@ struct DecodeHelper {
     }
 
     template<typename DecodeT, typename MsgT> static
-    shared_ptr<BATSMessageBase> decode(int timestamp, char msgtype, char* start, char* end, bool isLong=false)
+    shared_ptr<BATSMessageBase> decode(int timestamp, char msgtype, const char* start, const char* end, bool isLong=false)
     {
         shared_ptr<DecodeT>  decoder = DecodeHelper::make_decoder<DecodeT>( timestamp, msgtype, isLong );
         auto data = make_shared<MsgT>();
@@ -68,13 +68,13 @@ shared_ptr<TradeMsgDecoder> DecodeHelper::make_decoder<TradeMsgDecoder>( int tim
 shared_ptr<BATSMessageBase>
 BATSMsgFactory::createMsg(int timestamp, char msgtype, std::string msg)
 {
-    char *m = const_cast<char *>( msg.data() );
-//    return createMsg(timestamp, msgtype, msg.data(), msg.data() + msg.size());
-    return createMsg(timestamp, msgtype, m, m + msg.size());
+//    char *m = const_cast<char *>( msg.data() );
+    return createMsg(timestamp, msgtype, msg.data(), msg.data() + msg.size());
+//    return createMsg(timestamp, msgtype, m, m + msg.size());
 }
 
 shared_ptr<BATSMessageBase>
-BATSMsgFactory::createMsg(int timestamp, char msgtype, char* start, char* end)
+BATSMsgFactory::createMsg(int timestamp, char msgtype, const char* start, const char* end)
 {
     switch (msgtype)
     {
