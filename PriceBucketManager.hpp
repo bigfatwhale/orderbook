@@ -51,7 +51,7 @@ public:
     std::shared_ptr<PriceBucket> insert( bucket_set_t::value_type keyValPair )
     {
         // use the convenience of structured bindings offered by C++17
-        auto&& [item, ok] = m_map.insert( keyValPair );
+        auto [item, ok] = m_map.insert( keyValPair );
 
         if (ok)
             return item->second;
