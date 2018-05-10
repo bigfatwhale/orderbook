@@ -185,10 +185,36 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
 
     BOOST_AUTO_TEST_CASE( test_price_bucket_manager )
     {
-        auto x = PriceBucketManager<map<uint64_t, shared_ptr<PriceBucket>>>();
+        auto pm = PriceBucketManager<>();
 
-        auto bucket = x.addBucket(10);
-        cout << "priceLevel="<< bucket->m_pricePoint<< ", volume=" << bucket->m_volume << endl;
+        auto bucket = pm.addBucket(10);
+
+        BOOST_TEST( bucket->m_pricePoint == 10 );
+        BOOST_TEST( bucket->m_volume == 0 );
+
+        pm.addBucket(5);
+        pm.addBucket(20);
+
+        auto b1 = pm.findBucket(5);
+        BOOST_TEST( b1->m_pricePoint == 5 );
+        BOOST_TEST( b1->m_volume == 0 );
+
+        auto b2 = pm.findBucket(10);
+        BOOST_TEST( b2->m_pricePoint == 10 );
+        BOOST_TEST( b2->m_volume == 0 );
+
+        auto b3 = pm.findBucket(20);
+        BOOST_TEST( b3->m_pricePoint == 20 );
+        BOOST_TEST( b3->m_volume == 0 );
+
+        auto b4 = pm.nextBucket(10);
+        BOOST_TEST( b3->m_pricePoint == 20 );
+        BOOST_TEST( b3->m_volume == 0 );
+
+        auto b5 = pm.prevBucket(10);
+        BOOST_TEST( b5->m_pricePoint == 5 );
+        BOOST_TEST( b5->m_volume == 0 );
+
     }
 
 BOOST_AUTO_TEST_SUITE_END()
