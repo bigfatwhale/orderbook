@@ -11,9 +11,12 @@
 #include <fstream>
 #include <iostream>
 #include <deque>
+#include <map>
+#include <utility>
 #include <boost/test/unit_test.hpp>
 #include <boost/dynamic_bitset.hpp>
 #include "OrderBook.h"
+#include "PriceBucketManager.hpp"
 #include "veb.h"
 
 using namespace std;
@@ -22,18 +25,22 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
 
     BOOST_AUTO_TEST_CASE( test_simple )
     {
-        int price = 51234;
-        auto b = LimitOrderBook();
+        auto b = LimitOrderBook<PriceBucketManager<>>();
 
-        auto o = Order(2001, price, 100, BookType::BUY, "Acme Corp.");
+        auto o  = Order(2001, 10000, 100, BookType::BUY, "Acme Corp.");
+        auto o2 = Order(2001, 10050, 200, BookType::BUY, "Acme Corp.");
+        auto o3 = Order(2001, 10100, 300, BookType::BUY, "Acme Corp.");
 
         b.addOrder(o);
-        BOOST_TEST( b.bestBid() == price );
-        BOOST_TEST( b.volumeForPricePoint(price, o.side) == 100 );
+        b.addOrder(o2);
+        b.addOrder(o3);
+        BOOST_TEST( b.bestBid() == 10000 );
+        BOOST_TEST( b.volumeForPricePoint(10000, o.side) == 100 );
+        BOOST_TEST( b.volumeForPricePoint(10050, o.side) == 200 );
+        BOOST_TEST( b.volumeForPricePoint(10100, o.side) == 300 );
 
         b.removeOrder(o);
-        BOOST_TEST( b.volumeForPricePoint(price, o.side) == 0 );
-
+        BOOST_TEST( b.volumeForPricePoint(10000, o.side) == 0 );
     }
 
     BOOST_AUTO_TEST_CASE( test_veb )
@@ -177,6 +184,41 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
         BOOST_TEST( v.isMember(4) );
 
         BOOST_TEST( v.predecessor(4) == 3 );
+    }
+
+
+    BOOST_AUTO_TEST_CASE( test_price_bucket_manager )
+    {
+        auto pm = PriceBucketManager<>();
+
+        auto bucket = pm.addBucket(10);
+
+        BOOST_TEST( bucket->m_pricePoint == 10 );
+        BOOST_TEST( bucket->m_volume == 0 );
+
+        pm.addBucket(5);
+        pm.addBucket(20);
+
+        auto b1 = pm.findBucket(5);
+        BOOST_TEST( b1->m_pricePoint == 5 );
+        BOOST_TEST( b1->m_volume == 0 );
+
+        auto b2 = pm.findBucket(10);
+        BOOST_TEST( b2->m_pricePoint == 10 );
+        BOOST_TEST( b2->m_volume == 0 );
+
+        auto b3 = pm.findBucket(20);
+        BOOST_TEST( b3->m_pricePoint == 20 );
+        BOOST_TEST( b3->m_volume == 0 );
+
+        auto b4 = pm.nextBucket(10);
+        BOOST_TEST( b3->m_pricePoint == 20 );
+        BOOST_TEST( b3->m_volume == 0 );
+
+        auto b5 = pm.prevBucket(10);
+        BOOST_TEST( b5->m_pricePoint == 5 );
+        BOOST_TEST( b5->m_volume == 0 );
+
     }
 
 BOOST_AUTO_TEST_SUITE_END()
