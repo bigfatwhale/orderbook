@@ -89,20 +89,14 @@ public:
     // 3. find the predecessor bucket for the specified price-level
     // 4. add a new price-bucket for a given price-level
 
-    std::shared_ptr<PriceBucket> findBucket( uint64_t price )
-    {
-        return m_buckets.find(price);
-    }
+    std::shared_ptr<PriceBucket>
+    findBucket( uint64_t price ) { return m_buckets.find(price); }
 
-    std::shared_ptr<PriceBucket> nextBucket( uint64_t price )
-    {
-        return m_buckets.successor(price);
-    }
+    std::shared_ptr<PriceBucket>
+    nextBucket( uint64_t price ) { return m_buckets.successor(price); }
 
-    std::shared_ptr<PriceBucket> prevBucket( uint64_t price )
-    {
-        return m_buckets.predecessor(price);
-    }
+    std::shared_ptr<PriceBucket>
+    prevBucket( uint64_t price ) { return m_buckets.predecessor(price); }
 
     std::shared_ptr<PriceBucket> addBucket( uint64_t price )
     {
