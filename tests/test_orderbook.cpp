@@ -25,18 +25,22 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
 
     BOOST_AUTO_TEST_CASE( test_simple )
     {
-        int price = 51234;
         auto b = LimitOrderBook<PriceBucketManager<>>();
 
-        auto o = Order(2001, price, 100, BookType::BUY, "Acme Corp.");
+        auto o  = Order(2001, 10000, 100, BookType::BUY, "Acme Corp.");
+        auto o2 = Order(2001, 10050, 200, BookType::BUY, "Acme Corp.");
+        auto o3 = Order(2001, 10100, 300, BookType::BUY, "Acme Corp.");
 
         b.addOrder(o);
-        BOOST_TEST( b.bestBid() == price );
-        BOOST_TEST( b.volumeForPricePoint(price, o.side) == 100 );
+        b.addOrder(o2);
+        b.addOrder(o3);
+        BOOST_TEST( b.bestBid() == 10000 );
+        BOOST_TEST( b.volumeForPricePoint(10000, o.side) == 100 );
+        BOOST_TEST( b.volumeForPricePoint(10050, o.side) == 200 );
+        BOOST_TEST( b.volumeForPricePoint(10100, o.side) == 300 );
 
         b.removeOrder(o);
-        BOOST_TEST( b.volumeForPricePoint(price, o.side) == 0 );
-
+        BOOST_TEST( b.volumeForPricePoint(10000, o.side) == 0 );
     }
 
     BOOST_AUTO_TEST_CASE( test_veb )

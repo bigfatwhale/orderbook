@@ -59,11 +59,27 @@ public:
             return std::shared_ptr<PriceBucket>();
     }
 
+    uint64_t minPrice()
+    {
+        if ( !m_map.empty() )
+            return m_map.begin()->first;
+        else
+            return 0;
+    }
+
+    uint64_t maxPrice()
+    {
+        if ( !m_map.empty() )
+            return m_map.rbegin()->first;
+        else
+            return 0;
+    }
+
 private:
     bucket_set_t m_map;
 };
 
-template < typename SetT=default_bucket_set >
+template < typename BucketSetT=default_bucket_set >
 class PriceBucketManager
 {
 public:
@@ -95,10 +111,13 @@ public:
         return ret;
     }
 
-    // SetT must be a type which supports find/successor/predecessor/insert
+    uint64_t minPrice() { return m_buckets.minPrice(); }
+    uint64_t maxPrice() { return m_buckets.maxPrice(); }
+
+    // SetT must be a type which supports find/successor/predecessor/insert/min/max
     // By default we use a wrapper around std::map (log n lookups). We also can
     // switch in a veb-based set type (log(log(u)) lookups) and compare the performance.
-    SetT m_buckets;
+    BucketSetT m_buckets;
 };
 
 #endif //ORDERBOOK_PRICEBUCKETMANAGER_HPP

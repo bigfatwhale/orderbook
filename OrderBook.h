@@ -24,19 +24,7 @@ template <typename PriceBucketManagerT>
 class Book
 {
 public:
-    Book(BookType t) : m_bookType{t},
-                       //m_priceBuckets(new PriceBucket*[MAX_PRICE + 1]),
-                       m_bestPrice(m_bookType == BookType::BUY ? 0 : MAX_PRICE)
-    {
-//        for( int i=0; i < MAX_PRICE+1; i++ )
-//            m_priceBuckets[i] = nullptr;
-    }
-    ~Book()
-    {
-//        for( int i=0; i < MAX_PRICE+1; i++ )
-//            delete m_priceBuckets[i];
-//        delete [] m_priceBuckets;
-    }
+    Book(BookType t) : m_bookType{t} {}
 
     void addOrder( Order &order )
     {
@@ -52,7 +40,13 @@ public:
         bucket->removeOrder(order);
     }
 
-    uint64_t bestPrice() { return m_bestPrice; }
+    uint64_t bestPrice()
+    {
+        if (m_bookType == BookType::BUY)
+            return m_priceBucketManager.minPrice();
+        else
+            return m_priceBucketManager.maxPrice();
+    }
     uint32_t volumeForPricePoint( uint64_t price )
     {
         auto bucket = m_priceBucketManager.findBucket(price);
@@ -61,7 +55,6 @@ public:
 
 private:
     BookType m_bookType;
-    //PriceBucket **m_priceBuckets;
     PriceBucketManagerT m_priceBucketManager;
 
 //    uint64_t m_minAsk;
