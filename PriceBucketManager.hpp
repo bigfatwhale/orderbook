@@ -52,32 +52,21 @@ public:
     {
         // use the convenience of structured bindings offered by C++17
         auto [item, ok] = m_map.insert( keyValPair );
-
-        if (ok)
-            return item->second;
-        else
-            return std::shared_ptr<PriceBucket>();
+        return ok ? item->second : std::shared_ptr<PriceBucket>();
     }
 
-    void remove( uint64_t price )
-    {
-        m_map.erase(price);
-    }
+    void remove( uint64_t price ) { m_map.erase(price); }
 
     uint64_t minPrice()
     {
-        if ( !m_map.empty() )
-            return m_map.begin()->first;
-        else
-            return 0;
+        auto it = m_map.begin();
+        return it == m_map.end() ? 0 : it->first;
     }
 
     uint64_t maxPrice()
     {
-        if ( !m_map.empty() )
-            return m_map.rbegin()->first;
-        else
-            return 0;
+        auto it = m_map.rbegin();
+        return it == m_map.rend() ? 0 : it->first;
     }
 
 private:
