@@ -27,20 +27,34 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
     {
         auto b = LimitOrderBook<PriceBucketManager<>>();
 
-        auto o  = Order(2001, 10000, 100, BookType::BUY, "Acme Corp.");
-        auto o2 = Order(2001, 10050, 200, BookType::BUY, "Acme Corp.");
-        auto o3 = Order(2001, 10100, 300, BookType::BUY, "Acme Corp.");
+        auto o1 = Order(2001, 10000, 100, BookType::BUY, "Acme Corp.");
+        auto o2 = Order(2002, 10050, 200, BookType::BUY, "Acme Corp.");
+        auto o3 = Order(2003, 10100, 300, BookType::BUY, "Acme Corp.");
+        auto o4 = Order(2004, 10200, 400, BookType::SELL, "Acme Corp.");
+        auto o5 = Order(2005, 10250, 500, BookType::SELL, "Acme Corp.");
+        auto o6 = Order(2006, 10300, 600, BookType::SELL, "Acme Corp.");
 
-        b.addOrder(o);
+        b.addOrder(o1);
         b.addOrder(o2);
         b.addOrder(o3);
-        BOOST_TEST( b.bestBid() == 10000 );
-        BOOST_TEST( b.volumeForPricePoint(10000, o.side) == 100 );
-        BOOST_TEST( b.volumeForPricePoint(10050, o.side) == 200 );
-        BOOST_TEST( b.volumeForPricePoint(10100, o.side) == 300 );
+        b.addOrder(o4);
+        b.addOrder(o5);
+        b.addOrder(o6);
 
-        b.removeOrder(o);
-        BOOST_TEST( b.volumeForPricePoint(10000, o.side) == 0 );
+        BOOST_TEST( b.bestBid() == o3.price );
+        BOOST_TEST( b.volumeForPricePoint(o1.price, o1.side) == o1.volume );
+        BOOST_TEST( b.volumeForPricePoint(o2.price, o2.side) == o2.volume );
+        BOOST_TEST( b.volumeForPricePoint(o3.price, o3.side) == o3.volume );
+
+        BOOST_TEST( b.bestAsk() == o4.price );
+        BOOST_TEST( b.volumeForPricePoint(o4.price, o4.side) == o4.volume );
+        BOOST_TEST( b.volumeForPricePoint(o5.price, o5.side) == o5.volume );
+        BOOST_TEST( b.volumeForPricePoint(o6.price, o6.side) == o6.volume );
+
+        b.removeOrder(o3);
+        BOOST_TEST( b.bestBid() == o2.price );
+        b.removeOrder(o4);
+        BOOST_TEST( b.bestAsk() == o5.price );
     }
 
     BOOST_AUTO_TEST_CASE( test_veb )

@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <utility>
 #include <memory>
+#include <boost/function.hpp>
 #include "Order.h"
 #include "PriceBucket.h"
 #include "PriceBucketManager.hpp"
@@ -24,7 +25,11 @@ template <typename PriceBucketManagerT>
 class Book
 {
 public:
-    Book(BookType t) : m_bookType{t} {}
+    Book(BookType t) : m_bookType{t},
+                       m_bestPriceFunc{t == BookType::BUY ?
+                                       &PriceBucketManagerT::maxPrice :
+                                       &PriceBucketManagerT::minPrice} {
+    }
 
     void addOrder( Order &order )
     {
@@ -38,34 +43,25 @@ public:
     {
         auto bucket = m_priceBucketManager.findBucket(order.price);
         bucket->removeOrder(order);
+        if (bucket->m_volume == 0)
+            m_priceBucketManager.removeBucket(order.price);
     }
 
-    uint64_t bestPrice()
-    {
-        if (m_bookType == BookType::BUY)
-            return m_priceBucketManager.minPrice();
-        else
-            return m_priceBucketManager.maxPrice();
-    }
     uint32_t volumeForPricePoint( uint64_t price )
     {
         auto bucket = m_priceBucketManager.findBucket(price);
         return bucket->m_volume;
     }
 
+    uint64_t bestPrice()
+    {
+        return m_bestPriceFunc( &m_priceBucketManager );
+    }
+
 private:
     BookType m_bookType;
     PriceBucketManagerT m_priceBucketManager;
-
-//    uint64_t m_minAsk;
-//    uint64_t m_maxBid;
-
-//  Replace the above with best price. if it's a BUY book, then the best price is
-//  the highest pricePoint among all the order currently in the book, i.e. best bid
-//  - the highest price someone is willing to buy an item. If is the SELL book,
-//  then it is the best ask, i.e. lowest of price some is willing to sell an item.
-
-    uint64_t m_bestPrice;
+    boost::function<uint64_t (PriceBucketManagerT*) > m_bestPriceFunc;
 
 };
 
@@ -92,7 +88,7 @@ public:
             m_sellBook.removeOrder(order);
     }
 
-    uint32_t volumeForPricePoint( uint64_t price, BookType t)
+    uint32_t volumeForPricePoint( uint64_t price, BookType t )
     {
         if (t == BookType::BUY)
             return m_buyBook.volumeForPricePoint(price);
@@ -100,15 +96,8 @@ public:
             return m_sellBook.volumeForPricePoint(price);
     }
 
-    uint64_t bestBid()
-    {
-        return m_buyBook.bestPrice();
-    }
-
-    uint64_t bestAsk()
-    {
-        return m_sellBook.bestPrice();
-    }
+    uint64_t bestBid() { return m_buyBook.bestPrice(); }
+    uint64_t bestAsk() { return m_sellBook.bestPrice(); }
 
 private:
 

@@ -59,6 +59,11 @@ public:
             return std::shared_ptr<PriceBucket>();
     }
 
+    void remove( uint64_t price )
+    {
+        m_map.erase(price);
+    }
+
     uint64_t minPrice()
     {
         if ( !m_map.empty() )
@@ -104,6 +109,8 @@ public:
         auto ret = m_buckets.insert(std::make_pair(price, bucket));
         return ret;
     }
+
+    void removeBucket( uint64_t price ) { m_buckets.remove(price); }
 
     uint64_t minPrice() { return m_buckets.minPrice(); }
     uint64_t maxPrice() { return m_buckets.maxPrice(); }
