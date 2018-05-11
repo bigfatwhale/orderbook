@@ -15,7 +15,7 @@
 #include <utility>
 #include <boost/test/unit_test.hpp>
 #include <boost/dynamic_bitset.hpp>
-#include "OrderBook.h"
+#include "OrderBook.hpp"
 #include "PriceBucketManager.hpp"
 #include "veb.h"
 
