@@ -5,7 +5,7 @@ project(orderbook VERSION 0.01 DESCRIPTION "Limit Order Book")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-O3 -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall")
-set(SOURCE_FILES OrderBook.h veb.cpp veb.h PriceBucket.cpp PriceBucket.h Order.h PriceBucketManager.hpp)
+set(SOURCE_FILES OrderBook.hpp veb.cpp veb.h PriceBucket.cpp PriceBucket.h Order.h PriceBucketManager.hpp)
 
 add_library(orderbook SHARED ${SOURCE_FILES})
 

@@ -1,7 +1,6 @@
 //
 // Created by Uncle Chu on 9/5/18.
 //
-
 #include "PriceBucket.h"
 
 PriceBucket::PriceBucket(uint64_t pricePoint, Order const &order) :
@@ -32,7 +31,8 @@ void PriceBucket::removeOrder(Order const &order)
 {
     if (m_orderLookup.find(order.orderId) != m_orderLookup.end() )
     {
-        m_orders[m_orderLookup[order.orderId]].active = false;
+        auto item_num = m_orderLookup[order.orderId];
+        m_orders[item_num].active = false;
         m_deletedCount++;
         m_volume -= order.volume;
     }
