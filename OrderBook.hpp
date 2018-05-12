@@ -56,7 +56,7 @@ private:
 
 };
 
-template <typename PriceBucketManagerT>
+template <typename PriceBucketManagerT=PriceBucketManager<> >
 class LimitOrderBook {
     // class implementing the facilities for a "continuous double auction"
     // see https://arxiv.org/abs/1012.0349 for general survey of limit order books.

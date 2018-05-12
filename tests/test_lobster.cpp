@@ -16,6 +16,8 @@
 #include "../lobster/OrderExecutedMsg.hpp"
 #include "../lobster/AuctionTradeMsg.hpp"
 #include "../lobster/TradeHaltMsg.hpp"
+#include "OrderBook.hpp"
+#include "Order.h"
 
 using namespace std;
 using namespace lobster;
@@ -135,6 +137,7 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
     BOOST_AUTO_TEST_CASE( test_lobster_sample_load )
     {
         auto parser = lobster::MsgParser();
+        auto orderbook = LimitOrderBook<>();
         string line;
 
         mapped_file_source myfile("AAPL_2012-06-21_message_5.csv");
@@ -143,7 +146,16 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
         stream<mapped_file_source> ifs(myfile, std::ios::binary);
         while (getline(ifs, line))
         {
-            parser.parse_msg(line);
+            auto msg = parser.parse_msg(line);
+
+            if ( msg->m_msgtype == '1' )
+            {
+                //uint64_t id, uint64_t price, uint32_t volume, BookType side, std::string const &partId
+                auto dmsg = dynamic_pointer_cast<AddOrderMsg>(msg);
+                Order o(dmsg->m_orderId, dmsg->m_price, dmsg->m_shares,
+                        dmsg->m_side == 1 ? BookType::BUY : BookType::SELL, "NCM");
+                orderbook.addOrder(o);
+            }
         }
         ifs.close();
         myfile.close();
