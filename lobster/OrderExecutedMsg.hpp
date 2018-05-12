@@ -17,7 +17,7 @@ namespace phi = boost::phoenix;
 namespace lobster
 {
 
-    class OrderExecutedMsg : public MessageBase
+    class OrderExecutedMsg : public OrderMsgBase
     {
 
     public:
@@ -31,16 +31,12 @@ namespace lobster
 
     public:
 
-        OrderExecutedMsg() : MessageBase() {}
+        OrderExecutedMsg() : OrderMsgBase() {}
         OrderExecutedMsg(timespec timestamp, char msgtype, uint64_t orderId, uint32_t shares,
-                    uint64_t price, int8_t side, bool visible) : MessageBase(timestamp, msgtype), m_orderId{orderId},
-                                                   m_shares{shares}, m_price{price}, m_side{side}, m_visible{visible}
+                    uint64_t price, int8_t side, bool visible) : OrderMsgBase(timestamp, msgtype,
+                                                                              orderId, shares,
+                                                                              price, side)
         {}
-
-        uint64_t m_orderId;
-        uint32_t m_shares;
-        uint64_t m_price;
-        int8_t   m_side;
         bool     m_visible;
     };
 
@@ -49,14 +45,14 @@ namespace lobster
             decoder_base(timestamp, msgtype),
             OrderExecutedMsg::order_executed_decoder<Iterator>::base_type(m_wire_msg)
     {
-        m_wire_msg = ( qi::ulong_long >> qi::char_(",")
-                                      >> qi::int_ >> qi::char_(",")
-                                      >> qi::ulong_long >> qi::char_(",")
-                                      >> qi::int_ )
+        m_wire_msg = ( qi::ulong_long       >> qi::char_(",")
+                          >> qi::int_       >> qi::char_(",")
+                          >> qi::ulong_long >> qi::char_(",")
+                          >> qi::int_ )
         [qi::_val = phi::construct<OrderExecutedMsg> (
-                        m_ts, m_mtype, qi::_1, qi::_3, qi::_5, qi::_7, msgtype == '4' ? true : false )];
+                        m_ts, m_mtype, qi::_1, qi::_3, qi::_5, qi::_7,
+                        msgtype == '4' ? true : false )];
     }
-
 
 } // lobster
 

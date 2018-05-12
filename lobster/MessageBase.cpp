@@ -19,5 +19,14 @@ namespace lobster
     {
     }
 
+    OrderMsgBase::OrderMsgBase() : MessageBase()
+    {
+    }
+
+    OrderMsgBase::OrderMsgBase(timespec timestamp, char msgtype, uint64_t orderId,
+                               uint32_t shares, uint64_t price, int8_t side) :
+            MessageBase(timestamp, msgtype), m_orderId{orderId}, m_shares{shares},
+            m_price{price}, m_side{side}
+    {}
 
 } // end namespace lobster

@@ -11,6 +11,7 @@
 #include "DeleteOrderMsg.hpp"
 #include "OrderExecutedMsg.hpp"
 #include "AuctionTradeMsg.hpp"
+#include "TradeHaltMsg.hpp"
 
 using namespace std;
 
@@ -21,6 +22,7 @@ namespace lobster
     using DeleteOrderMsgDecoder        = DeleteOrderMsg::delete_order_decoder<string::iterator>;
     using OrderExecutedMsgDecoder      = OrderExecutedMsg::order_executed_decoder<string::iterator>;
     using AuctionTradeMsgDecoder       = AuctionTradeMsg::auction_trade_decoder<string::iterator>;
+    using TradeHaltMsgDecoder          = TradeHaltMsg::trade_halt_decoder<string::iterator>;
 
     template<typename DecodeT, typename MsgT>
     shared_ptr<MessageBase> decode(timespec timestamp, char msgtype, string msg)
@@ -59,6 +61,10 @@ namespace lobster
             }
             case '6': {
                 return decode<AuctionTradeMsgDecoder, AuctionTradeMsg>( timestamp, msgtype, msg );
+                break;
+            }
+            case '7': {
+                return decode<TradeHaltMsgDecoder, TradeHaltMsg>( timestamp, msgtype, msg );
                 break;
             }
         }

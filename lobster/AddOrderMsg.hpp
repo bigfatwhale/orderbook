@@ -17,7 +17,7 @@ namespace phi = boost::phoenix;
 namespace lobster
 {
 
-    class AddOrderMsg : public MessageBase
+    class AddOrderMsg : public OrderMsgBase
     {
 
     public:
@@ -31,16 +31,14 @@ namespace lobster
 
     public:
 
-        AddOrderMsg() : MessageBase() {}
+        AddOrderMsg() : OrderMsgBase() {}
+
         AddOrderMsg(timespec timestamp, char msgtype, uint64_t orderId, uint32_t shares,
-                    uint64_t price, int8_t side) : MessageBase(timestamp, msgtype), m_orderId{orderId},
-                                                 m_shares{shares}, m_price{price}, m_side{side}
+                    uint64_t price, int8_t side) : OrderMsgBase(timestamp, msgtype,
+                                                                orderId, shares,
+                                                                price, side)
         {}
 
-        uint64_t m_orderId;
-        uint32_t m_shares;
-        uint64_t m_price;
-        int8_t   m_side;
     };
 
     template<typename Iterator>
@@ -48,8 +46,8 @@ namespace lobster
         decoder_base(timestamp, msgtype),
         AddOrderMsg::add_order_decoder<Iterator>::base_type(m_wire_msg)
     {
-        m_wire_msg = ( qi::ulong_long >> qi::char_(",")
-                        >> qi::int_ >> qi::char_(",")
+        m_wire_msg = ( qi::ulong_long     >> qi::char_(",")
+                        >> qi::int_       >> qi::char_(",")
                         >> qi::ulong_long >> qi::char_(",")
                         >> qi::int_ )
                 [qi::_val = phi::construct<AddOrderMsg> (

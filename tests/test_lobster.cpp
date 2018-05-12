@@ -13,6 +13,7 @@
 #include "../lobster/DeleteOrderMsg.hpp"
 #include "../lobster/OrderExecutedMsg.hpp"
 #include "../lobster/AuctionTradeMsg.hpp"
+#include "../lobster/TradeHaltMsg.hpp"
 
 using namespace std;
 using namespace lobster;
@@ -112,6 +113,18 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
         BOOST_TEST( msg->m_shares == 100);
         BOOST_TEST( msg->m_price == 2237600);
         BOOST_TEST( msg->m_side == 1);
+    }
+
+    BOOST_AUTO_TEST_CASE( test_trade_halt )
+    {
+        auto parser = lobster::MsgParser();
+
+        string data = "34414.765462735,7,0,0,-1,-1";
+        auto msg = dynamic_pointer_cast<TradeHaltMsg>(parser.parse_msg(data));
+        BOOST_TEST( msg->m_timestamp.tv_sec == 34414);
+        BOOST_TEST( msg->m_timestamp.tv_nsec == 765462735);
+        BOOST_TEST( msg->m_msgtype == '7');
+        BOOST_TEST( msg->m_price == -1);
     }
 
 BOOST_AUTO_TEST_SUITE_END()
