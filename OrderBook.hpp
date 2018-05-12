@@ -15,12 +15,6 @@
 #include "PriceBucket.h"
 #include "PriceBucketManager.hpp"
 
-//#define MAX_PRICE 100000000 // 10000.0000 in fixed point format
-// reasonable for most stocks except berkshire
-#define MAX_PRICE 100000
-
-// 1. need to have order struct
-// 2. order book struct
 template <typename PriceBucketManagerT>
 class Book
 {
@@ -53,10 +47,7 @@ public:
         return bucket->m_volume;
     }
 
-    uint64_t bestPrice()
-    {
-        return m_bestPriceFunc( &m_priceBucketManager );
-    }
+    uint64_t bestPrice() { return m_bestPriceFunc( &m_priceBucketManager ); }
 
 private:
     BookType m_bookType;
@@ -96,7 +87,7 @@ public:
             return m_sellBook.volumeForPricePoint(price);
     }
 
-    uint64_t bestBid() { return m_buyBook.bestPrice(); }
+    uint64_t bestBid() { return m_buyBook.bestPrice();  }
     uint64_t bestAsk() { return m_sellBook.bestPrice(); }
 
 private:
