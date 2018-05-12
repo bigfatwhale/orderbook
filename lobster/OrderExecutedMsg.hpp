@@ -52,7 +52,7 @@ namespace lobster
         m_wire_msg = ( qi::ulong_long >> qi::char_(",")
                                       >> qi::int_ >> qi::char_(",")
                                       >> qi::ulong_long >> qi::char_(",")
-                                      >> qi::uint_ )
+                                      >> qi::int_ )
         [qi::_val = phi::construct<OrderExecutedMsg> (
                         m_ts, m_mtype, qi::_1, qi::_3, qi::_5, qi::_7, msgtype == '4' ? true : false )];
     }

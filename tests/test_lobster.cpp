@@ -83,7 +83,19 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
         BOOST_TEST( msg->m_shares == 100);
         BOOST_TEST( msg->m_price == 2237600);
         BOOST_TEST( msg->m_side == 1);
+        BOOST_TEST( msg->m_visible == true);
 
+
+        string data2 = "34418.450176448,5,0,100,2238600,-1";
+        auto msg2 = dynamic_pointer_cast<OrderExecutedMsg>(parser.parse_msg(data2));
+        BOOST_TEST( msg2->m_timestamp.tv_sec == 34418);
+        BOOST_TEST( msg2->m_timestamp.tv_nsec == 450176448);
+        BOOST_TEST( msg2->m_msgtype == '5');
+        BOOST_TEST( msg2->m_orderId == 0);
+        BOOST_TEST( msg2->m_shares == 100);
+        BOOST_TEST( msg2->m_price == 2238600);
+        BOOST_TEST( msg2->m_side == -1);
+        BOOST_TEST( msg2->m_visible == false);
     }
 
 BOOST_AUTO_TEST_SUITE_END()
