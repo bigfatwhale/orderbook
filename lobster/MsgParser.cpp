@@ -27,17 +27,17 @@ namespace lobster
         auto fill_ts_nanos = [&t] (int nanos) { t.tv_nsec = nanos; };
         auto fill_msgcode  = [&msgCode] (char c) { msgCode=c; };
 
-        auto grammar = qi::int_[fill_ts_secs] >> qi::char_(".")
-                        >> qi::int_[fill_ts_nanos] >> qi::char_(",")
-                        >> qi::char_[fill_msgcode];
-
-        auto parse_ok = qi::parse(input.begin(), input.end(), grammar );
+        auto parse_ok = qi::parse(input.begin(), input.end(),
+                                  qi::int_[fill_ts_secs] >> qi::char_(".")
+                                     >> qi::int_[fill_ts_nanos] >> qi::char_(",")
+                                     >> qi::char_[fill_msgcode]
+        );
 
         shared_ptr<MessageBase> pMsg;
 
         if (parse_ok)
         {
-           cout << "time.sec=" << t.tv_sec << "time.nanos=" << t.tv_nsec << endl;
+           cout << "time.sec=" << t.tv_sec << " time.nanos=" << t.tv_nsec << endl;
         }
         return pMsg;
     }
