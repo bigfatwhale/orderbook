@@ -12,6 +12,7 @@
 #include "../lobster/MsgParser.h"
 #include "../lobster/DeleteOrderMsg.hpp"
 #include "../lobster/OrderExecutedMsg.hpp"
+#include "../lobster/AuctionTradeMsg.hpp"
 
 using namespace std;
 using namespace lobster;
@@ -83,7 +84,34 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
         BOOST_TEST( msg->m_shares == 100);
         BOOST_TEST( msg->m_price == 2237600);
         BOOST_TEST( msg->m_side == 1);
+        BOOST_TEST( msg->m_visible == true);
 
+
+        string data2 = "34418.450176448,5,0,100,2238600,-1";
+        auto msg2 = dynamic_pointer_cast<OrderExecutedMsg>(parser.parse_msg(data2));
+        BOOST_TEST( msg2->m_timestamp.tv_sec == 34418);
+        BOOST_TEST( msg2->m_timestamp.tv_nsec == 450176448);
+        BOOST_TEST( msg2->m_msgtype == '5');
+        BOOST_TEST( msg2->m_orderId == 0);
+        BOOST_TEST( msg2->m_shares == 100);
+        BOOST_TEST( msg2->m_price == 2238600);
+        BOOST_TEST( msg2->m_side == -1);
+        BOOST_TEST( msg2->m_visible == false);
+    }
+
+    BOOST_AUTO_TEST_CASE( test_auction_trade )
+    {
+        auto parser = lobster::MsgParser();
+
+        string data = "34414.765462735,6,-2,100,2237600,1";
+        auto msg = dynamic_pointer_cast<AuctionTradeMsg>(parser.parse_msg(data));
+        BOOST_TEST( msg->m_timestamp.tv_sec == 34414);
+        BOOST_TEST( msg->m_timestamp.tv_nsec == 765462735);
+        BOOST_TEST( msg->m_msgtype == '6');
+        BOOST_TEST( msg->m_orderId == -2);
+        BOOST_TEST( msg->m_shares == 100);
+        BOOST_TEST( msg->m_price == 2237600);
+        BOOST_TEST( msg->m_side == 1);
     }
 
 BOOST_AUTO_TEST_SUITE_END()
