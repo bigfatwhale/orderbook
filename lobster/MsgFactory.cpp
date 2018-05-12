@@ -9,6 +9,7 @@
 #include "AddOrderMsg.hpp"
 #include "CancelOrderMsg.hpp"
 #include "DeleteOrderMsg.hpp"
+#include "OrderExecutedMsg.hpp"
 
 using namespace std;
 
@@ -17,6 +18,7 @@ namespace lobster
     using AddOrderMsgDecoder           = AddOrderMsg::add_order_decoder<string::iterator>;
     using CancelOrderMsgDecoder        = CancelOrderMsg::cancel_order_decoder<string::iterator>;
     using DeleteOrderMsgDecoder        = DeleteOrderMsg::delete_order_decoder<string::iterator>;
+    using OrderExecutedMsgDecoder      = OrderExecutedMsg::order_executed_decoder<string::iterator>;
 
     template<typename DecodeT, typename MsgT>
     shared_ptr<MessageBase> decode(timespec timestamp, char msgtype, string msg)
@@ -37,15 +39,20 @@ namespace lobster
         switch (msgtype)
         {
             case '1': {
-                return decode<AddOrderMsgDecoder, AddOrderMsg>( timestamp, msgtype, msg);
+                return decode<AddOrderMsgDecoder, AddOrderMsg>( timestamp, msgtype, msg );
                 break;
             }
             case '2': {
-                return decode<CancelOrderMsgDecoder, CancelOrderMsg>( timestamp, msgtype, msg);
+                return decode<CancelOrderMsgDecoder, CancelOrderMsg>( timestamp, msgtype, msg );
                 break;
             }
             case '3': {
-                return decode<DeleteOrderMsgDecoder, DeleteOrderMsg>( timestamp, msgtype, msg);
+                return decode<DeleteOrderMsgDecoder, DeleteOrderMsg>( timestamp, msgtype, msg );
+                break;
+            }
+            case '4':
+            case '5': {
+                return decode<OrderExecutedMsgDecoder, OrderExecutedMsg>( timestamp, msgtype, msg );
                 break;
             }
         }
