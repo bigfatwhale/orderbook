@@ -12,7 +12,7 @@
 
 using namespace std;
 
-BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
+BOOST_AUTO_TEST_SUITE( test_lobster_suite )
 
     BOOST_AUTO_TEST_CASE( test_simple )
     {
