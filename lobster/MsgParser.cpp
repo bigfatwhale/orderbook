@@ -17,7 +17,7 @@ namespace phi = boost::phoenix;
 namespace lobster
 {
 
-    shared_ptr<MessageBase> parse_msg(const std::string &input)
+    shared_ptr<MessageBase> MsgParser::parse_msg(const std::string &input)
     {
 
         timespec t;
