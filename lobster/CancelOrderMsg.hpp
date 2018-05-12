@@ -17,7 +17,7 @@ namespace phi = boost::phoenix;
 namespace lobster
 {
 
-    class CancelOrderMsg : public MessageBase
+    class CancelOrderMsg : public OrderMsgBase
     {
 
     public:
@@ -31,16 +31,13 @@ namespace lobster
 
     public:
 
-        CancelOrderMsg() : MessageBase() {}
+        CancelOrderMsg() : OrderMsgBase() {}
         CancelOrderMsg(timespec timestamp, char msgtype, uint64_t orderId, uint32_t shares,
-                    uint64_t price, int8_t side) : MessageBase(timestamp, msgtype), m_orderId{orderId},
-                                                 m_shares{shares}, m_price{price}, m_side{side}
+                    uint64_t price, int8_t side) : OrderMsgBase(timestamp, msgtype,
+                                                                orderId, shares,
+                                                                price, side)
         {}
 
-        uint64_t m_orderId;
-        uint32_t m_shares;
-        uint64_t m_price;
-        int8_t   m_side;
     };
 
     template<typename Iterator>
@@ -49,8 +46,8 @@ namespace lobster
         CancelOrderMsg::cancel_order_decoder<Iterator>::base_type(m_wire_msg)
     {
         // "21866417,200,2239600,-1"
-        m_wire_msg = ( qi::ulong_long >> qi::char_(",")
-                        >> qi::int_ >> qi::char_(",")
+        m_wire_msg = ( qi::ulong_long     >> qi::char_(",")
+                        >> qi::int_       >> qi::char_(",")
                         >> qi::ulong_long >> qi::char_(",")
                         >> qi::int_ )
                 [qi::_val = phi::construct<CancelOrderMsg> (
