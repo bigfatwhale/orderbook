@@ -7,6 +7,8 @@
 
 #include <string>
 #include <boost/test/unit_test.hpp>
+#include <boost/iostreams/device/mapped_file.hpp>
+#include <boost/iostreams/stream.hpp>
 #include "../lobster/AddOrderMsg.hpp"
 #include "../lobster/CancelOrderMsg.hpp"
 #include "../lobster/MsgParser.h"
@@ -17,6 +19,9 @@
 
 using namespace std;
 using namespace lobster;
+
+using boost::iostreams::mapped_file_source;
+using boost::iostreams::stream;
 
 BOOST_AUTO_TEST_SUITE( test_lobster_suite )
 
@@ -126,5 +131,23 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
         BOOST_TEST( msg->m_msgtype == '7');
         BOOST_TEST( msg->m_price == -1);
     }
+
+    BOOST_AUTO_TEST_CASE( test_lobster_sample_load )
+    {
+        auto parser = lobster::MsgParser();
+        string line;
+
+        mapped_file_source myfile("AAPL_2012-06-21_message_5.csv");
+        BOOST_TEST(myfile.is_open());
+
+        stream<mapped_file_source> ifs(myfile, std::ios::binary);
+        while (getline(ifs, line))
+        {
+            parser.parse_msg(line);
+        }
+        ifs.close();
+        myfile.close();
+    }
+
 
 BOOST_AUTO_TEST_SUITE_END()
