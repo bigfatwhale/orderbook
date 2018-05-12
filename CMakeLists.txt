@@ -13,7 +13,7 @@ add_library(orderbook SHARED ${SOURCE_FILES})
 
 enable_testing()
 
-find_package(Boost COMPONENTS unit_test_framework REQUIRED)
+find_package(Boost COMPONENTS unit_test_framework iostreams REQUIRED)
 include_directories (${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR} )
 
 file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tests/*.cpp)
@@ -28,3 +28,8 @@ foreach(testSrc ${TEST_SRCS})
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
                 COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/${testName} )
 endforeach(testSrc)
+
+set(TEST_FILES tests/AAPL_2012-06-21_message_5.csv tests/AAPL_2012-06-21_orderbook_5.csv )
+foreach(testFile ${TEST_FILES})
+    configure_file(${testFile} ${testFile} COPYONLY)
+endforeach(testFile)
