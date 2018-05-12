@@ -33,14 +33,14 @@ namespace lobster
 
         AddOrderMsg() : MessageBase() {}
         AddOrderMsg(timespec timestamp, char msgtype, uint64_t orderId, uint32_t shares,
-                    uint64_t price, char side) : MessageBase(timestamp, msgtype), m_orderId{orderId},
+                    uint64_t price, uint8_t side) : MessageBase(timestamp, msgtype), m_orderId{orderId},
                                                  m_shares{shares}, m_price{price}, m_side{side}
         {}
 
         uint64_t m_orderId;
         uint32_t m_shares;
         uint64_t m_price;
-        char     m_side;
+        uint8_t  m_side;
     };
 
     template<typename Iterator>
@@ -51,9 +51,9 @@ namespace lobster
         m_wire_msg = ( qi::ulong_long >> qi::char_(",")
                         >> qi::int_ >> qi::char_(",")
                         >> qi::ulong_long >> qi::char_(",")
-                        >> qi::char_ )
+                        >> qi::uint_ )
                 [qi::_val = phi::construct<AddOrderMsg> (
-                        m_ts, m_mtype, qi::_1, qi::_2, qi::_3, qi::_4 )];
+                        m_ts, m_mtype, qi::_1, qi::_3, qi::_5, qi::_7 )];
     }
 
 
