@@ -7,12 +7,14 @@
 #include "MsgFactory.h"
 #include "MessageBase.h"
 #include "AddOrderMsg.hpp"
+#include "CancelOrderMsg.hpp"
 
 using namespace std;
 
 namespace lobster
 {
     using AddOrderMsgDecoder           = AddOrderMsg::add_order_decoder<string::iterator>;
+    using CancelOrderMsgDecoder        = CancelOrderMsg::cancel_order_decoder<string::iterator>;
 
     template<typename DecodeT, typename MsgT>
     shared_ptr<MessageBase> decode(timespec timestamp, char msgtype, string msg)
@@ -33,8 +35,12 @@ namespace lobster
     {
         switch (msgtype)
         {
-            case 1: {
+            case '1': {
                 return decode<AddOrderMsgDecoder, AddOrderMsg>( timestamp, msgtype, msg);
+                break;
+            }
+            case '2': {
+                return decode<CancelOrderMsgDecoder, CancelOrderMsg>( timestamp, msgtype, msg);
                 break;
             }
         }

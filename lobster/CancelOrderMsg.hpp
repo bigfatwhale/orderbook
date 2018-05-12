@@ -1,9 +1,9 @@
 //
-// Created by Uncle Chu on 11/5/18.
+// Created by Uncle Chu on 12/5/18.
 //
 
-#ifndef ORDERBOOK_ADDORDERMSG_HPP
-#define ORDERBOOK_ADDORDERMSG_HPP
+#ifndef ORDERBOOK_CANCELORDERMSG_HPP
+#define ORDERBOOK_CANCELORDERMSG_HPP
 
 #include <ctime>
 #include <boost/spirit/include/qi.hpp>
@@ -17,22 +17,22 @@ namespace phi = boost::phoenix;
 namespace lobster
 {
 
-    class AddOrderMsg : public MessageBase
+    class CancelOrderMsg : public MessageBase
     {
 
     public:
         template <typename Iterator>
-        struct add_order_decoder : decoder_base, qi::grammar<Iterator, AddOrderMsg()>
+        struct cancel_order_decoder : decoder_base, qi::grammar<Iterator, CancelOrderMsg()>
         {
-            add_order_decoder(timespec timestamp, char msgtype);
+            cancel_order_decoder(timespec timestamp, char msgtype);
 
-            qi::rule<Iterator, AddOrderMsg()> m_wire_msg; // member variables
+            qi::rule<Iterator, CancelOrderMsg()> m_wire_msg; // member variables
         };
 
     public:
 
-        AddOrderMsg() : MessageBase() {}
-        AddOrderMsg(timespec timestamp, char msgtype, uint64_t orderId, uint32_t shares,
+        CancelOrderMsg() : MessageBase() {}
+        CancelOrderMsg(timespec timestamp, char msgtype, uint64_t orderId, uint32_t shares,
                     uint64_t price, int8_t side) : MessageBase(timestamp, msgtype), m_orderId{orderId},
                                                  m_shares{shares}, m_price{price}, m_side{side}
         {}
@@ -44,19 +44,20 @@ namespace lobster
     };
 
     template<typename Iterator>
-    AddOrderMsg::add_order_decoder<Iterator>::add_order_decoder(timespec timestamp, char msgtype) :
+    CancelOrderMsg::cancel_order_decoder<Iterator>::cancel_order_decoder(timespec timestamp, char msgtype) :
         decoder_base(timestamp, msgtype),
-        AddOrderMsg::add_order_decoder<Iterator>::base_type(m_wire_msg)
+        CancelOrderMsg::cancel_order_decoder<Iterator>::base_type(m_wire_msg)
     {
+        // "21866417,200,2239600,-1"
         m_wire_msg = ( qi::ulong_long >> qi::char_(",")
                         >> qi::int_ >> qi::char_(",")
                         >> qi::ulong_long >> qi::char_(",")
-                        >> qi::uint_ )
-                [qi::_val = phi::construct<AddOrderMsg> (
+                        >> qi::int_ )
+                [qi::_val = phi::construct<CancelOrderMsg> (
                         m_ts, m_mtype, qi::_1, qi::_3, qi::_5, qi::_7 )];
     }
 
 
 } // lobster
 
-#endif //ORDERBOOK_ADDORDERMSG_HPP
+#endif //ORDERBOOK_CANCELORDERMSG_HPP
