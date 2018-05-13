@@ -25,6 +25,8 @@ using namespace lobster;
 using boost::iostreams::mapped_file_source;
 using boost::iostreams::stream;
 
+
+
 BOOST_AUTO_TEST_SUITE( test_lobster_suite )
 
     BOOST_AUTO_TEST_CASE( test_add_order )
@@ -138,15 +140,25 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
     {
         auto parser = lobster::MsgParser();
         auto orderbook = LimitOrderBook<>();
-        string line;
+        string msgline, cur_order_line, prev_order_line;
 
-        mapped_file_source myfile("AAPL_2012-06-21_message_5.csv");
-        BOOST_TEST(myfile.is_open());
+        mapped_file_source msgfile("AAPL_2012-06-21_message_5.csv");
+        mapped_file_source orderfile("AAPL_2012-06-_orderbook_5.csv");
 
-        stream<mapped_file_source> ifs(myfile, std::ios::binary);
-        while (getline(ifs, line))
+        stream<mapped_file_source> msg_ifs(msgfile, std::ios::binary);
+        stream<mapped_file_source> order_ifs(orderfile, std::ios::binary);
+
+        BOOST_TEST(msgfile.is_open());
+        BOOST_TEST(orderfile.is_open());
+
+        getline(order_ifs, prev_order_line);
+        getline(msg_ifs, msgline);
+
+        while (getline(msg_ifs, msgline))
         {
-            auto msg = parser.parse_msg(line);
+
+
+            auto msg = parser.parse_msg(msgline);
 
             if ( msg->m_msgtype == '1' )
             {
@@ -157,8 +169,8 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
                 orderbook.addOrder(o);
             }
         }
-        ifs.close();
-        myfile.close();
+        msg_ifs.close();
+        msgfile.close();
     }
 
 
