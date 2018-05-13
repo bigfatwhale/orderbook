@@ -9,6 +9,8 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/iostreams/stream.hpp>
+#include <boost/tokenizer.hpp>
+#include <boost/lexical_cast.hpp>
 #include "../lobster/AddOrderMsg.hpp"
 #include "../lobster/CancelOrderMsg.hpp"
 #include "../lobster/MsgParser.h"
@@ -143,7 +145,7 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
         string msgline, cur_order_line, prev_order_line;
 
         mapped_file_source msgfile("AAPL_2012-06-21_message_5.csv");
-        mapped_file_source orderfile("AAPL_2012-06-_orderbook_5.csv");
+        mapped_file_source orderfile("AAPL_2012-06-21_orderbook_5.csv");
 
         stream<mapped_file_source> msg_ifs(msgfile, std::ios::binary);
         stream<mapped_file_source> order_ifs(orderfile, std::ios::binary);
@@ -153,6 +155,40 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
 
         getline(order_ifs, prev_order_line);
         getline(msg_ifs, msgline);
+
+        // take the first line from the order file, and initialize the orderbook with it.
+        boost::char_separator<char> sep(",");
+        boost::tokenizer<boost::char_separator<char>> tokenizer(prev_order_line, sep);
+
+        int c = 0;
+
+        auto it = tokenizer.begin();
+        while (it != tokenizer.end())
+        {
+            auto price = boost::lexical_cast<int>(*it++);
+            auto volume = boost::lexical_cast<int>(*it++);
+
+            auto o = Order(0, price, volume, ( c % 2 == 0 ) ? BookType::SELL : BookType::BUY, "");
+
+            orderbook.addOrder(o);
+            std::cout << "price=" << price << ", volume=" << volume << std::endl;
+
+            c++;
+        }
+
+        // below is the first row of the order book data file.
+        // 5859400,200,5853300,18,  5859800,200,5853000,150,  5861000,200,5851000,5,
+        // 5868900,300,5850100,89,  5869500,50,5849700,5
+        BOOST_TEST(orderbook.volumeForPricePoint(5859400, BookType::SELL) == 200);
+        BOOST_TEST(orderbook.volumeForPricePoint(5853300, BookType::BUY) == 18);
+        BOOST_TEST(orderbook.volumeForPricePoint(5859800, BookType::SELL) == 200);
+        BOOST_TEST(orderbook.volumeForPricePoint(5853000, BookType::BUY) == 150);
+        BOOST_TEST(orderbook.volumeForPricePoint(5861000, BookType::SELL) == 200);
+        BOOST_TEST(orderbook.volumeForPricePoint(5851000, BookType::BUY) == 5);
+        BOOST_TEST(orderbook.volumeForPricePoint(5868900, BookType::SELL) == 300);
+        BOOST_TEST(orderbook.volumeForPricePoint(5850100, BookType::BUY) == 89);
+        BOOST_TEST(orderbook.volumeForPricePoint(5869500, BookType::SELL) == 50);
+        BOOST_TEST(orderbook.volumeForPricePoint(5849700, BookType::BUY) == 5);
 
         while (getline(msg_ifs, msgline))
         {
@@ -172,6 +208,5 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
         msg_ifs.close();
         msgfile.close();
     }
-
 
 BOOST_AUTO_TEST_SUITE_END()
