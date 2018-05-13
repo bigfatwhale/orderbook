@@ -27,6 +27,7 @@ using namespace lobster;
 using boost::iostreams::mapped_file_source;
 using boost::iostreams::stream;
 
+using tokenizer = boost::tokenizer<boost::char_separator<char>>;
 
 
 BOOST_AUTO_TEST_SUITE( test_lobster_suite )
@@ -154,25 +155,21 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
         BOOST_TEST(orderfile.is_open());
 
         getline(order_ifs, prev_order_line);
-        getline(msg_ifs, msgline);
+        getline(msg_ifs, msgline); // skip first line of the message file.
 
         // take the first line from the order file, and initialize the orderbook with it.
         boost::char_separator<char> sep(",");
-        boost::tokenizer<boost::char_separator<char>> tokenizer(prev_order_line, sep);
+        tokenizer tokens(prev_order_line, sep);
 
         int c = 0;
 
-        auto it = tokenizer.begin();
-        while (it != tokenizer.end())
+        auto it = tokens.begin();
+        while (it != tokens.end())
         {
             auto price = boost::lexical_cast<int>(*it++);
             auto volume = boost::lexical_cast<int>(*it++);
-
             auto o = Order(0, price, volume, ( c % 2 == 0 ) ? BookType::SELL : BookType::BUY, "");
-
             orderbook.addOrder(o);
-            std::cout << "price=" << price << ", volume=" << volume << std::endl;
-
             c++;
         }
 
@@ -192,8 +189,7 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
 
         while (getline(msg_ifs, msgline))
         {
-
-
+            // process one line of message file, apply the actions onto the orderbook
             auto msg = parser.parse_msg(msgline);
 
             if ( msg->m_msgtype == '1' )
@@ -204,6 +200,25 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
                         dmsg->m_side == 1 ? BookType::BUY : BookType::SELL, "NCM");
                 orderbook.addOrder(o);
             }
+
+            // now take the corresponding line in the order book file. check that our order book
+            // state is the same as what is given by the order book file line.
+            getline(order_ifs, cur_order_line);
+            tokens = tokenizer (cur_order_line, sep);
+
+            int c = 0;
+            auto it = tokens.begin();
+            while (it != tokens.end())
+            {
+                auto price = boost::lexical_cast<int>(*it++);
+                auto volume = boost::lexical_cast<int>(*it++);
+
+                auto type = ( c % 2 == 0 ) ? BookType::SELL : BookType::BUY;
+                BOOST_TEST(orderbook.volumeForPricePoint(price, type) == volume);
+
+                c++;
+            }
+
         }
         msg_ifs.close();
         msgfile.close();
