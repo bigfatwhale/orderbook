@@ -19,15 +19,15 @@
 using namespace std;
 
 // syntatic sugar...
-using AddOrderMsgDecoder           = BATSAddOrderMsg::add_order_decoder<string::iterator>;
-using OrderExecutedMsgDecoder      = BATSOrderExecutedMsg::order_executed_decoder<string::iterator>;
-using OrderCancelMsgDecoder        = BATSOrderCancelMsg::order_cancel_decoder<string::iterator>;
-using TradeMsgDecoder              = BATSTradeMsg::trade_decoder<string::iterator>;
-using TradeBreakMsgDecoder         = BATSTradeBreakMsg::trade_break_decoder<string::iterator>;
-using TradingStatusMsgDecoder      = BATSTradingStatusMsg::trading_status_decoder<string::iterator>;
-using AuctionUpdateMsgDecoder      = BATSAuctionUpdateMsg::auction_update_decoder<string::iterator>;
-using AuctionSummaryMsgDecoder     = BATSAuctionSummaryMsg::auction_summary_decoder<string::iterator>;
-using RetailPriceImproveMsgDecoder = BATSRetailPriceImproveMsg::retail_price_improve_decoder<string::iterator>;
+using AddOrderMsgDecoder           = BATSAddOrderMsg::add_order_decoder<const char*>;
+using OrderExecutedMsgDecoder      = BATSOrderExecutedMsg::order_executed_decoder<const char*>;
+using OrderCancelMsgDecoder        = BATSOrderCancelMsg::order_cancel_decoder<const char*>;
+using TradeMsgDecoder              = BATSTradeMsg::trade_decoder<const char*>;
+using TradeBreakMsgDecoder         = BATSTradeBreakMsg::trade_break_decoder<const char*>;
+using TradingStatusMsgDecoder      = BATSTradingStatusMsg::trading_status_decoder<const char*>;
+using AuctionUpdateMsgDecoder      = BATSAuctionUpdateMsg::auction_update_decoder<const char*>;
+using AuctionSummaryMsgDecoder     = BATSAuctionSummaryMsg::auction_summary_decoder<const char*>;
+using RetailPriceImproveMsgDecoder = BATSRetailPriceImproveMsg::retail_price_improve_decoder<const char*>;
 
 struct DecodeHelper {
 
@@ -38,12 +38,12 @@ struct DecodeHelper {
     }
 
     template<typename DecodeT, typename MsgT> static
-    shared_ptr<BATSMessageBase> decode(int timestamp, char msgtype, string msg, bool isLong=false)
+    shared_ptr<BATSMessageBase> decode(int timestamp, char msgtype, const char* start, const char* end, bool isLong=false)
     {
         shared_ptr<DecodeT>  decoder = DecodeHelper::make_decoder<DecodeT>( timestamp, msgtype, isLong );
         auto data = make_shared<MsgT>();
 
-        bool ret = qi::parse(msg.begin(), msg.end(), *decoder, *data);
+        bool ret = qi::parse(start, end, *decoder, *data);
         if (ret)
             return data;
         else
@@ -68,49 +68,58 @@ shared_ptr<TradeMsgDecoder> DecodeHelper::make_decoder<TradeMsgDecoder>( int tim
 shared_ptr<BATSMessageBase>
 BATSMsgFactory::createMsg(int timestamp, char msgtype, std::string msg)
 {
+//    char *m = const_cast<char *>( msg.data() );
+    return createMsg(timestamp, msgtype, msg.data(), msg.data() + msg.size());
+//    return createMsg(timestamp, msgtype, m, m + msg.size());
+}
+
+shared_ptr<BATSMessageBase>
+BATSMsgFactory::createMsg(int timestamp, char msgtype, const char* start, const char* end)
+{
     switch (msgtype)
     {
         case 'A':
         case 'd': {
             return DecodeHelper::decode<AddOrderMsgDecoder, BATSAddOrderMsg>
-                    (timestamp, msgtype, msg, msgtype == 'd' ? true : false);
+                    (timestamp, msgtype, start, end, msgtype == 'd' ? true : false);
             break;
         }
         case 'E': {
-            return DecodeHelper::decode<OrderExecutedMsgDecoder, BATSOrderExecutedMsg>(timestamp, msgtype, msg);
+            return DecodeHelper::decode<OrderExecutedMsgDecoder, BATSOrderExecutedMsg>(timestamp, msgtype, start, end);
             break;
         }
         case'X':{
-            return DecodeHelper::decode<OrderCancelMsgDecoder, BATSOrderCancelMsg>(timestamp, msgtype, msg);
+            return DecodeHelper::decode<OrderCancelMsgDecoder, BATSOrderCancelMsg>(timestamp, msgtype, start, end);
             break;
         }
         case 'P':
         case 'r': {
             return DecodeHelper::decode<TradeMsgDecoder, BATSTradeMsg>
-                    (timestamp, msgtype, msg, msgtype == 'r' ? true : false);
+                    (timestamp, msgtype, start, end, msgtype == 'r' ? true : false);
             break;
         }
         case 'B': {
-            return DecodeHelper::decode<TradeBreakMsgDecoder, BATSTradeBreakMsg>(timestamp, msgtype, msg);
+            return DecodeHelper::decode<TradeBreakMsgDecoder, BATSTradeBreakMsg>(timestamp, msgtype, start, end);
             break;
         }
         case 'H':{
-            return DecodeHelper::decode<TradingStatusMsgDecoder, BATSTradingStatusMsg>(timestamp, msgtype, msg);
+            return DecodeHelper::decode<TradingStatusMsgDecoder, BATSTradingStatusMsg>(timestamp, msgtype, start, end);
             break;
         }
         case 'I':{
-            return DecodeHelper::decode<AuctionUpdateMsgDecoder, BATSAuctionUpdateMsg>(timestamp, msgtype, msg);
+            return DecodeHelper::decode<AuctionUpdateMsgDecoder, BATSAuctionUpdateMsg>(timestamp, msgtype, start, end);
             break;
         }
         case 'J':{
-            return DecodeHelper::decode<AuctionSummaryMsgDecoder, BATSAuctionSummaryMsg>(timestamp, msgtype, msg);
+            return DecodeHelper::decode<AuctionSummaryMsgDecoder, BATSAuctionSummaryMsg>(timestamp, msgtype, start, end);
             break;
         }
         case 'R':{
-            return DecodeHelper::decode<RetailPriceImproveMsgDecoder, BATSRetailPriceImproveMsg>(timestamp, msgtype, msg);
+            return DecodeHelper::decode<RetailPriceImproveMsgDecoder, BATSRetailPriceImproveMsg>(timestamp, msgtype, start, end);
             break;
         }
-        default:
-            throw runtime_error("Error parsing message = " + msg);
+        default:{
+            throw runtime_error("Error parsing message = " + string(start, end));
+        }
     }
 }
