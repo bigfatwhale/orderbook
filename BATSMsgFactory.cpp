@@ -68,9 +68,7 @@ shared_ptr<TradeMsgDecoder> DecodeHelper::make_decoder<TradeMsgDecoder>( int tim
 shared_ptr<BATSMessageBase>
 BATSMsgFactory::createMsg(int timestamp, char msgtype, std::string msg)
 {
-//    char *m = const_cast<char *>( msg.data() );
     return createMsg(timestamp, msgtype, msg.data(), msg.data() + msg.size());
-//    return createMsg(timestamp, msgtype, m, m + msg.size());
 }
 
 shared_ptr<BATSMessageBase>

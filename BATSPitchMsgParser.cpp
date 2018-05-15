@@ -31,8 +31,7 @@ shared_ptr<BATSMessageBase> BATSPitchMsgParser::parse_msg(const string &input)
     if (!parse_ok)
         throw std::runtime_error("Error parsing message");
     else {
-        auto data = input.substr(BASE_OFFSET + FIELD_LENGTH_TIMESTAMP + 1);
-        pMsg = BATSMsgFactory::createMsg(timestamp, msgCode, data);
+        pMsg = BATSMsgFactory::createMsg(timestamp, msgCode, input.c_str() + (BASE_OFFSET + FIELD_LENGTH_TIMESTAMP + 1), input.c_str() + input.length());
         if ( pMsg == nullptr )
             throw std::runtime_error("Error parsing message : " + input );
     }
