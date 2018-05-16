@@ -21,7 +21,7 @@ class ParserTest( unittest.TestCase ):
 
     def test_parse_trade_break(self):
 
-        msg = self.parser.parse_msg( "S28800168B1K27GA00000Y" )
+        msg = self.parser.parse_msg( "28800168B1K27GA00000Y" )
         #int('1K27GA00000Y', 36) -> 204969015920664610 
         self.assertEqual( msg.timestamp, 28800168 )
         self.assertEqual( msg.msgtype, 'B')
@@ -29,7 +29,7 @@ class ParserTest( unittest.TestCase ):
 
     def test_parse_trade_status(self):
 
-        msg = self.parser.parse_msg( "S28800168HAAPLSPOTT0XY")
+        msg = self.parser.parse_msg( "28800168HAAPLSPOTT0XY")
         self.assertEqual( msg.timestamp, 28800168 )
         self.assertEqual( msg.msgtype, 'H')
         self.assertEqual( msg.symbol, "AAPLSPOT") # ticker symbol
@@ -39,7 +39,7 @@ class ParserTest( unittest.TestCase ):
 
     def test_parse_retail_price_improve(self): 
 
-        msg = self.parser.parse_msg( "S28800168RAAPLSPOTS" )
+        msg = self.parser.parse_msg( "28800168RAAPLSPOTS" )
 
         self.assertEqual( msg.timestamp, 28800168 )
         self.assertEqual( msg.msgtype, 'R')
@@ -48,7 +48,7 @@ class ParserTest( unittest.TestCase ):
         
     def test_parse_order_cancel(self): 
 
-        msg = self.parser.parse_msg("S28800168X1K27GA00000Y000500")
+        msg = self.parser.parse_msg("28800168X1K27GA00000Y000500")
 
         self.assertEqual( msg.timestamp, 28800168 )
         self.assertEqual( msg.msgtype, 'X')
@@ -57,7 +57,7 @@ class ParserTest( unittest.TestCase ):
 
     def test_parse_order_execute(self): 
 
-        msg = self.parser.parse_msg("S28800168E1K27GA00000Y0001001K27GA00000K")
+        msg = self.parser.parse_msg("28800168E1K27GA00000Y0001001K27GA00000K")
 
         self.assertEqual( msg.timestamp, 28800168 )
         self.assertEqual( msg.msgtype, 'E')
@@ -67,7 +67,7 @@ class ParserTest( unittest.TestCase ):
 
     def test_parse_auction_summary(self): 
 
-        msg = self.parser.parse_msg("S28800168JAAPLSPOTC00010068000000020000")
+        msg = self.parser.parse_msg("28800168JAAPLSPOTC00010068000000020000")
 
         self.assertEqual( msg.timestamp, 28800168 )
         self.assertEqual( msg.msgtype, 'J')
@@ -78,7 +78,7 @@ class ParserTest( unittest.TestCase ):
 
     def test_parse_auction_update(self): 
 
-        msg = self.parser.parse_msg("S28800168IAAPLSPOTC00010068000000020000000001000000015034000001309800")
+        msg = self.parser.parse_msg("28800168IAAPLSPOTC00010068000000020000000001000000015034000001309800")
 
         self.assertEqual( msg.timestamp, 28800168 )
         self.assertEqual( msg.msgtype, 'I')
@@ -92,7 +92,7 @@ class ParserTest( unittest.TestCase ):
 
     def test_parse_add_order(self): 
 
-        msg = self.parser.parse_msg("S28800168A1K27GA00000YS000100AAPL  0001831900Y")
+        msg = self.parser.parse_msg("28800168A1K27GA00000YS000100AAPL  0001831900Y")
 
         self.assertEqual( msg.timestamp, 28800168 )
         self.assertEqual( msg.msgtype, 'A')
@@ -103,7 +103,7 @@ class ParserTest( unittest.TestCase ):
         self.assertEqual( msg.price, 1831900)
         self.assertEqual( msg.display, 'Y')
 
-        msg = self.parser.parse_msg("S28800168d1K27GA00000YS000100AAPL  0001831900YBAML")
+        msg = self.parser.parse_msg("28800168d1K27GA00000YS000100AAPL  0001831900YBAML")
 
         self.assertEqual( msg.timestamp, 28800168 )
         self.assertEqual( msg.msgtype, 'd')
@@ -117,7 +117,7 @@ class ParserTest( unittest.TestCase ):
 
     def test_parse_trade(self): 
 
-        msg = self.parser.parse_msg("S28800168P1K27GA00000YB000300AAPL  00018319001K27GA00000Z");
+        msg = self.parser.parse_msg("28800168P1K27GA00000YB000300AAPL  00018319001K27GA00000Z");
 
         self.assertEqual( msg.timestamp, 28800168 );
         self.assertEqual( msg.msgtype, 'P');
@@ -128,7 +128,7 @@ class ParserTest( unittest.TestCase ):
         self.assertEqual( msg.price, 1831900);
         self.assertEqual( msg.execId, 204969015920664611); # python : int("1K27GA00000Z", 36) -> 204969015920664611
 
-        msg = self.parser.parse_msg("S28800168r1K27GA00000YB000300AAPLSPOT00018319001K27GA00000Z");
+        msg = self.parser.parse_msg("28800168r1K27GA00000YB000300AAPLSPOT00018319001K27GA00000Z");
 
         self.assertEqual( msg.timestamp, 28800168 );
         self.assertEqual( msg.msgtype, 'r');
