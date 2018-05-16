@@ -22,7 +22,7 @@ public:
     template<typename Iterator>
     struct trade_decoder : decoder_base, qi::grammar<Iterator, BATSTradeMsg()>
     {
-        trade_decoder(int timestamp, char msgtype, bool isLong);
+        trade_decoder(int timestamp, char msgtype);
 
         qi::rule<Iterator, BATSTradeMsg()> m_wire_msg; // member variables
     };
@@ -70,10 +70,14 @@ public:
     std::string m_symbol;
     uint64_t    m_price;
     uint64_t    m_execId; // Base 36 Numeric values come over the wire in ascii
+
+private:
+    static const char shortMsgCode = 'P';
+    static const char longMsgCode  = 'r';
 };
 
 template<typename Iterator>
-BATSTradeMsg::trade_decoder<Iterator>::trade_decoder(int timestamp, char msgtype, bool isLong) :
+BATSTradeMsg::trade_decoder<Iterator>::trade_decoder(int timestamp, char msgtype) :
         decoder_base(timestamp, msgtype),
         BATSTradeMsg::trade_decoder<Iterator>::base_type(m_wire_msg)
 {
@@ -83,7 +87,7 @@ BATSTradeMsg::trade_decoder<Iterator>::trade_decoder(int timestamp, char msgtype
     qi::uint_parser<uint32_t, 10,  6, 6 > p_shares;
     qi::uint_parser<uint32_t, 10,  10, 10 > m_price;
 
-    if (isLong)
+    if (msgtype == longMsgCode)
         m_wire_msg = ( p_orderId >> qi::char_("BS")
                                   >> p_shares
                                   >> qi::as_string[qi::repeat(8)[qi::char_]]

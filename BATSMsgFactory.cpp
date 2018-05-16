@@ -31,16 +31,10 @@ using RetailPriceImproveMsgDecoder = BATSRetailPriceImproveMsg::retail_price_imp
 
 struct DecodeHelper {
 
-    template<typename DecodeT> static
-    shared_ptr<DecodeT> make_decoder( int timestamp, char msgtype, bool isLong)
-    {
-        return std::make_shared<DecodeT>(timestamp, msgtype);
-    }
-
     template<typename DecodeT, typename MsgT> static
-    shared_ptr<BATSMessageBase> decode(int timestamp, char msgtype, const char* start, const char* end, bool isLong=false)
+    shared_ptr<BATSMessageBase> decode(int timestamp, char msgtype, const char* start, const char* end)
     {
-        shared_ptr<DecodeT>  decoder = DecodeHelper::make_decoder<DecodeT>( timestamp, msgtype, isLong );
+        shared_ptr<DecodeT> decoder = make_shared<DecodeT>( timestamp, msgtype );
         auto data = make_shared<MsgT>();
 
         bool ret = qi::parse(start, end, *decoder, *data);
@@ -49,20 +43,6 @@ struct DecodeHelper {
         else
             return nullptr;
     }
-};
-
-// specialise for three param AddOrderMsgDecoder constructor types
-template<>
-shared_ptr<AddOrderMsgDecoder> DecodeHelper::make_decoder<AddOrderMsgDecoder>( int timestamp, char msgtype, bool isLong)
-{
-    return std::make_shared<AddOrderMsgDecoder>(timestamp, msgtype, isLong);
-};
-
-// specialise for three param TradeMsgDecoder constructor
-template<>
-shared_ptr<TradeMsgDecoder> DecodeHelper::make_decoder<TradeMsgDecoder>( int timestamp, char msgtype, bool isLong)
-{
-    return std::make_shared<TradeMsgDecoder>(timestamp, msgtype, isLong);
 };
 
 shared_ptr<BATSMessageBase>
@@ -78,8 +58,7 @@ BATSMsgFactory::createMsg(int timestamp, char msgtype, const char* start, const 
     {
         case 'A':
         case 'd': {
-            return DecodeHelper::decode<AddOrderMsgDecoder, BATSAddOrderMsg>
-                    (timestamp, msgtype, start, end, msgtype == 'd' ? true : false);
+            return DecodeHelper::decode<AddOrderMsgDecoder, BATSAddOrderMsg>(timestamp, msgtype, start, end );
             break;
         }
         case 'E': {
@@ -92,8 +71,7 @@ BATSMsgFactory::createMsg(int timestamp, char msgtype, const char* start, const 
         }
         case 'P':
         case 'r': {
-            return DecodeHelper::decode<TradeMsgDecoder, BATSTradeMsg>
-                    (timestamp, msgtype, start, end, msgtype == 'r' ? true : false);
+            return DecodeHelper::decode<TradeMsgDecoder, BATSTradeMsg>(timestamp, msgtype, start, end);
             break;
         }
         case 'B': {
