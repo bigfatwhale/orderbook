@@ -18,17 +18,6 @@
 
 using namespace std;
 
-// syntatic sugar...
-using AddOrderMsgDecoder           = BATSAddOrderMsg::add_order_decoder<const char*>;
-using OrderExecutedMsgDecoder      = BATSOrderExecutedMsg::order_executed_decoder<const char*>;
-using OrderCancelMsgDecoder        = BATSOrderCancelMsg::order_cancel_decoder<const char*>;
-using TradeMsgDecoder              = BATSTradeMsg::trade_decoder<const char*>;
-using TradeBreakMsgDecoder         = BATSTradeBreakMsg::trade_break_decoder<const char*>;
-using TradingStatusMsgDecoder      = BATSTradingStatusMsg::trading_status_decoder<const char*>;
-using AuctionUpdateMsgDecoder      = BATSAuctionUpdateMsg::auction_update_decoder<const char*>;
-using AuctionSummaryMsgDecoder     = BATSAuctionSummaryMsg::auction_summary_decoder<const char*>;
-using RetailPriceImproveMsgDecoder = BATSRetailPriceImproveMsg::retail_price_improve_decoder<const char*>;
-
 struct DecodeHelper {
 
     template<typename DecodeT, typename MsgT> static
