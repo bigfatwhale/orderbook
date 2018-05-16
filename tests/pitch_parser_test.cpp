@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
 
     BOOST_AUTO_TEST_CASE( test_parse_trade_break )
     {
-        auto msg = parse( "S28800168B1K27GA00000Y" );
+        auto msg = parse( "28800168B1K27GA00000Y" );
 
         BOOST_TEST( msg->m_timestamp == 28800168 );
         BOOST_TEST( msg->m_msgtype == 'B');
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
 
     BOOST_AUTO_TEST_CASE( test_parse_trade_status )
     {
-        auto msg = parse( "S28800168HAAPLSPOTT0XY");
+        auto msg = parse( "28800168HAAPLSPOTT0XY");
 
         BOOST_TEST( msg->m_timestamp == 28800168 );
         BOOST_TEST( msg->m_msgtype == 'H');
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
 
     BOOST_AUTO_TEST_CASE( test_parse_retail_price_improve )
     {
-        auto msg = parse( "S28800168RAAPLSPOTS" );
+        auto msg = parse( "28800168RAAPLSPOTS" );
 
         BOOST_TEST( msg->m_timestamp == 28800168 );
         BOOST_TEST( msg->m_msgtype == 'R');
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
 
     BOOST_AUTO_TEST_CASE( test_parse_order_cancel )
     {
-        auto msg = parse("S28800168X1K27GA00000Y000500");
+        auto msg = parse("28800168X1K27GA00000Y000500");
 
         BOOST_TEST( msg->m_timestamp == 28800168 );
         BOOST_TEST( msg->m_msgtype == 'X');
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
 
     BOOST_AUTO_TEST_CASE( test_parse_order_execute )
     {
-        auto msg = parse("S28800168E1K27GA00000Y0001001K27GA00000K");
+        auto msg = parse("28800168E1K27GA00000Y0001001K27GA00000K");
 
         BOOST_TEST( msg->m_timestamp == 28800168 );
         BOOST_TEST( msg->m_msgtype == 'E');
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
 
     BOOST_AUTO_TEST_CASE( test_parse_auction_summary )
     {
-        auto msg = parse("S28800168JAAPLSPOTC00010068000000020000");
+        auto msg = parse("28800168JAAPLSPOTC00010068000000020000");
 
         BOOST_TEST( msg->m_timestamp == 28800168 );
         BOOST_TEST( msg->m_msgtype == 'J');
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
 
     BOOST_AUTO_TEST_CASE( test_parse_auction_update )
     {
-        auto msg = parse("S28800168IAAPLSPOTC00010068000000020000000001000000015034000001309800");
+        auto msg = parse("28800168IAAPLSPOTC00010068000000020000000001000000015034000001309800");
 
         BOOST_TEST( msg->m_timestamp == 28800168 );
         BOOST_TEST( msg->m_msgtype == 'I');
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
 
     BOOST_AUTO_TEST_CASE( test_parse_add_order, * boost::unit_test::tolerance(0.0001)  )
     {
-        auto msg = parse("S28800168A1K27GA00000YS000100AAPL  0001831900Y");
+        auto msg = parse("28800168A1K27GA00000YS000100AAPL  0001831900Y");
 
         BOOST_TEST( msg->m_timestamp == 28800168 );
         BOOST_TEST( msg->m_msgtype == 'A');
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
         BOOST_TEST( addOrderMsg->m_price == 1831900);
         BOOST_TEST( addOrderMsg->m_display == 'Y');
 
-        msg = parse("S28800168d1K27GA00000YS000100AAPL  0001831900YBAML");
+        msg = parse("28800168d1K27GA00000YS000100AAPL  0001831900YBAML");
 
         BOOST_TEST( msg->m_timestamp == 28800168 );
         BOOST_TEST( msg->m_msgtype == 'd');
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
 
     BOOST_AUTO_TEST_CASE( test_parse_trade )
     {
-        auto msg = parse("S28800168P1K27GA00000YB000300AAPL  00018319001K27GA00000Z");
+        auto msg = parse("28800168P1K27GA00000YB000300AAPL  00018319001K27GA00000Z");
 
         BOOST_TEST( msg->m_timestamp == 28800168 );
         BOOST_TEST( msg->m_msgtype == 'P');
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
         BOOST_TEST( tradeMsg->m_price == 1831900);
         BOOST_TEST( tradeMsg->m_execId == 204969015920664611); // python : int("1K27GA00000Z", 36) -> 204969015920664611
 
-        msg = parse("S28800168r1K27GA00000YB000300AAPLSPOT00018319001K27GA00000Z");
+        msg = parse("28800168r1K27GA00000YB000300AAPLSPOT00018319001K27GA00000Z");
 
         BOOST_TEST( msg->m_timestamp == 28800168 );
         BOOST_TEST( msg->m_msgtype == 'r');
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
 
     BOOST_AUTO_TEST_CASE( test_fail_parse )
     {
-        auto bad_msg = "S2880016adfadfihiwey8JAAPLSPOTC00010068000000020000";
+        auto bad_msg = "2880016adfadfihiwey8JAAPLSPOTC00010068000000020000";
         BOOST_CHECK_THROW( parse( bad_msg ), std::runtime_error);
     }
 

@@ -13,9 +13,6 @@
 
 class BATSPitchMsgParser
 {
-private:
-	static const unsigned BASE_OFFSET = 1;
-	static const unsigned FIELD_LENGTH_TIMESTAMP = 8;
 public:
     std::shared_ptr<BATSMessageBase>  parse_msg( const std::string &input );
     static void export_to_python();
