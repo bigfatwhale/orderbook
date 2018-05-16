@@ -23,15 +23,16 @@ struct DecodeHelper {
     template<typename DecodeT, typename MsgT> static
     shared_ptr<BATSMessageBase> decode(int timestamp, char msgtype, const char* start, const char* end)
     {
-        shared_ptr<DecodeT> decoder = make_shared<DecodeT>( timestamp, msgtype );
+        DecodeT decoder( timestamp, msgtype );
         auto data = make_shared<MsgT>();
 
-        bool ret = qi::parse(start, end, *decoder, *data);
+        bool ret = qi::parse(start, end, decoder, *data);
         if (ret)
             return data;
         else
             return nullptr;
     }
+
 };
 
 shared_ptr<BATSMessageBase>

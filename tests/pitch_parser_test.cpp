@@ -152,9 +152,9 @@ BOOST_AUTO_TEST_SUITE( test_parse_suite )
         BOOST_TEST( addOrderMsg->m_price == 1831900);
         BOOST_TEST( addOrderMsg->m_display == 'Y');
 
-        msg = parse("28800168d1K27GA00000YS000100AAPL  0001831900YBAML");
+        msg = parse("28800169d1K27GA00000YS000100AAPL  0001831900YBAML");
 
-        BOOST_TEST( msg->m_timestamp == 28800168 );
+        BOOST_TEST( msg->m_timestamp == 28800169 );
         BOOST_TEST( msg->m_msgtype == 'd');
 
         addOrderMsg = dynamic_pointer_cast<BATSAddOrderMsg>(msg);
