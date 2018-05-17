@@ -20,9 +20,9 @@ class BATSTradeMsg : public BATSMessageBase
 public:
     // nested class for decoding the wire msg
     template<typename Iterator>
-    struct trade_decoder : decoder_base, qi::grammar<Iterator, BATSTradeMsg()>
+    struct trade_decoder : qi::grammar<Iterator, BATSTradeMsg()>
     {
-        trade_decoder(int timestamp, char msgtype);
+        trade_decoder(char msgtype);
 
         qi::rule<Iterator, BATSTradeMsg()> m_wire_msg; // member variables
     };
@@ -71,39 +71,43 @@ public:
     uint64_t    m_price;
     uint64_t    m_execId; // Base 36 Numeric values come over the wire in ascii
 
-private:
-    static const char shortMsgCode = 'P';
-    static const char longMsgCode  = 'r';
 };
 
 template<typename Iterator>
-BATSTradeMsg::trade_decoder<Iterator>::trade_decoder(int timestamp, char msgtype) :
-        decoder_base(timestamp, msgtype),
+BATSTradeMsg::trade_decoder<Iterator>::trade_decoder(char msgtype) :
         BATSTradeMsg::trade_decoder<Iterator>::base_type(m_wire_msg)
 {
+    static const char shortMsgCode = 'P';
+    static const char longMsgCode  = 'r';
+
     // order and execution ids are 12 characters base 36
-    qi::uint_parser<uint64_t, 36, 12, 12> p_orderId;
-    qi::uint_parser<uint64_t, 36, 12, 12> p_execId;
-    qi::uint_parser<uint32_t, 10,  6, 6 > p_shares;
-    qi::uint_parser<uint32_t, 10,  10, 10 > m_price;
+    qi::uint_parser< uint64_t, 36, 12, 12 > p_orderId;
+    qi::uint_parser< uint64_t, 36, 12, 12 > p_execId;
+    qi::uint_parser< uint32_t, 10,  6,  6 > p_shares;
+    qi::uint_parser< uint32_t, 10, 10, 10 > m_price;
+    qi::uint_parser< uint32_t, 10,  8,  8 > p_ts;
 
     if (msgtype == longMsgCode)
-        m_wire_msg = ( p_orderId >> qi::char_("BS")
-                                  >> p_shares
-                                  >> qi::as_string[qi::repeat(8)[qi::char_]]
-                                  >> m_price
-                                  >> p_execId )
+        m_wire_msg = ( p_ts >> qi::char_(msgtype)
+                            >> p_orderId
+                            >> qi::char_("BS")
+                            >> p_shares
+                            >> qi::as_string[qi::repeat(8)[qi::char_]]
+                            >> m_price
+                            >> p_execId )
                 [qi::_val = phi::construct<BATSTradeMsg>(
-                        m_ts, m_mtype, qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6)];
+                        qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7, qi::_8)];
 
-    else
-        m_wire_msg = ( p_orderId >> qi::char_("BS")
-                                  >> p_shares
-                                  >> qi::as_string[qi::repeat(6)[qi::char_]]
-                                  >> m_price
-                                  >> p_execId )
+    else if ( msgtype == shortMsgCode )
+        m_wire_msg = ( p_ts >> qi::char_(msgtype)
+                            >> p_orderId
+                            >> qi::char_("BS")
+                            >> p_shares
+                            >> qi::as_string[qi::repeat(6)[qi::char_]]
+                            >> m_price
+                            >> p_execId )
                 [qi::_val = phi::construct<BATSTradeMsg>(
-                        m_ts, m_mtype, qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6)];
+                        qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7, qi::_8)];
 
 }
 

@@ -23,16 +23,16 @@ class BATSTradingStatusMsg : public BATSMessageBase
 public:
     // nested class for decoding the wire msg
     template<typename Iterator>
-    struct trading_status_decoder : decoder_base,  qi::grammar<Iterator, BATSTradingStatusMsg()>
+    struct trading_status_decoder : qi::grammar<Iterator, BATSTradingStatusMsg()>
     {
-        trading_status_decoder(int timestamp, char msgtype);
+        trading_status_decoder(char msgtype);
         qi::rule<Iterator, BATSTradingStatusMsg()> m_wire_msg; // member variables
     };
 
 public:
     BATSTradingStatusMsg() : BATSMessageBase() {}
-    BATSTradingStatusMsg(int timestamp, char msgtype, std::string const& symbol) :
-            BATSMessageBase(timestamp, msgtype), m_symbol(symbol) {}
+//    BATSTradingStatusMsg(int timestamp, char msgtype, std::string const& symbol) :
+//            BATSMessageBase(timestamp, msgtype), m_symbol(symbol) {}
 
     BATSTradingStatusMsg(int timestamp, char msgtype, std::string const& symbol,
                          char halt_status, uint8_t reg_sho_action,
@@ -78,20 +78,22 @@ public:
 };
 
 template<typename Iterator>
-BATSTradingStatusMsg::trading_status_decoder<Iterator>::trading_status_decoder(int timestamp, char msgtype) :
-        decoder_base(timestamp, msgtype),
+BATSTradingStatusMsg::trading_status_decoder<Iterator>::trading_status_decoder(char msgtype) :
         BATSTradingStatusMsg::trading_status_decoder<Iterator>::base_type(m_wire_msg)
 {
     // order and execution ids are 12 characters base 36
-    qi::uint_parser<uint8_t, 10,  1, 1 > action;
+    qi::uint_parser< uint8_t , 10,   1,  1 > action;
+    qi::uint_parser< uint32_t, 10,  10, 10 > m_price;
+    qi::uint_parser< uint32_t, 10,   8,  8 > p_ts;
 
-    m_wire_msg = ( qi::as_string[qi::repeat(8)[qi::char_]]
-                    >> qi::char_("HQT")
-                    >> action
-                    >> qi::char_
-                    >> qi::char_ )
+    m_wire_msg = ( p_ts >> qi::char_(msgtype)
+                        >> qi::as_string[qi::repeat(8)[qi::char_]]
+                        >> qi::char_("HQT")
+                        >> action
+                        >> qi::char_
+                        >> qi::char_ )
                   [qi::_val = phi::construct<BATSTradingStatusMsg>(
-                          m_ts, m_mtype, qi::_1, qi::_2, qi::_3, qi::_4, qi::_5)];
+                          qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7 )];
 }
 
 #endif //PITCH_SPIRIT_BATSTRADINGSTATUSMSG_HPP

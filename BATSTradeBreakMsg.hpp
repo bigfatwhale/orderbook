@@ -21,9 +21,9 @@ class BATSTradeBreakMsg : public BATSMessageBase
 public:
     // nested class for decoding the wire msg
     template<typename Iterator>
-    struct trade_break_decoder : decoder_base, qi::grammar<Iterator, BATSTradeBreakMsg()>
+    struct trade_break_decoder : qi::grammar<Iterator, BATSTradeBreakMsg()>
     {
-        trade_break_decoder(int timestamp, char msgtype);
+        trade_break_decoder(char msgtype);
         qi::rule<Iterator, BATSTradeBreakMsg()> m_wire_msg; // member variables
     };
 
@@ -56,14 +56,15 @@ public:
 };
 
 template<typename Iterator>
-BATSTradeBreakMsg::trade_break_decoder<Iterator>::trade_break_decoder(int timestamp, char msgtype) :
-        decoder_base(timestamp, msgtype),
+BATSTradeBreakMsg::trade_break_decoder<Iterator>::trade_break_decoder(char msgtype) :
         BATSTradeBreakMsg::trade_break_decoder<Iterator>::base_type(m_wire_msg)
 {
     // order and execution ids are 12 characters base 36
-    qi::uint_parser<uint64_t, 36, 12, 12> p_execId;
-    m_wire_msg  = p_execId[
-            qi::_val = phi::construct<BATSTradeBreakMsg>(m_ts, m_mtype, qi::_1)];
+    qi::uint_parser< uint64_t, 36, 12, 12 > p_execId;
+    qi::uint_parser< uint32_t, 10,  8,  8 > p_ts;
+
+    m_wire_msg  = ( p_ts >> qi::char_(msgtype) >> p_execId )[
+            qi::_val = phi::construct<BATSTradeBreakMsg>(qi::_1, qi::_2, qi::_3)];
 }
 
 #endif //PITCH_SPIRIT_BATSTRADEBREAKMSG_HPP

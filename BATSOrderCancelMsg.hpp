@@ -21,9 +21,9 @@ class BATSOrderCancelMsg : public BATSMessageBase
 public:
     // nested class for decoding the wire msg
     template<typename Iterator>
-    struct order_cancel_decoder : decoder_base, qi::grammar<Iterator, BATSOrderCancelMsg()>
+    struct order_cancel_decoder : qi::grammar<Iterator, BATSOrderCancelMsg()>
     {
-        order_cancel_decoder(int timestamp, char msgtype);
+        order_cancel_decoder(char msgtype);
         qi::rule<Iterator, BATSOrderCancelMsg()> m_wire_msg; // member variables
     };
 
@@ -60,16 +60,16 @@ public:
 
 
 template<typename Iterator>
-BATSOrderCancelMsg::order_cancel_decoder<Iterator>::order_cancel_decoder(int timestamp, char msgtype) :
-        decoder_base(timestamp, msgtype),
+BATSOrderCancelMsg::order_cancel_decoder<Iterator>::order_cancel_decoder(char msgtype) :
         BATSOrderCancelMsg::order_cancel_decoder<Iterator>::base_type(m_wire_msg)
 {
     // order and execution ids are 12 characters base 36
-    qi::uint_parser<uint64_t, 36, 12, 12> p_orderId;
-    qi::uint_parser<uint32_t, 10,  6, 6 > p_shares;
+    qi::uint_parser< uint64_t, 36, 12, 12 > p_orderId;
+    qi::uint_parser< uint32_t, 10,  6,  6 > p_shares;
+    qi::uint_parser< uint32_t, 10,  8,  8 > p_ts;
 
-    m_wire_msg  = ( p_orderId >> p_shares )
-                    [ qi::_val = phi::construct<BATSOrderCancelMsg>( m_ts, m_mtype, qi::_1, qi::_2) ];
+    m_wire_msg  = ( p_ts >> qi::char_(msgtype) >> p_orderId >> p_shares )
+                    [ qi::_val = phi::construct<BATSOrderCancelMsg>( qi::_1, qi::_2, qi::_3, qi::_4) ];
 }
 
 #endif //PITCH_SPIRIT_BATSORDERCANCELMSG_HPP

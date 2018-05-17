@@ -14,13 +14,6 @@ struct fixed_point
     uint32_t  dec_part;
 };
 
-struct decoder_base
-{
-    decoder_base(int timestamp, char msgtype) : m_ts(timestamp), m_mtype(msgtype) {}
-    int  m_ts;
-    char m_mtype;
-};
-
 BOOST_FUSION_ADAPT_STRUCT( fixed_point, int_part, dec_part )
 
 namespace boost { namespace spirit { namespace traits {

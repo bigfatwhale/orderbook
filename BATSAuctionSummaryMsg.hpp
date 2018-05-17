@@ -22,9 +22,9 @@ class BATSAuctionSummaryMsg : public BATSMessageBase
 public:
     // nested class for decoding the wire msg
     template<typename Iterator>
-    struct auction_summary_decoder : decoder_base, qi::grammar<Iterator, BATSAuctionSummaryMsg()>
+    struct auction_summary_decoder : qi::grammar<Iterator, BATSAuctionSummaryMsg()>
     {
-        auction_summary_decoder(int timestamp, char msgtype);
+        auction_summary_decoder(char msgtype);
 
         qi::rule<Iterator, BATSAuctionSummaryMsg()> m_wire_msg; // member variables
     };
@@ -69,19 +69,20 @@ public:
 };
 
 template<typename Iterator>
-BATSAuctionSummaryMsg::auction_summary_decoder<Iterator>::auction_summary_decoder(int timestamp, char msgtype) :
-        decoder_base(timestamp, msgtype),
+BATSAuctionSummaryMsg::auction_summary_decoder<Iterator>::auction_summary_decoder(char msgtype) :
         BATSAuctionSummaryMsg::auction_summary_decoder<Iterator>::base_type(m_wire_msg)
 {
     // order and execution ids are 12 characters base 36
-    qi::uint_parser<uint32_t, 10,  10, 10 > p_shares;
-    qi::uint_parser<uint32_t, 10,  10, 10 > m_price;
+    qi::uint_parser< uint32_t, 10, 10, 10 > p_shares;
+    qi::uint_parser< uint32_t, 10, 10, 10 > m_price;
+    qi::uint_parser< uint32_t, 10,  8,  8 > p_ts;
 
-    m_wire_msg = ( qi::as_string[qi::repeat(8)[qi::char_]]
-                    >> qi::char_("OCHI")
-                    >> m_price
-                    >> p_shares )
-            [qi::_val = phi::construct<BATSAuctionSummaryMsg>(m_ts, m_mtype, qi::_1, qi::_2, qi::_3, qi::_4)];
+    m_wire_msg = ( p_ts >> qi::char_(msgtype)
+                        >> qi::as_string[qi::repeat(8)[qi::char_]]
+                        >> qi::char_("OCHI")
+                        >> m_price
+                        >> p_shares )
+            [qi::_val = phi::construct<BATSAuctionSummaryMsg>(qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6)];
 
 }
 

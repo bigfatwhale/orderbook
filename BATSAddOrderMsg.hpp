@@ -21,9 +21,9 @@ class BATSAddOrderMsg : public BATSMessageBase
 public:
     // nested class for decoding the wire msg
     template<typename Iterator>
-    struct add_order_decoder : decoder_base, qi::grammar<Iterator, BATSAddOrderMsg()>
+    struct add_order_decoder : qi::grammar<Iterator, BATSAddOrderMsg()>
     {
-        add_order_decoder(int timestamp, char msgtype);
+        add_order_decoder(char msgtype);
 
         qi::rule<Iterator, BATSAddOrderMsg()> m_wire_msg; // member variables
 
@@ -80,16 +80,25 @@ public:
     uint64_t    m_price;
     char        m_display;
     std::string m_partId;
+
+//    static const char longCode;
+//    static const char shortCode;
+
 };
 
+
+
 template<typename Iterator>
-BATSAddOrderMsg::add_order_decoder<Iterator>::add_order_decoder(int timestamp, char msgtype) :
-        decoder_base(timestamp, msgtype),
+BATSAddOrderMsg::add_order_decoder<Iterator>::add_order_decoder(char msgtype) :
         BATSAddOrderMsg::add_order_decoder<Iterator>::base_type(m_wire_msg)
 {
+    static const char longCode = 'd';
+    static const char shortCode = 'A';
+
     // order and execution ids are 12 characters base 36
+    qi::uint_parser< uint32_t, 10,  6,  6 > p_shares;
     qi::uint_parser< uint64_t, 36, 12, 12 > p_orderId;
-    qi::uint_parser< uint32_t, 10,  6, 6  > p_shares;
+    qi::uint_parser< uint32_t, 10,  8,  8 > p_ts;
     qi::uint_parser< uint32_t, 10, 10, 10 > m_price;
 
     // leaving the below for reference on how to convert fixed_point to double using boost spirit
@@ -98,14 +107,29 @@ BATSAddOrderMsg::add_order_decoder<Iterator>::add_order_decoder(int timestamp, c
     // m_price       = m_fixed_point; // this converts to double from fixed point
     // m_fixed_point = int_part >> dec_part;
 
-    m_wire_msg = (p_orderId >> qi::char_("BS")
+    if (msgtype == longCode)
+        m_wire_msg = ( p_ts >> qi::char_(longCode)
+                            >> p_orderId
+                            >> qi::char_("BS")
                             >> p_shares
                             >> qi::as_string[qi::repeat(6)[qi::char_]]
                             >> m_price
                             >> qi::char_('Y')
-                            >> (qi::as_string[qi::repeat(4)[qi::char_]] | qi::as_string[qi::eps]))
-                [qi::_val = phi::construct<BATSAddOrderMsg>(
-                    m_ts, m_mtype, qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7)];
+                            >> qi::as_string[qi::repeat(4)[qi::char_]] )
+                            [qi::_val = phi::construct<BATSAddOrderMsg>(
+                                    qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7, qi::_8, qi::_9)];
+
+    else if (msgtype == shortCode)
+        m_wire_msg = ( p_ts >> qi::char_(shortCode)
+                            >> p_orderId
+                            >> qi::char_("BS")
+                            >> p_shares
+                            >> qi::as_string[qi::repeat(6)[qi::char_]]
+                            >> m_price
+                            >> qi::char_('Y') )
+                            [qi::_val = phi::construct<BATSAddOrderMsg>(
+                                    qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7, qi::_8, "")];
+
 }
 
 #endif //PITCH_SPIRIT_BATSADDORDERMSG_HPP

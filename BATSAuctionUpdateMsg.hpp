@@ -21,9 +21,9 @@ class BATSAuctionUpdateMsg : public BATSMessageBase
 public:
     // nested class for decoding the wire msg
     template<typename Iterator>
-    struct auction_update_decoder : decoder_base, qi::grammar<Iterator, BATSAuctionUpdateMsg()>
+    struct auction_update_decoder : qi::grammar<Iterator, BATSAuctionUpdateMsg()>
     {
-        auction_update_decoder(int timestamp, char msgtype);
+        auction_update_decoder(char msgtype);
 
         qi::rule<Iterator, BATSAuctionUpdateMsg()> m_wire_msg; // member variables
         qi::rule<Iterator, uint64_t> m_price;
@@ -82,23 +82,24 @@ public:
 };
 
 template<typename Iterator>
-BATSAuctionUpdateMsg::auction_update_decoder<Iterator>::auction_update_decoder(int timestamp, char msgtype) :
-        decoder_base(timestamp, msgtype),
+BATSAuctionUpdateMsg::auction_update_decoder<Iterator>::auction_update_decoder(char msgtype) :
         BATSAuctionUpdateMsg::auction_update_decoder<Iterator>::base_type(m_wire_msg)
 {
     // order and execution ids are 12 characters base 36
-    qi::uint_parser<uint32_t, 10, 10, 10 > p_shares;
-    qi::uint_parser<uint32_t, 10,  10, 10 > m_price;
+    qi::uint_parser< uint32_t, 10, 10, 10 > p_shares;
+    qi::uint_parser< uint32_t, 10, 10, 10 > m_price;
+    qi::uint_parser< uint32_t, 10,  8,  8 > p_ts;
 
-    m_wire_msg    = ( qi::as_string[ qi::repeat(8)[qi::char_] ]
-                    >> qi::char_("OCHI")
-                    >> m_price
-                    >> p_shares
-                    >> p_shares
-                    >> m_price
-                    >> m_price )
+    m_wire_msg    = ( p_ts >> qi::char_(msgtype)
+                           >> qi::as_string[ qi::repeat(8)[qi::char_] ]
+                           >> qi::char_("OCHI")
+                           >> m_price
+                           >> p_shares
+                           >> p_shares
+                           >> m_price
+                           >> m_price )
         [qi::_val = phi::construct<BATSAuctionUpdateMsg>(
-                    m_ts, m_mtype, qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7)];
+                qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7, qi::_8, qi::_9)];
 
 }
 

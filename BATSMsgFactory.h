@@ -23,8 +23,8 @@ class BATSMsgFactory
 {
 public:
 
-    static std::shared_ptr<BATSMessageBase> createMsg( int timestamp, char msgtype, std::string msg );
-    static std::shared_ptr<BATSMessageBase> createMsg( int timestamp, char msgtype, const char* start, const char* end );
+    static std::shared_ptr<BATSMessageBase> createMsg( char msgtype, std::string msg );
+    static std::shared_ptr<BATSMessageBase> createMsg( char msgtype, const char* start, const char* end );
 
 private:
     // syntatic sugar...
