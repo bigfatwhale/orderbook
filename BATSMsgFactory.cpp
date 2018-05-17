@@ -14,31 +14,24 @@
 #include "BATSAuctionSummaryMsg.hpp"
 #include "BATSRetailPriceImproveMsg.hpp"
 #include <boost/core/enable_if.hpp>
-#include <boost/type_traits.hpp>
+#include <type_traits>
 #include <memory>
 #include <string>
 
 using namespace std;
 
-// good template practice below. EnableIfAddOrder and DisableIfAddOrder are used
+// good template practice below. EnableIfAddOrder/EnableIfTradeMsg/DisableIf are used
 // for simulating template function partial specialization (not supported in C++).
 // Boost enable_if allows the use of SFINAE pattern which chooses the special function
-// we want to use for BATSAddOrderMsg. The dummy variable does the magic.
+// we want to use for BATSAddOrderMsg and BATSTradeMsg. The dummy variable does the magic.
 template<typename T>
-using EnableIfAddOrder =
-        typename boost::enable_if<boost::is_same<T, BATSAddOrderMsg>,
-                BATSAddOrderMsg>::type;
+using EnableIfAddOrder = enable_if_t<is_same_v<T, BATSAddOrderMsg>, BATSAddOrderMsg>;
 
 template<typename T>
-using EnableIfTradeMsg =
-typename boost::enable_if<boost::is_same<T, BATSTradeMsg>,
-        BATSTradeMsg>::type;
+using EnableIfTradeMsg = enable_if_t<is_same_v<T, BATSTradeMsg>, BATSTradeMsg>;
 
 template <typename T>
-using DisableIf =
-        typename boost::disable_if_c< boost::is_same<T, BATSAddOrderMsg>::value |
-                                      boost::is_same<T, BATSTradeMsg>::value,
-                void >::type;
+using DisableIf = enable_if_t< !( is_same_v<T, BATSAddOrderMsg> | is_same_v<T, BATSTradeMsg> ), void >;
 
 struct DecodeHelper {
 
@@ -67,7 +60,7 @@ struct DecodeHelper {
                                        EnableIfAddOrder<MsgT> *dummy=0)
     {
         static DecodeT decoder_short{ BATSAddOrderMsg::shortCode };
-        static DecodeT decoder_long{  BATSAddOrderMsg::longCode };
+        static DecodeT decoder_long { BATSAddOrderMsg::longCode  };
         return DecodeHelper::parse<DecodeT, MsgT>(
                 start, end, ( msgtype == BATSAddOrderMsg::shortCode ) ? decoder_short : decoder_long );
     }
@@ -77,7 +70,7 @@ struct DecodeHelper {
                                        EnableIfTradeMsg<MsgT> *dummy=0)
     {
         static DecodeT decoder_short{ BATSTradeMsg::shortMsgCode };
-        static DecodeT decoder_long{  BATSTradeMsg::longMsgCode };
+        static DecodeT decoder_long { BATSTradeMsg::longMsgCode  };
         return DecodeHelper::parse<DecodeT, MsgT>(
                 start, end, ( msgtype == BATSTradeMsg::shortMsgCode ) ? decoder_short : decoder_long );
     }
