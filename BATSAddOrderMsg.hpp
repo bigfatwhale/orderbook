@@ -81,19 +81,17 @@ public:
     char        m_display;
     std::string m_partId;
 
-//    static const char longCode;
-//    static const char shortCode;
+    static constexpr char longCode    {'d'};
+    static constexpr char shortCode   {'A'};
+    static constexpr char displayFlag {'Y'};
+    static constexpr auto sideFlag    {"BS"};
 
 };
-
-
 
 template<typename Iterator>
 BATSAddOrderMsg::add_order_decoder<Iterator>::add_order_decoder(char msgtype) :
         BATSAddOrderMsg::add_order_decoder<Iterator>::base_type(m_wire_msg)
 {
-    static const char longCode = 'd';
-    static const char shortCode = 'A';
 
     // order and execution ids are 12 characters base 36
     qi::uint_parser< uint32_t, 10,  6,  6 > p_shares;
@@ -107,26 +105,26 @@ BATSAddOrderMsg::add_order_decoder<Iterator>::add_order_decoder(char msgtype) :
     // m_price       = m_fixed_point; // this converts to double from fixed point
     // m_fixed_point = int_part >> dec_part;
 
-    if (msgtype == longCode)
-        m_wire_msg = ( p_ts >> qi::char_(longCode)
+    if (msgtype == BATSAddOrderMsg::longCode)
+        m_wire_msg = ( p_ts >> qi::char_(BATSAddOrderMsg::longCode)
                             >> p_orderId
-                            >> qi::char_("BS")
+                            >> qi::char_(BATSAddOrderMsg::sideFlag)
                             >> p_shares
                             >> qi::as_string[qi::repeat(6)[qi::char_]]
                             >> m_price
-                            >> qi::char_('Y')
+                            >> qi::char_(BATSAddOrderMsg::displayFlag)
                             >> qi::as_string[qi::repeat(4)[qi::char_]] )
                             [qi::_val = phi::construct<BATSAddOrderMsg>(
                                     qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7, qi::_8, qi::_9)];
 
-    else if (msgtype == shortCode)
-        m_wire_msg = ( p_ts >> qi::char_(shortCode)
+    else if (msgtype == BATSAddOrderMsg::shortCode)
+        m_wire_msg = ( p_ts >> qi::char_(BATSAddOrderMsg::shortCode)
                             >> p_orderId
-                            >> qi::char_("BS")
+                            >> qi::char_(BATSAddOrderMsg::sideFlag)
                             >> p_shares
                             >> qi::as_string[qi::repeat(6)[qi::char_]]
                             >> m_price
-                            >> qi::char_('Y') )
+                            >> qi::char_(BATSAddOrderMsg::displayFlag) )
                             [qi::_val = phi::construct<BATSAddOrderMsg>(
                                     qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7, qi::_8, "")];
 

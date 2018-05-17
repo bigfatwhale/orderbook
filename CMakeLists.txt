@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.7)
 project(bats_pitch_parser VERSION 0.01 DESCRIPTION "BATS PITCH parser")
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_FLAGS "-O3 -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall")
