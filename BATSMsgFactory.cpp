@@ -66,18 +66,20 @@ struct DecodeHelper {
     shared_ptr<BATSMessageBase> decode(char msgtype, const char* start, const char* end,
                                        EnableIfAddOrder<MsgT> *dummy=0)
     {
-        static DecodeT decoder_short( 'A' );
-        static DecodeT decoder_long( 'd' );
-        return DecodeHelper::parse<DecodeT, MsgT>(start, end, ( msgtype == 'A' ) ? decoder_short : decoder_long);
+        static DecodeT decoder_short{ BATSAddOrderMsg::shortCode };
+        static DecodeT decoder_long{  BATSAddOrderMsg::longCode };
+        return DecodeHelper::parse<DecodeT, MsgT>(
+                start, end, ( msgtype == BATSAddOrderMsg::shortCode ) ? decoder_short : decoder_long );
     }
 
     template<typename DecodeT, typename MsgT> static
     shared_ptr<BATSMessageBase> decode(char msgtype, const char* start, const char* end,
                                        EnableIfTradeMsg<MsgT> *dummy=0)
     {
-        static DecodeT decoder_short( 'P' );
-        static DecodeT decoder_long( 'r' );
-        return DecodeHelper::parse<DecodeT, MsgT>(start, end, ( msgtype == 'P' ) ? decoder_short : decoder_long);
+        static DecodeT decoder_short{ BATSTradeMsg::shortMsgCode };
+        static DecodeT decoder_long{  BATSTradeMsg::longMsgCode };
+        return DecodeHelper::parse<DecodeT, MsgT>(
+                start, end, ( msgtype == BATSTradeMsg::shortMsgCode ) ? decoder_short : decoder_long );
     }
 };
 
