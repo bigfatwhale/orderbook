@@ -6,6 +6,7 @@
 #define BOOST_TEST_DYN_LINK
 
 #include <string>
+#include <iostream>
 #include <boost/test/unit_test.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/iostreams/stream.hpp>
@@ -214,6 +215,14 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
                 auto volume = boost::lexical_cast<int>(*it++);
 
                 auto type = ( c % 2 == 0 ) ? BookType::SELL : BookType::BUY;
+
+                cout << "current msg line=" << msgline << endl;
+                cout << "current order line=" << cur_order_line << endl;
+                cout << "testing volume for price=" << price << " is " << volume << endl;
+
+                auto orderbook_volume = orderbook.volumeForPricePoint(price, type);
+                cout << ". Orderbook has volume=" << orderbook_volume << endl;
+
                 BOOST_TEST(orderbook.volumeForPricePoint(price, type) == volume);
 
                 c++;
