@@ -57,6 +57,8 @@ public:
   
     std::string m_symbol;
     char m_retail_price_improve;
+
+    static constexpr auto improveTypes{"BASN"};
 };
 
 template<typename Iterator>
@@ -67,7 +69,7 @@ BATSRetailPriceImproveMsg::retail_price_improve_decoder<Iterator>::retail_price_
 
     m_wire_msg  = ( p_ts >> qi::char_(msgtype)
                          >> qi::as_string[qi::repeat(8)[qi::char_]]
-                         >> qi::char_("BASN") )
+                         >> qi::char_(BATSRetailPriceImproveMsg::improveTypes) )
         [qi::_val = phi::construct<BATSRetailPriceImproveMsg>(qi::_1, qi::_2, qi::_3, qi::_4)];
 }
 

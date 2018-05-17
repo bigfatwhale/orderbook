@@ -71,15 +71,15 @@ public:
     uint64_t    m_price;
     uint64_t    m_execId; // Base 36 Numeric values come over the wire in ascii
 
+    static constexpr char longMsgCode  {'r'};
+    static constexpr char shortMsgCode {'P'};
+    static constexpr auto sideFlag    {"BS"};
 };
 
 template<typename Iterator>
 BATSTradeMsg::trade_decoder<Iterator>::trade_decoder(char msgtype) :
         BATSTradeMsg::trade_decoder<Iterator>::base_type(m_wire_msg)
 {
-    static const char shortMsgCode = 'P';
-    static const char longMsgCode  = 'r';
-
     // order and execution ids are 12 characters base 36
     qi::uint_parser< uint64_t, 36, 12, 12 > p_orderId;
     qi::uint_parser< uint64_t, 36, 12, 12 > p_execId;
@@ -87,10 +87,10 @@ BATSTradeMsg::trade_decoder<Iterator>::trade_decoder(char msgtype) :
     qi::uint_parser< uint32_t, 10, 10, 10 > m_price;
     qi::uint_parser< uint32_t, 10,  8,  8 > p_ts;
 
-    if (msgtype == longMsgCode)
+    if (msgtype == BATSTradeMsg::longMsgCode)
         m_wire_msg = ( p_ts >> qi::char_(msgtype)
                             >> p_orderId
-                            >> qi::char_("BS")
+                            >> qi::char_(BATSTradeMsg::sideFlag)
                             >> p_shares
                             >> qi::as_string[qi::repeat(8)[qi::char_]]
                             >> m_price
@@ -98,10 +98,10 @@ BATSTradeMsg::trade_decoder<Iterator>::trade_decoder(char msgtype) :
                 [qi::_val = phi::construct<BATSTradeMsg>(
                         qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7, qi::_8)];
 
-    else if ( msgtype == shortMsgCode )
+    else if ( msgtype == BATSTradeMsg::shortMsgCode )
         m_wire_msg = ( p_ts >> qi::char_(msgtype)
                             >> p_orderId
-                            >> qi::char_("BS")
+                            >> qi::char_(BATSTradeMsg::sideFlag)
                             >> p_shares
                             >> qi::as_string[qi::repeat(6)[qi::char_]]
                             >> m_price

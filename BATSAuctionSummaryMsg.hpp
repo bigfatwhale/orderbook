@@ -66,6 +66,8 @@ public:
     char m_auction_type;
     uint64_t m_price;
     uint32_t m_shares;
+
+    static constexpr auto auctionTypes{"OCHI"};
 };
 
 template<typename Iterator>
@@ -79,7 +81,7 @@ BATSAuctionSummaryMsg::auction_summary_decoder<Iterator>::auction_summary_decode
 
     m_wire_msg = ( p_ts >> qi::char_(msgtype)
                         >> qi::as_string[qi::repeat(8)[qi::char_]]
-                        >> qi::char_("OCHI")
+                        >> qi::char_(BATSAuctionSummaryMsg::auctionTypes)
                         >> m_price
                         >> p_shares )
             [qi::_val = phi::construct<BATSAuctionSummaryMsg>(qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6)];

@@ -75,6 +75,7 @@ public:
     char m_reserved1;
     char m_reserved2;
 
+    static constexpr auto haltStatus {"HQT"};
 };
 
 template<typename Iterator>
@@ -88,7 +89,7 @@ BATSTradingStatusMsg::trading_status_decoder<Iterator>::trading_status_decoder(c
 
     m_wire_msg = ( p_ts >> qi::char_(msgtype)
                         >> qi::as_string[qi::repeat(8)[qi::char_]]
-                        >> qi::char_("HQT")
+                        >> qi::char_(BATSTradingStatusMsg::haltStatus)
                         >> action
                         >> qi::char_
                         >> qi::char_ )

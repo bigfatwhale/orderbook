@@ -79,6 +79,8 @@ public:
     uint32_t m_sellshares;
     uint64_t m_indicative_price;
     uint64_t m_auction_only_price;
+
+    static constexpr auto auctionTypes{"OCHI"};
 };
 
 template<typename Iterator>
@@ -92,7 +94,7 @@ BATSAuctionUpdateMsg::auction_update_decoder<Iterator>::auction_update_decoder(c
 
     m_wire_msg    = ( p_ts >> qi::char_(msgtype)
                            >> qi::as_string[ qi::repeat(8)[qi::char_] ]
-                           >> qi::char_("OCHI")
+                           >> qi::char_(BATSAuctionUpdateMsg::auctionTypes)
                            >> m_price
                            >> p_shares
                            >> p_shares
