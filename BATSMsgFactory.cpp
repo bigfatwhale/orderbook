@@ -24,10 +24,14 @@ using namespace std;
 // std enable_if allows the use of SFINAE pattern which chooses the special function
 // we want to use for BATSAddOrderMsg and BATSTradeMsg. The dummy variable does the magic.
 template<typename T>
-using EnableIf  = enable_if_t< is_same_v<T, BATSAddOrderMsg> | is_same_v<T, BATSTradeMsg>, void>;
+using EnableIf  = enable_if_t<
+        is_same_v<T, BATSAddOrderMsg> | is_same_v<T, BATSTradeMsg>,
+        shared_ptr<BATSMessageBase> >;
 
 template <typename T>
-using DisableIf = enable_if_t< !( is_same_v<T, BATSAddOrderMsg> | is_same_v<T, BATSTradeMsg> ), void >;
+using DisableIf = enable_if_t<
+        !( is_same_v<T, BATSAddOrderMsg> | is_same_v<T, BATSTradeMsg> ),
+        shared_ptr<BATSMessageBase> >;
 
 struct DecodeHelper {
 
@@ -44,16 +48,14 @@ struct DecodeHelper {
     }
 
     template<typename DecodeT, typename MsgT> static
-    shared_ptr<BATSMessageBase> decode(char msgtype, const char* start, const char* end,
-                                       DisableIf<MsgT> *dummy=0)
+    DisableIf<MsgT> decode(char msgtype, const char* start, const char* end)
     {
         static DecodeT decoder( msgtype );
         return DecodeHelper::parse<DecodeT, MsgT>(start, end, decoder);
     }
 
     template<typename DecodeT, typename MsgT> static
-    shared_ptr<BATSMessageBase> decode(char msgtype, const char* start, const char* end,
-                                       EnableIf<MsgT> *dummy=0)
+    EnableIf<MsgT> decode(char msgtype, const char* start, const char* end)
     {
         static DecodeT decoder_short{ MsgT::shortMsgCode };
         static DecodeT decoder_long { MsgT::longMsgCode  };
