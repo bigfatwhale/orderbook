@@ -81,10 +81,10 @@ public:
     char        m_display;
     std::string m_partId;
 
-    static constexpr char longCode    {'d'};
-    static constexpr char shortCode   {'A'};
-    static constexpr char displayFlag {'Y'};
-    static constexpr auto sideFlag    {"BS"};
+    static constexpr char longMsgCode  {'d'};
+    static constexpr char shortMsgCode {'A'};
+    static constexpr char displayFlag  {'Y'};
+    static constexpr auto sideFlag     {"BS"};
 
 };
 
@@ -105,8 +105,8 @@ BATSAddOrderMsg::add_order_decoder<Iterator>::add_order_decoder(char msgtype) :
     // m_price       = m_fixed_point; // this converts to double from fixed point
     // m_fixed_point = int_part >> dec_part;
 
-    if (msgtype == BATSAddOrderMsg::longCode)
-        m_wire_msg = ( p_ts >> qi::char_(BATSAddOrderMsg::longCode)
+    if (msgtype == BATSAddOrderMsg::longMsgCode)
+        m_wire_msg = ( p_ts >> qi::char_(BATSAddOrderMsg::longMsgCode)
                             >> p_orderId
                             >> qi::char_(BATSAddOrderMsg::sideFlag)
                             >> p_shares
@@ -117,8 +117,8 @@ BATSAddOrderMsg::add_order_decoder<Iterator>::add_order_decoder(char msgtype) :
                             [qi::_val = phi::construct<BATSAddOrderMsg>(
                                     qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7, qi::_8, qi::_9)];
 
-    else if (msgtype == BATSAddOrderMsg::shortCode)
-        m_wire_msg = ( p_ts >> qi::char_(BATSAddOrderMsg::shortCode)
+    else if (msgtype == BATSAddOrderMsg::shortMsgCode)
+        m_wire_msg = ( p_ts >> qi::char_(BATSAddOrderMsg::shortMsgCode)
                             >> p_orderId
                             >> qi::char_(BATSAddOrderMsg::sideFlag)
                             >> p_shares
