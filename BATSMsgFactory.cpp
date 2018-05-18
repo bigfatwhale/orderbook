@@ -13,7 +13,6 @@
 #include "BATSAuctionUpdateMsg.hpp"
 #include "BATSAuctionSummaryMsg.hpp"
 #include "BATSRetailPriceImproveMsg.hpp"
-#include <boost/core/enable_if.hpp>
 #include <type_traits>
 #include <memory>
 #include <string>
@@ -22,7 +21,7 @@ using namespace std;
 
 // good template practice below. EnableIfAddOrder/EnableIfTradeMsg/DisableIf are used
 // for simulating template function partial specialization (not supported in C++).
-// Boost enable_if allows the use of SFINAE pattern which chooses the special function
+// std enable_if allows the use of SFINAE pattern which chooses the special function
 // we want to use for BATSAddOrderMsg and BATSTradeMsg. The dummy variable does the magic.
 template<typename T>
 using EnableIfAddOrder = enable_if_t<is_same_v<T, BATSAddOrderMsg>, BATSAddOrderMsg>;
