@@ -188,23 +188,43 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
         BOOST_TEST(orderbook.volumeForPricePoint(5869500, BookType::SELL) == 50);
         BOOST_TEST(orderbook.volumeForPricePoint(5849700, BookType::BUY) == 5);
 
+        int msgcnt = 0;
         while (getline(msg_ifs, msgline))
         {
             // process one line of message file, apply the actions onto the orderbook
             auto msg = parser.parse_msg(msgline);
 
+            getline(order_ifs, cur_order_line);
+
+//            cout << "msg type=" << msg->m_msgtype << endl;
+            cout << "current msg line=" << msgline << endl;
+            cout << "current order line=" << cur_order_line << endl;
             if ( msg->m_msgtype == '1' )
             {
                 //uint64_t id, uint64_t price, uint32_t volume, BookType side, std::string const &partId
                 auto dmsg = dynamic_pointer_cast<AddOrderMsg>(msg);
                 Order o(dmsg->m_orderId, dmsg->m_price, dmsg->m_shares,
-                        dmsg->m_side == 1 ? BookType::BUY : BookType::SELL, "NCM");
+                        ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
                 orderbook.addOrder(o);
+            }
+            else if (msg->m_msgtype == '2')
+            {
+                auto dmsg = dynamic_pointer_cast<CancelOrderMsg>(msg);
+                Order o(dmsg->m_orderId, dmsg->m_price, dmsg->m_shares,
+                        ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
+                orderbook.removeOrder(o);
+            }
+            else if (msg->m_msgtype == '3')
+            {
+                auto dmsg = dynamic_pointer_cast<DeleteOrderMsg>(msg);
+                Order o(dmsg->m_orderId, dmsg->m_price, dmsg->m_shares,
+                        ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
+                orderbook.removeOrder(o);
             }
 
             // now take the corresponding line in the order book file. check that our order book
             // state is the same as what is given by the order book file line.
-            getline(order_ifs, cur_order_line);
+
             tokens = tokenizer (cur_order_line, sep);
 
             int c = 0;
@@ -216,17 +236,17 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
 
                 auto type = ( c % 2 == 0 ) ? BookType::SELL : BookType::BUY;
 
-                cout << "current msg line=" << msgline << endl;
-                cout << "current order line=" << cur_order_line << endl;
                 cout << "testing volume for price=" << price << " is " << volume << endl;
 
                 auto orderbook_volume = orderbook.volumeForPricePoint(price, type);
-                cout << ". Orderbook has volume=" << orderbook_volume << endl;
+                cout << msgcnt << ":Orderbook has volume=" << orderbook_volume << endl;
 
                 BOOST_TEST(orderbook.volumeForPricePoint(price, type) == volume);
 
                 c++;
+                msgcnt++;
             }
+
 
         }
         msg_ifs.close();
