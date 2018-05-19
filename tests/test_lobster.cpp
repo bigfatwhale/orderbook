@@ -5,6 +5,7 @@
 #define BOOST_TEST_MODULE test_orderbook
 #define BOOST_TEST_DYN_LINK
 
+#include <set>
 #include <string>
 #include <iostream>
 #include <boost/test/unit_test.hpp>
@@ -189,6 +190,9 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
         BOOST_TEST(orderbook.volumeForPricePoint(5849700, BookType::BUY) == 5);
 
         int msgcnt = 0;
+
+        set<uint32_t> added_price_levels;
+
         while (getline(msg_ifs, msgline))
         {
             // process one line of message file, apply the actions onto the orderbook
@@ -206,6 +210,7 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
                 Order o(dmsg->m_orderId, dmsg->m_price, dmsg->m_shares,
                         ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
                 orderbook.addOrder(o);
+                added_price_levels.insert(o.price);
             }
             else if (msg->m_msgtype == '2')
             {
@@ -221,6 +226,13 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
                         ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
                 orderbook.removeOrder(o);
             }
+            else if (msg->m_msgtype == '4')
+            {
+                // execution msg.
+                auto dmsg = dynamic_pointer_cast<OrderExecutedMsg>(msg);
+
+
+            }
 
             // now take the corresponding line in the order book file. check that our order book
             // state is the same as what is given by the order book file line.
@@ -234,15 +246,17 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
                 auto price = boost::lexical_cast<int>(*it++);
                 auto volume = boost::lexical_cast<int>(*it++);
 
-                auto type = ( c % 2 == 0 ) ? BookType::SELL : BookType::BUY;
+                if (added_price_levels.find(price) != added_price_levels.end() )
+                {
+                    auto type = (c % 2 == 0) ? BookType::SELL : BookType::BUY;
 
-                cout << "testing volume for price=" << price << " is " << volume << endl;
+                    cout << "testing volume for price=" << price << " is " << volume << endl;
 
-                auto orderbook_volume = orderbook.volumeForPricePoint(price, type);
-                cout << msgcnt << ":Orderbook has volume=" << orderbook_volume << endl;
+                    auto orderbook_volume = orderbook.volumeForPricePoint(price, type);
+                    cout << msgcnt << ":Orderbook has volume=" << orderbook_volume << endl;
 
-                BOOST_TEST(orderbook.volumeForPricePoint(price, type) == volume);
-
+                    BOOST_TEST(orderbook.volumeForPricePoint(price, type) == volume);
+                }
                 c++;
                 msgcnt++;
             }

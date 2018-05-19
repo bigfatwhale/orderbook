@@ -65,6 +65,10 @@ public:
 
     void addOrder(Order &order)
     {
+        // we need to check if this incoming order "crossed the spread", i.e. if the bid
+        // for some particular stock is $100.00 and the ask is $100.10, and then some one puts
+        // in a new order with bid at $100.10, then we have to match this with the sell book
+        // and generate an execution msg.
         if ( order.side == BookType::BUY )
             m_buyBook.addOrder(order);
         else
