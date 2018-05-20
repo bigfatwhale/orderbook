@@ -9,6 +9,7 @@
 #include <utility>
 #include <memory>
 #include <iostream>
+#include <boost/iterator/iterator_facade.hpp>
 #include "PriceBucket.h"
 
 class default_bucket_set
@@ -108,6 +109,41 @@ public:
     // By default we use a wrapper around std::map (log n lookups). We also can
     // switch in a veb-based set type (log(log(u)) lookups) and compare the performance.
     BucketSetT m_buckets;
+
+    friend class iterator;
+
+    // boost::iterator_facade uses CRTP.
+    class iterator :
+            public boost::iterator_facade<
+                    iterator,    // CRTP
+                    PriceBucket, // what we are iterating over
+                    boost::bidirectional_traversal_tag >// type of iterator
+    {
+    public:
+        iterator() : m_price{0} {}
+        iterator( const PriceBucketManager& pbm ) : m_priceBucketManager{pbm} {}
+
+    private:
+        friend class boost::iterator_core_access;
+
+        void increment() { m_price = m_priceBucketManager.nextBucket(m_price); }
+
+        void decrement() { m_price = m_priceBucketManager.prevBucket(m_price); }
+
+        bool equal( iterator const& other ) const
+        {
+            return this->m_price == other.m_price;
+        }
+
+        PriceBucket& dereference() const
+        {
+            std::shared_ptr<PriceBucket> p_bucket = m_priceBucketManager.findBucket(m_price);
+            return *p_bucket;
+        }
+
+        uint32_t m_price; // which price point we are currently at.
+        const PriceBucketManager& m_priceBucketManager;
+    };
 };
 
 #endif //ORDERBOOK_PRICEBUCKETMANAGER_HPP

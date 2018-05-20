@@ -25,6 +25,18 @@ public:
                                        &PriceBucketManagerT::minPrice} {
     }
 
+    class PriceLevelIterator
+    {
+    public:
+        PriceLevelIterator(const Book& book) {}
+
+
+    private:
+
+    };
+
+
+
     void addOrder( Order &order )
     {
         auto bucket = m_priceBucketManager.findBucket(order.price);
@@ -49,6 +61,8 @@ public:
 
     uint64_t bestPrice() { return m_bestPriceFunc( &m_priceBucketManager ); }
 
+    //friend class PriceLevelIterator;
+
 private:
     BookType m_bookType;
     PriceBucketManagerT m_priceBucketManager;
@@ -70,7 +84,19 @@ public:
         // in a new order with bid at $100.10, then we have to match this with the sell book
         // and generate an execution msg.
         if ( order.side == BookType::BUY )
+        {
+            // do hacky approach for now, should switch to use iterator and walk through the prices.
+            if ( order.price >= m_sellBook.bestPrice() )
+            {
+                auto volume = order.volume;
+                //auto bucketIter = m_sellBook.m_
+                while (volume > 0)
+                {
+
+                }
+            }
             m_buyBook.addOrder(order);
+        }
         else
             m_sellBook.addOrder(order);
     }
