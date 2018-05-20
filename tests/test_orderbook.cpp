@@ -235,4 +235,41 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
 
     }
 
+    BOOST_AUTO_TEST_CASE( test_price_bucket_iter )
+    {
+        auto pm = PriceBucketManager<>();
+
+        pm.addBucket(10);
+        pm.addBucket(5);
+        pm.addBucket(20);
+
+        auto it = pm.begin();
+        BOOST_TEST( it->m_pricePoint == 20 );
+
+        it++;
+        BOOST_TEST( it->m_pricePoint == 10 );
+
+        it++;
+        BOOST_TEST( it->m_pricePoint == 5 );
+
+        it++;
+        bool isEnd = it == pm.end();
+        BOOST_TEST( isEnd );
+
+        int cnt = 0;
+        int arr[] = {20, 10, 5};
+        for ( auto iter : pm ) // test range based for loop.
+        {
+            BOOST_TEST( iter.m_pricePoint == arr[cnt++] );
+        }
+
+        cnt = 0;
+        for ( auto iter = pm.begin(); iter != pm.end(); iter++ ) // test range based for loop.
+        {
+            BOOST_TEST( iter->m_pricePoint == arr[cnt++] );
+        }
+
+    }
+
+
 BOOST_AUTO_TEST_SUITE_END()
