@@ -9,6 +9,8 @@
 #include <utility>
 #include <memory>
 #include <iostream>
+#include <boost/function.hpp>
+#include <boost/iterator/iterator_facade.hpp>
 #include "PriceBucket.h"
 
 class default_bucket_set
@@ -83,6 +85,12 @@ public:
     // 3. find the predecessor bucket for the specified price-level
     // 4. add a new price-bucket for a given price-level
 
+    //PriceBucketManager(BookType t) : m_bookType{t}
+    //{
+        // unfortunately we need to know book type (BUY or SELL) to do iterators.
+        // if it's BUY, we iterate from highest to lowest, and the reverse for SELL.
+    //}
+
     std::shared_ptr<PriceBucket>
     findBucket( uint64_t price ) { return m_buckets.find(price); }
 
@@ -108,6 +116,74 @@ public:
     // By default we use a wrapper around std::map (log n lookups). We also can
     // switch in a veb-based set type (log(log(u)) lookups) and compare the performance.
     BucketSetT m_buckets;
+    //BookType   m_bookType;
+
+    //
+    //
+    //
+    friend class iterator;
+
+    // boost::iterator_facade uses CRTP.
+    class iterator :
+            public boost::iterator_facade<
+                    iterator,    // CRTP
+                    PriceBucket, // what we are iterating over
+                    boost::bidirectional_traversal_tag >// type of iterator
+    {
+    public:
+        iterator( PriceBucketManager& pbm, uint32_t price, BookType t) :
+                 m_price{price}, m_priceBucketManager{pbm},
+                 m_incFunc{t == BookType::BUY ?
+                           &PriceBucketManager::prevBucket : &PriceBucketManager::nextBucket},
+                 m_decFunc{t == BookType::BUY ?
+                           &PriceBucketManager::nextBucket : &PriceBucketManager::prevBucket}
+        {
+        }
+
+    private:
+        friend class boost::iterator_core_access;
+
+        void increment()
+        {
+            auto bucket = m_incFunc( &m_priceBucketManager, m_price);
+            m_price = bucket == nullptr ? 0 : bucket->m_pricePoint;
+        }
+
+        void decrement()
+        {
+            auto bucket = m_decFunc( &m_priceBucketManager, m_price);
+            m_price = bucket == nullptr ? 0 : bucket->m_pricePoint;
+        }
+
+        bool equal( iterator const& other ) const
+        {
+            return this->m_price == other.m_price;
+        }
+
+        PriceBucket& dereference() const
+        {
+            std::shared_ptr<PriceBucket> p_bucket = m_priceBucketManager.findBucket(m_price);
+            return *p_bucket;
+        }
+
+        uint32_t m_price; // which price point we are currently at.
+        PriceBucketManager& m_priceBucketManager;
+        boost::function< std::shared_ptr<PriceBucket> (PriceBucketManager<BucketSetT>*, uint64_t) > m_incFunc;
+        boost::function< std::shared_ptr<PriceBucket> (PriceBucketManager<BucketSetT>*, uint64_t) > m_decFunc;
+
+    };
+
+    iterator begin(BookType t = BookType::BUY)
+    {
+        auto bestPrice = t == BookType::BUY ? maxPrice() : minPrice();
+        return iterator( *this, bestPrice, t );
+    }
+
+    iterator end(BookType t = BookType::BUY)
+    {
+        return iterator( *this, 0, t );
+    }
+
 };
 
 #endif //ORDERBOOK_PRICEBUCKETMANAGER_HPP

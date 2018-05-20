@@ -11,6 +11,7 @@
 #include <utility>
 #include <memory>
 #include <boost/function.hpp>
+#include <boost/iterator/iterator_facade.hpp>
 #include "Order.h"
 #include "PriceBucket.h"
 #include "PriceBucketManager.hpp"
@@ -49,6 +50,38 @@ public:
 
     uint64_t bestPrice() { return m_bestPriceFunc( &m_priceBucketManager ); }
 
+    // This is just a forwarding iterator which forwards all calls to a
+    // PriceBucketManager::iterator.
+    class iterator : public boost::iterator_facade<
+            iterator,
+            PriceBucket,
+            boost::bidirectional_traversal_tag >
+    {
+
+        using PriceBucketManagerIter = typename PriceBucketManagerT::iterator;
+    public:
+        iterator( PriceBucketManagerT& pbm, uint32_t price, BookType t) :
+                m_bucket_iter{pbm, price, t} {}
+
+    private:
+        friend class boost::iterator_core_access;
+
+        PriceBucketManagerIter m_bucket_iter;
+
+        void increment() { m_bucket_iter++; }
+        void decrement() { m_bucket_iter--; }
+
+        bool equal( iterator const& other ) const
+        {
+            return this->m_bucket_iter == other.m_bucket_iter;
+        }
+
+        PriceBucket& dereference() const { return *m_bucket_iter; }
+    };
+
+    iterator begin() { return iterator( m_priceBucketManager, bestPrice(), m_bookType ); }
+    iterator end()   { return iterator(m_priceBucketManager, 0, m_bookType ); }
+
 private:
     BookType m_bookType;
     PriceBucketManagerT m_priceBucketManager;
@@ -56,7 +89,7 @@ private:
 
 };
 
-template <typename PriceBucketManagerT>
+template <typename PriceBucketManagerT=PriceBucketManager<> >
 class LimitOrderBook {
     // class implementing the facilities for a "continuous double auction"
     // see https://arxiv.org/abs/1012.0349 for general survey of limit order books.
@@ -65,8 +98,24 @@ public:
 
     void addOrder(Order &order)
     {
+        // we need to check if this incoming order "crossed the spread", i.e. if the bid
+        // for some particular stock is $100.00 and the ask is $100.10, and then some one puts
+        // in a new order with bid at $100.10, then we have to match this with the sell book
+        // and generate an execution msg.
         if ( order.side == BookType::BUY )
+        {
+            // do hacky approach for now, should switch to use iterator and walk through the prices.
+            if ( ( m_sellBook.bestPrice() > 0 ) && ( order.price >= m_sellBook.bestPrice() ) )
+            {
+                auto volume = order.volume;
+                //auto bucketIter = m_sellBook.m_
+                while (volume > 0)
+                {
+
+                }
+            }
             m_buyBook.addOrder(order);
+        }
         else
             m_sellBook.addOrder(order);
     }
@@ -89,6 +138,13 @@ public:
 
     uint64_t bestBid() { return m_buyBook.bestPrice();  }
     uint64_t bestAsk() { return m_sellBook.bestPrice(); }
+
+    using BookIter = typename Book<PriceBucketManagerT>::iterator;
+
+    BookIter bids_begin() { return m_buyBook.begin();  }
+    BookIter asks_begin() { return m_sellBook.begin(); }
+    BookIter bids_end()   { return m_buyBook.end();    }
+    BookIter asks_end()   { return m_sellBook.end();   }
 
 private:
 
