@@ -67,6 +67,8 @@ namespace lobster
                 return decode<TradeHaltMsgDecoder, TradeHaltMsg>( timestamp, msgtype, msg );
                 break;
             }
+            default:
+                throw runtime_error("Error parsing message = " + msg);
         }
 
     }
