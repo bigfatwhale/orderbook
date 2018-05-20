@@ -17,6 +17,10 @@ public:
     PriceBucket(uint64_t pricePoint);
     void addOrder( Order const& order);
     void removeOrder( Order const& order);
+
+    std::deque<Order>::iterator begin() { return m_orders.begin(); }
+    std::deque<Order>::iterator end() { return m_orders.end(); }
+
     uint32_t totalVolume();
     uint32_t numOrders();
     uint64_t m_pricePoint;

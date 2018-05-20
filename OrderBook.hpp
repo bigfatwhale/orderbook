@@ -5,11 +5,13 @@
 #ifndef ORDERBOOK_ORDERBOOK_HPP
 #define ORDERBOOK_ORDERBOOK_HPP
 
+#include <algorithm>
 #include <deque>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <memory>
+#include <iostream>
 #include <boost/function.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include "Order.h"
@@ -108,13 +110,36 @@ public:
             if ( ( m_sellBook.bestPrice() > 0 ) && ( order.price >= m_sellBook.bestPrice() ) )
             {
                 auto volume = order.volume;
-                //auto bucketIter = m_sellBook.m_
-                while (volume > 0)
+                auto priceBucketIter = asks_begin();
+                auto order_i = priceBucketIter->begin();
+
+                while (volume > 0 && order_i != priceBucketIter->end() && order_i->price < order.price )
                 {
+                    if ( volume >= order_i->volume )
+                    {
+                        order_i->volume = 0;
+                        volume -= order_i->volume;
+
+                        //TODO: generate execution msg, for both sides.
+                    }
+                    else
+                    {
+                        volume = 0;
+                        order_i->volume -= volume;
+                        //TODO: generate execution msg, for both sides.
+                    }
+                    order_i++; // walk orders in the same bucket
+                    if ( order_i == priceBucketIter->end() )
+                    {
+                        priceBucketIter++;
+                        if ( priceBucketIter == asks_end() )
+                            break;
+                    }
 
                 }
             }
-            m_buyBook.addOrder(order);
+            else
+                m_buyBook.addOrder(order);
         }
         else
             m_sellBook.addOrder(order);
