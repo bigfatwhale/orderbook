@@ -7,17 +7,15 @@
 using namespace std;
 
 PriceBucket::PriceBucket(uint64_t pricePoint, Order const &order) :
-        //m_nextBucket{nullptr}, m_previousBucket{nullptr},
-        m_pricePoint{pricePoint}, m_deletedCount{0},
-        m_volume{0}
+        m_pricePoint{pricePoint}, m_volume{0}, m_deletedCount{0}
+
 {
     addOrder(order);
 }
 
 PriceBucket::PriceBucket(uint64_t pricePoint) :
-        //m_nextBucket{nullptr}, m_previousBucket{nullptr},
-        m_pricePoint{pricePoint}, m_deletedCount{0},
-        m_volume{0}
+        m_pricePoint{pricePoint}, m_volume{0}, m_deletedCount{0}
+
 {
 }
 

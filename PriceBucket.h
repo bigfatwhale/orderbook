@@ -12,7 +12,7 @@
 class PriceBucket
 {
 public:
-    PriceBucket() : m_deletedCount{0} {}
+    PriceBucket() : m_pricePoint{0}, m_deletedCount{0} {}
     PriceBucket(uint64_t pricePoint, Order const& order);
     PriceBucket(uint64_t pricePoint);
     void addOrder( Order const& order);
