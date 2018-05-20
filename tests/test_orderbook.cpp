@@ -271,5 +271,95 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
 
     }
 
+    BOOST_AUTO_TEST_CASE( test_book_iter )
+    {
+        auto buybook  = Book<PriceBucketManager<>>(BookType::BUY);
+        auto sellbook = Book<PriceBucketManager<>>(BookType::SELL);
 
+        auto o1 = Order(2001, 10000, 100, BookType::BUY, "Acme Corp.");
+        auto o2 = Order(2002, 10050, 200, BookType::BUY, "Acme Corp.");
+        auto o3 = Order(2003, 10100, 300, BookType::BUY, "Acme Corp.");
+        auto o4 = Order(2004, 10200, 400, BookType::SELL, "Acme Corp.");
+        auto o5 = Order(2005, 10250, 500, BookType::SELL, "Acme Corp.");
+        auto o6 = Order(2006, 10300, 600, BookType::SELL, "Acme Corp.");
+
+        buybook.addOrder(o1);
+        buybook.addOrder(o2);
+        buybook.addOrder(o3);
+        sellbook.addOrder(o4);
+        sellbook.addOrder(o5);
+        sellbook.addOrder(o6);
+
+        auto it = buybook.begin();
+        BOOST_TEST( it->m_pricePoint == 10100 );
+
+        it++;
+        BOOST_TEST( it->m_pricePoint == 10050 );
+
+        it++;
+        BOOST_TEST( it->m_pricePoint == 10000 );
+
+        it++;
+        bool isEnd = it == buybook.end();
+        BOOST_TEST( isEnd );
+
+        auto it2 = sellbook.begin();
+        BOOST_TEST( it2->m_pricePoint == 10200 );
+
+        it2++;
+        BOOST_TEST( it2->m_pricePoint == 10250 );
+
+        it2++;
+        BOOST_TEST( it2->m_pricePoint == 10300 );
+
+        it2++;
+        isEnd = it2 == buybook.end();
+        BOOST_TEST( isEnd );
+
+    }
+
+    BOOST_AUTO_TEST_CASE( test_lob_iter )
+    {
+        auto b = LimitOrderBook<PriceBucketManager<>>();
+
+        auto o1 = Order(2001, 10000, 100, BookType::BUY, "Acme Corp.");
+        auto o2 = Order(2002, 10050, 200, BookType::BUY, "Acme Corp.");
+        auto o3 = Order(2003, 10100, 300, BookType::BUY, "Acme Corp.");
+        auto o4 = Order(2004, 10200, 400, BookType::SELL, "Acme Corp.");
+        auto o5 = Order(2005, 10250, 500, BookType::SELL, "Acme Corp.");
+        auto o6 = Order(2006, 10300, 600, BookType::SELL, "Acme Corp.");
+
+        b.addOrder(o1);
+        b.addOrder(o2);
+        b.addOrder(o3);
+        b.addOrder(o4);
+        b.addOrder(o5);
+        b.addOrder(o6);
+
+        auto it = b.bids_begin();
+        BOOST_TEST( it->m_pricePoint == 10100 );
+
+        it++;
+        BOOST_TEST( it->m_pricePoint == 10050 );
+
+        it++;
+        BOOST_TEST( it->m_pricePoint == 10000 );
+
+        it++;
+        bool isEnd = it == b.bids_end();
+        BOOST_TEST( isEnd );
+
+        auto it2 = b.asks_begin();
+        BOOST_TEST( it2->m_pricePoint == 10200 );
+
+        it2++;
+        BOOST_TEST( it2->m_pricePoint == 10250 );
+
+        it2++;
+        BOOST_TEST( it2->m_pricePoint == 10300 );
+
+        it2++;
+        isEnd = it2 == b.asks_end();
+        BOOST_TEST( isEnd );
+    }
 BOOST_AUTO_TEST_SUITE_END()

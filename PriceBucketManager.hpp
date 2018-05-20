@@ -131,7 +131,6 @@ public:
                     boost::bidirectional_traversal_tag >// type of iterator
     {
     public:
-        iterator() : m_price{0} {}
         iterator( PriceBucketManager& pbm, uint32_t price, BookType t) :
                  m_price{price}, m_priceBucketManager{pbm},
                  m_incFunc{t == BookType::BUY ?
