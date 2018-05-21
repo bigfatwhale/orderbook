@@ -17,6 +17,7 @@ public:
     PriceBucket(uint64_t pricePoint);
     void addOrder( Order const& order);
     void removeOrder( Order const& order);
+    void adjustOrderVolume( Order &order, int32_t volume );
 
     std::deque<Order>::iterator begin() { return m_orders.begin(); }
     std::deque<Order>::iterator end() { return m_orders.end(); }
@@ -25,8 +26,8 @@ public:
     uint32_t numOrders();
     uint64_t m_pricePoint;
     uint32_t m_volume;
-
-private:
+public:
+//private:
     std::deque<Order> m_orders;
     std::unordered_map<uint64_t, uint32_t> m_orderLookup;
     uint32_t m_deletedCount;
