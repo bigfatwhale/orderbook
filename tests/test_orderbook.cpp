@@ -362,4 +362,36 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
         isEnd = it2 == b.asks_end();
         BOOST_TEST( isEnd );
     }
+
+    BOOST_AUTO_TEST_CASE( test_lob_cross_spread )
+    {
+        auto b = LimitOrderBook<PriceBucketManager<>>();
+
+        auto o1 = Order(2001, 10200, 400, BookType::SELL, "Acme Corp.");
+        auto o2 = Order(2002, 10250, 500, BookType::SELL, "Acme Corp.");
+        auto o3 = Order(2003, 10300, 600, BookType::SELL, "Acme Corp.");
+
+        b.addOrder(o1);
+        b.addOrder(o2);
+        b.addOrder(o3);
+
+        auto o4 = Order(2004, 10225, 300, BookType::BUY, "Acme Corp.");
+        b.addOrder(o4);
+
+        BOOST_TEST( b.volumeForPricePoint(10200, BookType::SELL) == 100 );
+
+        auto o5 = Order(2005, 10000, 100, BookType::BUY, "Acme Corp.");
+        auto o6 = Order(2006, 10050, 200, BookType::BUY, "Acme Corp.");
+        auto o7 = Order(2007, 10100, 300, BookType::BUY, "Acme Corp.");
+
+        b.addOrder(o5);
+        b.addOrder(o6);
+        b.addOrder(o7);
+
+        auto o8 = Order(2008, 10075, 150, BookType::SELL, "Acme Corp.");
+        b.addOrder(o8);
+
+        BOOST_TEST( b.volumeForPricePoint(10100, BookType::BUY) == 150 );
+    }
+
 BOOST_AUTO_TEST_SUITE_END()

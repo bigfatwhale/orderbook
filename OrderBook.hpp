@@ -5,11 +5,13 @@
 #ifndef ORDERBOOK_ORDERBOOK_HPP
 #define ORDERBOOK_ORDERBOOK_HPP
 
+#include <algorithm>
 #include <deque>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <memory>
+#include <iostream>
 #include <boost/function.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include "Order.h"
@@ -82,6 +84,8 @@ public:
     iterator begin() { return iterator( m_priceBucketManager, bestPrice(), m_bookType ); }
     iterator end()   { return iterator(m_priceBucketManager, 0, m_bookType ); }
 
+    BookType bookType() { return m_bookType; }
+
 private:
     BookType m_bookType;
     PriceBucketManagerT m_priceBucketManager;
@@ -102,22 +106,37 @@ public:
         // for some particular stock is $100.00 and the ask is $100.10, and then some one puts
         // in a new order with bid at $100.10, then we have to match this with the sell book
         // and generate an execution msg.
+        int32_t residual_volume;
         if ( order.side == BookType::BUY )
         {
-            // do hacky approach for now, should switch to use iterator and walk through the prices.
+            // iterate and walk through the prices, generating filled order msgs.
             if ( ( m_sellBook.bestPrice() > 0 ) && ( order.price >= m_sellBook.bestPrice() ) )
             {
-                auto volume = order.volume;
-                //auto bucketIter = m_sellBook.m_
-                while (volume > 0)
-                {
+                residual_volume = crossSpreadWalk(order, m_sellBook);
 
-                }
+                if (residual_volume > 0)
+                    order.volume = residual_volume;
+                else
+                    return;
             }
+
             m_buyBook.addOrder(order);
         }
         else
+        {
+            // iterate and walk through the prices, generating filled order msgs.
+            if ( ( m_buyBook.bestPrice() > 0 ) && ( order.price <= m_buyBook.bestPrice() ) )
+            {
+                residual_volume = crossSpreadWalk(order, m_buyBook);
+
+                if (residual_volume > 0)
+                    order.volume = residual_volume;
+                else
+                    return;
+            }
+
             m_sellBook.addOrder(order);
+        }
     }
 
     void removeOrder( Order &order )
@@ -147,6 +166,58 @@ public:
     BookIter asks_end()   { return m_sellBook.end();   }
 
 private:
+
+    uint32_t crossSpreadWalk( Order &order, Book<PriceBucketManagerT>& book )
+    {
+        // walks the order book match off orders, returns residual volume for
+        // addition back into the LOB
+        auto volume = order.volume;
+        auto priceBucketIter = book.begin();
+        auto orderIter = priceBucketIter->begin();
+
+        bool price_condition;
+
+        while (volume > 0) // && order_i != priceBucketIter->end() // this is always true on first entry
+        {
+            if ( book.bookType() == BookType::BUY ) // order is a sell order, orderIter is walking through
+            {
+                // order is a sell order, orderIter is walking through buy orders in the book.
+                // so we process any order in the book where sell price is less than buy price.
+                price_condition = order.price <= orderIter->price;
+            }
+            else
+            {
+                // order is a buy order, orderIter is walking through sell orders in the book.
+                // so we process any order in the book where sell price is less than buy price.
+                price_condition = order.price >= orderIter->price;
+            }
+
+            if (!price_condition)
+                break;
+
+            if ( volume >= orderIter->volume )
+            {
+                volume -= orderIter->volume;
+                priceBucketIter->adjustOrderVolume(*orderIter, -orderIter->volume);
+                //TODO: generate execution msg, for both sides.
+            }
+            else
+            {
+                priceBucketIter->adjustOrderVolume(*orderIter, -volume);
+                volume = 0;
+                //TODO: generate execution msg, for both sides.
+            }
+            orderIter++; // walk orders in the same bucket
+            if ( orderIter == priceBucketIter->end() )
+            {
+                priceBucketIter++;
+                if ( priceBucketIter == asks_end() )
+                    break;
+            }
+
+        }
+        return volume;
+    }
 
     Book<PriceBucketManagerT> m_buyBook;
     Book<PriceBucketManagerT> m_sellBook;

@@ -41,6 +41,17 @@ void PriceBucket::removeOrder(Order const &order)
     }
 }
 
+void PriceBucket::adjustOrderVolume(Order &order, int32_t volume)
+{
+    // assumptions : order must exists in the price bucket.
+    // After modifying +/- the volume field in the order, we need to
+    // adjust the PriceBucket.m_volume field as well because it keeps
+    // a summary of the volume
+
+    order.volume += volume;
+    m_volume += volume;
+}
+
 uint32_t PriceBucket::numOrders()
 {
     return m_orders.size() - m_deletedCount;
