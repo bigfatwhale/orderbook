@@ -106,27 +106,36 @@ public:
         // for some particular stock is $100.00 and the ask is $100.10, and then some one puts
         // in a new order with bid at $100.10, then we have to match this with the sell book
         // and generate an execution msg.
+        int32_t residual_volume;
         if ( order.side == BookType::BUY )
         {
             // iterate and walk through the prices, generating filled order msgs.
             if ( ( m_sellBook.bestPrice() > 0 ) && ( order.price >= m_sellBook.bestPrice() ) )
             {
-                crossSpreadWalk(order, m_sellBook);
-                // TODO: add logic for handling residual volume. An order still needs to be added.
+                residual_volume = crossSpreadWalk(order, m_sellBook);
+
+                if (residual_volume > 0)
+                    order.volume = residual_volume;
+                else
+                    return;
             }
-            else
-                m_buyBook.addOrder(order);
+
+            m_buyBook.addOrder(order);
         }
         else
         {
             // iterate and walk through the prices, generating filled order msgs.
             if ( ( m_buyBook.bestPrice() > 0 ) && ( order.price <= m_buyBook.bestPrice() ) )
             {
-                crossSpreadWalk(order, m_buyBook);
-                // TODO: add logic for handling residual volume. An order still needs to be added.
+                residual_volume = crossSpreadWalk(order, m_buyBook);
+
+                if (residual_volume > 0)
+                    order.volume = residual_volume;
+                else
+                    return;
             }
-            else
-                m_sellBook.addOrder(order);
+
+            m_sellBook.addOrder(order);
         }
     }
 
@@ -158,34 +167,48 @@ public:
 
 private:
 
-    void crossSpreadWalk( Order &order, Book<PriceBucketManagerT>& book )
+    uint32_t crossSpreadWalk( Order &order, Book<PriceBucketManagerT>& book )
     {
+        // walks the order book match off orders, returns residual volume for
+        // addition back into the LOB
         auto volume = order.volume;
         auto priceBucketIter = book.begin();
-        auto order_i = priceBucketIter->begin();
+        auto orderIter = priceBucketIter->begin();
 
-        //bool price_condition = book.bookType() == BookType::BUY ?
+        bool price_condition;
 
         while (volume > 0) // && order_i != priceBucketIter->end() // this is always true on first entry
         {
-            if ( book.bookType() == BookType::BUY )
-                order_i->price < order.price
-
-
-            if ( volume >= order_i->volume )
+            if ( book.bookType() == BookType::BUY ) // order is a sell order, orderIter is walking through
             {
-                volume -= order_i->volume;
-                priceBucketIter->adjustOrderVolume(*order_i, -order_i->volume);
+                // order is a sell order, orderIter is walking through buy orders in the book.
+                // so we process any order in the book where sell price is less than buy price.
+                price_condition = order.price <= orderIter->price;
+            }
+            else
+            {
+                // order is a buy order, orderIter is walking through sell orders in the book.
+                // so we process any order in the book where sell price is less than buy price.
+                price_condition = order.price >= orderIter->price;
+            }
+
+            if (!price_condition)
+                break;
+
+            if ( volume >= orderIter->volume )
+            {
+                volume -= orderIter->volume;
+                priceBucketIter->adjustOrderVolume(*orderIter, -orderIter->volume);
                 //TODO: generate execution msg, for both sides.
             }
             else
             {
-                priceBucketIter->adjustOrderVolume(*order_i, -volume);
+                priceBucketIter->adjustOrderVolume(*orderIter, -volume);
                 volume = 0;
                 //TODO: generate execution msg, for both sides.
             }
-            order_i++; // walk orders in the same bucket
-            if ( order_i == priceBucketIter->end() )
+            orderIter++; // walk orders in the same bucket
+            if ( orderIter == priceBucketIter->end() )
             {
                 priceBucketIter++;
                 if ( priceBucketIter == asks_end() )
@@ -193,7 +216,7 @@ private:
             }
 
         }
-
+        return volume;
     }
 
     Book<PriceBucketManagerT> m_buyBook;
