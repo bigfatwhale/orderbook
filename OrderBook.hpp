@@ -165,9 +165,15 @@ public:
     BookIter bids_end()   { return m_buyBook.end();    }
     BookIter asks_end()   { return m_sellBook.end();   }
 
+    // for unittest convenience only
+    void addOrderToBuyBook(  Order &order ) { m_buyBook.addOrder(order); }
+    void addOrderToSellBook( Order &order ) { m_sellBook.addOrder(order); }
+
+    using IBookType = Book<PriceBucketManagerT>;
+
 private:
 
-    uint32_t crossSpreadWalk( Order &order, Book<PriceBucketManagerT>& book )
+    virtual uint32_t crossSpreadWalk( Order &order, Book<PriceBucketManagerT>& book )
     {
         // walks the order book match off orders, returns residual volume for
         // addition back into the LOB
@@ -219,8 +225,8 @@ private:
         return volume;
     }
 
-    Book<PriceBucketManagerT> m_buyBook;
-    Book<PriceBucketManagerT> m_sellBook;
+    IBookType m_buyBook;
+    IBookType m_sellBook;
 
 };
 

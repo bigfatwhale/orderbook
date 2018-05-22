@@ -32,11 +32,49 @@ using boost::iostreams::stream;
 
 using tokenizer = boost::tokenizer<boost::char_separator<char>>;
 
-class LOBSim : public PriceBucketManager<>
+class LOBSim : public LimitOrderBook<>
 {
+private:
 
+    uint32_t crossSpreadWalk( Order &order, LOBSim::IBookType &book ) override
+    {
+        // walks the order book match off orders, returns residual volume for
+        // addition back into the LOB
+        auto volume = order.volume;
+        auto priceBucketIter = book.begin();
+        //auto orderIter = priceBucketIter->begin();
+
+        // get to the right price bucket
+        while ( priceBucketIter->m_pricePoint != order.price && priceBucketIter != book.end() )
+            priceBucketIter++;
+
+        for ( auto orderIter : *priceBucketIter )
+        {
+            if ( volume > 0 )
+            {
+                if ( volume >= orderIter.volume )
+                {
+                    volume -= orderIter.volume;
+                    priceBucketIter->adjustOrderVolume(orderIter, -orderIter.volume);
+                    //TODO: generate execution msg, for both sides.
+                }
+                else
+                {
+                    priceBucketIter->adjustOrderVolume(orderIter, -volume);
+                    volume = 0;
+                    //TODO: generate execution msg, for both sides.
+                }
+            }
+            else
+                break;
+
+        }
+        return volume;
+    }
 
 };
+
+
 
 BOOST_AUTO_TEST_SUITE( test_lobster_suite )
 
@@ -150,7 +188,8 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
     BOOST_AUTO_TEST_CASE( test_lobster_sample_load )
     {
         auto parser = lobster::MsgParser();
-        auto orderbook = LimitOrderBook<>();
+//        auto orderbook = LimitOrderBook<>();
+        auto orderbook = LOBSim();
         string msgline, cur_order_line, prev_order_line;
 
         mapped_file_source msgfile("AAPL_2012-06-21_message_5.csv");
