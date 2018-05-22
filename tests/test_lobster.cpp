@@ -20,6 +20,7 @@
 #include "../lobster/OrderExecutedMsg.hpp"
 #include "../lobster/AuctionTradeMsg.hpp"
 #include "../lobster/TradeHaltMsg.hpp"
+#include "PriceBucketManager.hpp"
 #include "OrderBook.hpp"
 #include "Order.h"
 
@@ -31,6 +32,11 @@ using boost::iostreams::stream;
 
 using tokenizer = boost::tokenizer<boost::char_separator<char>>;
 
+class LOBSim : public PriceBucketManager<>
+{
+
+
+};
 
 BOOST_AUTO_TEST_SUITE( test_lobster_suite )
 
@@ -228,9 +234,23 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
             }
             else if (msg->m_msgtype == '4')
             {
-                // execution msg.
+                // execution msg. this is a msg transmitted out because some order filled the exchange's
+                // LOB and the exchange generated a msg to send to us. to process this in our local instance
+                // of the LOB, we need to artificially create an appropriate buy/sell order on the opposite side
+                // of the book. This order should immediately get filled by our orderbook and our orderbook state
+                // will then match what's specified in the cur_order_line.
                 auto dmsg = dynamic_pointer_cast<OrderExecutedMsg>(msg);
-
+                if ( dmsg->m_side == 1 )
+                {
+                    // if it's a execution in the buy book, then we need to generate a sell order, and vice versa.
+                    Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::SELL, "NCM");
+                    orderbook.addOrder(o);
+                }
+                else
+                {
+                    Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::BUY, "NCM");
+                    orderbook.addOrder(o);
+                }
 
             }
 
