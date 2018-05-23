@@ -40,14 +40,14 @@ public:
     {
         auto bucket = m_priceBucketManager.findBucket(order.price);
         bucket->removeOrder(order);
-        if (bucket->m_volume == 0)
+        if (bucket->totalVolume() == 0)
             m_priceBucketManager.removeBucket(order.price);
     }
 
     uint32_t volumeForPricePoint( uint64_t price )
     {
         auto bucket = m_priceBucketManager.findBucket(price);
-        return bucket->m_volume;
+        return bucket->totalVolume();
     }
 
     uint64_t bestPrice() { return m_bestPriceFunc( &m_priceBucketManager ); }

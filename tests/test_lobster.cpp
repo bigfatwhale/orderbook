@@ -200,7 +200,6 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
     BOOST_AUTO_TEST_CASE( test_lobster_sample_load )
     {
         auto parser = lobster::MsgParser();
-//        auto orderbook = LimitOrderBook<>();
         auto orderbook = LOBSim();
         string msgline, cur_order_line, prev_order_line;
 
@@ -232,25 +231,10 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
             c++;
         }
 
-        // below is the first row of the order book data file.
-        // 5859400,200,5853300,18,  5859800,200,5853000,150,  5861000,200,5851000,5,
-        // 5868900,300,5850100,89,  5869500,50,5849700,5
-//        BOOST_TEST(orderbook.volumeForPricePoint(5859400, BookType::SELL) == 200);
-//        BOOST_TEST(orderbook.volumeForPricePoint(5853300, BookType::BUY) == 18);
-//        BOOST_TEST(orderbook.volumeForPricePoint(5859800, BookType::SELL) == 200);
-//        BOOST_TEST(orderbook.volumeForPricePoint(5853000, BookType::BUY) == 150);
-//        BOOST_TEST(orderbook.volumeForPricePoint(5861000, BookType::SELL) == 200);
-//        BOOST_TEST(orderbook.volumeForPricePoint(5851000, BookType::BUY) == 5);
-//        BOOST_TEST(orderbook.volumeForPricePoint(5868900, BookType::SELL) == 300);
-//        BOOST_TEST(orderbook.volumeForPricePoint(5850100, BookType::BUY) == 89);
-//        BOOST_TEST(orderbook.volumeForPricePoint(5869500, BookType::SELL) == 50);
-//        BOOST_TEST(orderbook.volumeForPricePoint(5849700, BookType::BUY) == 5);
-
-        BOOST_TEST(orderbook.volumeForPricePoint(5873900, BookType::SELL) == 100);
-
         int msgcnt = 2;
 
         set<uint32_t> added_price_levels;
+        set<uint32_t> added_order_ids;
 
         while (getline(msg_ifs, msgline))
         {
@@ -259,9 +243,6 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
 
             getline(order_ifs, cur_order_line);
 
-//            cout << "msg type=" << msg->m_msgtype << endl;
-            cout << "current msg line=" << msgline << endl;
-            cout << "current order line=" << cur_order_line << endl;
             if ( msg->m_msgtype == '1' )
             {
                 //uint64_t id, uint64_t price, uint32_t volume, BookType side, std::string const &partId
@@ -270,6 +251,7 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
                         ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
                 orderbook.addOrder(o);
                 added_price_levels.insert(o.price);
+                added_order_ids.insert(o.orderId);
             }
             else if (msg->m_msgtype == '2')
             {
@@ -281,7 +263,13 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
             else if (msg->m_msgtype == '3')
             {
                 auto dmsg = dynamic_pointer_cast<DeleteOrderMsg>(msg);
-                Order o(dmsg->m_orderId, dmsg->m_price, dmsg->m_shares,
+
+                uint32_t oid;
+                if ( added_order_ids.find(dmsg->m_orderId) != added_order_ids.end())
+                    oid = dmsg->m_orderId;
+                else
+                    oid = 0;
+                Order o(oid, dmsg->m_price, dmsg->m_shares,
                         ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
                 orderbook.removeOrder(o);
             }
@@ -306,6 +294,7 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
                 }
 
             }
+            // msgtype = '5' is to be ignored.
 
             // now take the corresponding line in the order book file. check that our order book
             // state is the same as what is given by the order book file line.
@@ -329,20 +318,16 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
                     auto type = (c % 2 == 0) ? BookType::SELL : BookType::BUY;
 
                     auto orderbook_volume = orderbook.volumeForPricePoint(price, type);
-                    cout << "(line=" << msgcnt << ", c="<< c << ") Testing LOBSTER volume for price=" << price << " is " << volume
-                         << ". Internal Orderbook has volume=" << orderbook_volume << endl;
 
                     BOOST_TEST(orderbook_volume == volume);
 
                     if (orderbook_volume != volume)
                         throw runtime_error("volume mismatch");
 
-
                 }
                 c++;
             }
             msgcnt++;
-
 
         }
         msg_ifs.close();
