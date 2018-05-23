@@ -3,6 +3,7 @@
 //
 #include "PriceBucket.h"
 #include <iostream>
+#include <numeric>
 
 using namespace std;
 
@@ -30,14 +31,20 @@ void PriceBucket::addOrder(Order const &order)
 
 void PriceBucket::removeOrder(Order const &order)
 {
+
+
     if (m_orderLookup.find(order.orderId) != m_orderLookup.end() )
     {
         cout << "m_orderLookup has " << m_orderLookup.size() << " items" << endl;
         auto item_num = m_orderLookup[order.orderId];
-        cout << "item_num=" << item_num << "orderId=" << order.orderId << endl;
-        m_orders[item_num].active = false;
-        m_deletedCount++;
-        m_volume -= order.volume;
+        cout << "item_num=" << item_num << ". orderId=" << order.orderId << endl;
+        //m_orders[item_num].active = false;
+        //m_deletedCount++;
+
+        //m_volume -= order.volume;
+
+        m_orders.erase( m_orders.begin() + item_num );
+        m_orderLookup.erase(order.orderId);
     }
 }
 
@@ -49,7 +56,7 @@ void PriceBucket::adjustOrderVolume(Order &order, int32_t volume)
     // a summary of the volume
 
     order.volume += volume;
-    m_volume += volume;
+    //m_volume += volume;
 }
 
 uint32_t PriceBucket::numOrders()
@@ -59,5 +66,7 @@ uint32_t PriceBucket::numOrders()
 
 uint32_t PriceBucket::totalVolume()
 {
-    return m_volume;
+    // count the total volume we have in this bucket.
+    auto f = []( int a, Order const& b) { return a + b.volume; };
+    return accumulate( m_orders.begin(), m_orders.end(), 0, f);
 }
