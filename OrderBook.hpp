@@ -182,6 +182,7 @@ private:
         auto orderIter = priceBucketIter->begin();
 
         bool price_condition;
+        std::deque<Order> orders_to_remove;
 
         while (volume > 0) // && order_i != priceBucketIter->end() // this is always true on first entry
         {
@@ -205,6 +206,7 @@ private:
             {
                 volume -= orderIter->volume;
                 priceBucketIter->adjustOrderVolume(*orderIter, -orderIter->volume);
+                orders_to_remove.push_back(*orderIter);
                 //TODO: generate execution msg, for both sides.
             }
             else
@@ -213,6 +215,7 @@ private:
                 volume = 0;
                 //TODO: generate execution msg, for both sides.
             }
+
             orderIter++; // walk orders in the same bucket
             if ( orderIter == priceBucketIter->end() )
             {
@@ -222,6 +225,10 @@ private:
             }
 
         }
+
+        for ( auto &i : orders_to_remove )
+            book.removeOrder(i);
+
         return volume;
     }
 

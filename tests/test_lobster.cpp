@@ -48,7 +48,14 @@ private:
         while ( priceBucketIter->m_pricePoint != order.price && priceBucketIter != book.end() )
             priceBucketIter++;
 
-        for ( auto orderIter : *priceBucketIter )
+        std::deque<Order> orders_to_remove;
+
+        auto bucket = *priceBucketIter;
+        cout << "PriceBucket(" << bucket.m_pricePoint << ") has the followins orders," << endl;
+        for ( auto x : bucket )
+            cout << "oid=" << x.orderId << ", vol=" << x.volume << endl;
+
+        for ( auto &orderIter : *priceBucketIter )
         {
             if ( volume > 0 )
             {
@@ -56,6 +63,7 @@ private:
                 {
                     volume -= orderIter.volume;
                     priceBucketIter->adjustOrderVolume(orderIter, -orderIter.volume);
+                    orders_to_remove.push_back(orderIter);
                     //TODO: generate execution msg, for both sides.
                 }
                 else
@@ -69,6 +77,10 @@ private:
                 break;
 
         }
+
+        for ( auto &i : orders_to_remove )
+            book.removeOrder(i);
+
         return volume;
     }
 
@@ -192,8 +204,8 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
         auto orderbook = LOBSim();
         string msgline, cur_order_line, prev_order_line;
 
-        mapped_file_source msgfile("AAPL_2012-06-21_message_5.csv");
-        mapped_file_source orderfile("AAPL_2012-06-21_orderbook_5.csv");
+        mapped_file_source msgfile("AAPL_2012-06-21_message_50.csv");
+        mapped_file_source orderfile("AAPL_2012-06-21_orderbook_50.csv");
 
         stream<mapped_file_source> msg_ifs(msgfile, std::ios::binary);
         stream<mapped_file_source> order_ifs(orderfile, std::ios::binary);
@@ -213,8 +225,8 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
         auto it = tokens.begin();
         while (it != tokens.end())
         {
-            auto price = boost::lexical_cast<int>(*it++);
-            auto volume = boost::lexical_cast<int>(*it++);
+            auto price = boost::lexical_cast<uint64_t>(*it++);
+            auto volume = boost::lexical_cast<uint64_t>(*it++);
             auto o = Order(0, price, volume, ( c % 2 == 0 ) ? BookType::SELL : BookType::BUY, "");
             orderbook.addOrder(o);
             c++;
@@ -223,18 +235,20 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
         // below is the first row of the order book data file.
         // 5859400,200,5853300,18,  5859800,200,5853000,150,  5861000,200,5851000,5,
         // 5868900,300,5850100,89,  5869500,50,5849700,5
-        BOOST_TEST(orderbook.volumeForPricePoint(5859400, BookType::SELL) == 200);
-        BOOST_TEST(orderbook.volumeForPricePoint(5853300, BookType::BUY) == 18);
-        BOOST_TEST(orderbook.volumeForPricePoint(5859800, BookType::SELL) == 200);
-        BOOST_TEST(orderbook.volumeForPricePoint(5853000, BookType::BUY) == 150);
-        BOOST_TEST(orderbook.volumeForPricePoint(5861000, BookType::SELL) == 200);
-        BOOST_TEST(orderbook.volumeForPricePoint(5851000, BookType::BUY) == 5);
-        BOOST_TEST(orderbook.volumeForPricePoint(5868900, BookType::SELL) == 300);
-        BOOST_TEST(orderbook.volumeForPricePoint(5850100, BookType::BUY) == 89);
-        BOOST_TEST(orderbook.volumeForPricePoint(5869500, BookType::SELL) == 50);
-        BOOST_TEST(orderbook.volumeForPricePoint(5849700, BookType::BUY) == 5);
+//        BOOST_TEST(orderbook.volumeForPricePoint(5859400, BookType::SELL) == 200);
+//        BOOST_TEST(orderbook.volumeForPricePoint(5853300, BookType::BUY) == 18);
+//        BOOST_TEST(orderbook.volumeForPricePoint(5859800, BookType::SELL) == 200);
+//        BOOST_TEST(orderbook.volumeForPricePoint(5853000, BookType::BUY) == 150);
+//        BOOST_TEST(orderbook.volumeForPricePoint(5861000, BookType::SELL) == 200);
+//        BOOST_TEST(orderbook.volumeForPricePoint(5851000, BookType::BUY) == 5);
+//        BOOST_TEST(orderbook.volumeForPricePoint(5868900, BookType::SELL) == 300);
+//        BOOST_TEST(orderbook.volumeForPricePoint(5850100, BookType::BUY) == 89);
+//        BOOST_TEST(orderbook.volumeForPricePoint(5869500, BookType::SELL) == 50);
+//        BOOST_TEST(orderbook.volumeForPricePoint(5849700, BookType::BUY) == 5);
 
-        int msgcnt = 0;
+        BOOST_TEST(orderbook.volumeForPricePoint(5873900, BookType::SELL) == 100);
+
+        int msgcnt = 2;
 
         set<uint32_t> added_price_levels;
 
@@ -302,23 +316,32 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
             auto it = tokens.begin();
             while (it != tokens.end())
             {
-                auto price = boost::lexical_cast<int>(*it++);
-                auto volume = boost::lexical_cast<int>(*it++);
+                auto price = boost::lexical_cast<uint64_t>(*it++);
+                auto volume = boost::lexical_cast<uint64_t>(*it++);
+
+                if (c==0)
+                    BOOST_TEST( orderbook.bestAsk() == price);
+                if (c==1)
+                    BOOST_TEST( orderbook.bestBid() == price);
 
                 if (added_price_levels.find(price) != added_price_levels.end() )
                 {
                     auto type = (c % 2 == 0) ? BookType::SELL : BookType::BUY;
 
-                    cout << "testing volume for price=" << price << " is " << volume << endl;
-
                     auto orderbook_volume = orderbook.volumeForPricePoint(price, type);
-                    cout << msgcnt << ":Orderbook has volume=" << orderbook_volume << endl;
+                    cout << "(line=" << msgcnt << ", c="<< c << ") Testing LOBSTER volume for price=" << price << " is " << volume
+                         << ". Internal Orderbook has volume=" << orderbook_volume << endl;
 
-                    BOOST_TEST(orderbook.volumeForPricePoint(price, type) == volume);
+                    BOOST_TEST(orderbook_volume == volume);
+
+                    if (orderbook_volume != volume)
+                        throw runtime_error("volume mismatch");
+
+
                 }
                 c++;
-                msgcnt++;
             }
+            msgcnt++;
 
 
         }
