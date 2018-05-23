@@ -29,7 +29,7 @@ foreach(testSrc ${TEST_SRCS})
                 COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/${testName} )
 endforeach(testSrc)
 
-set(TEST_FILES tests/AAPL_2012-06-21_message_5.csv tests/AAPL_2012-06-21_orderbook_5.csv )
+set(TEST_FILES tests/AAPL_2012-06-21_message_50.csv tests/AAPL_2012-06-21_orderbook_50.csv )
 foreach(testFile ${TEST_FILES})
     configure_file(${testFile} ${testFile} COPYONLY)
 endforeach(testFile)

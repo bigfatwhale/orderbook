@@ -35,7 +35,8 @@ namespace lobster
         OrderExecutedMsg(timespec timestamp, char msgtype, uint64_t orderId, uint32_t shares,
                     uint64_t price, int8_t side, bool visible) : OrderMsgBase(timestamp, msgtype,
                                                                               orderId, shares,
-                                                                              price, side)
+                                                                              price, side),
+                                                                 m_visible{visible}
         {}
         bool     m_visible;
     };

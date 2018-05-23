@@ -12,7 +12,7 @@
 class PriceBucket
 {
 public:
-    PriceBucket() : m_pricePoint{0}, m_deletedCount{0} {}
+    PriceBucket() : m_pricePoint{0} {}
     PriceBucket(uint64_t pricePoint, Order const& order);
     PriceBucket(uint64_t pricePoint);
     void addOrder( Order const& order);
@@ -25,12 +25,9 @@ public:
     uint32_t totalVolume();
     uint32_t numOrders();
     uint64_t m_pricePoint;
-    uint32_t m_volume;
-public:
-//private:
+
+private:
     std::deque<Order> m_orders;
-    std::unordered_map<uint64_t, uint32_t> m_orderLookup;
-    uint32_t m_deletedCount;
 
 };
 

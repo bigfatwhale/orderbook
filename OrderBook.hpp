@@ -40,14 +40,14 @@ public:
     {
         auto bucket = m_priceBucketManager.findBucket(order.price);
         bucket->removeOrder(order);
-        if (bucket->m_volume == 0)
+        if (bucket->totalVolume() == 0)
             m_priceBucketManager.removeBucket(order.price);
     }
 
     uint32_t volumeForPricePoint( uint64_t price )
     {
         auto bucket = m_priceBucketManager.findBucket(price);
-        return bucket->m_volume;
+        return bucket->totalVolume();
     }
 
     uint64_t bestPrice() { return m_bestPriceFunc( &m_priceBucketManager ); }
@@ -165,9 +165,15 @@ public:
     BookIter bids_end()   { return m_buyBook.end();    }
     BookIter asks_end()   { return m_sellBook.end();   }
 
+    // for unittest convenience only
+    void addOrderToBuyBook(  Order &order ) { m_buyBook.addOrder(order); }
+    void addOrderToSellBook( Order &order ) { m_sellBook.addOrder(order); }
+
+    using IBookType = Book<PriceBucketManagerT>;
+
 private:
 
-    uint32_t crossSpreadWalk( Order &order, Book<PriceBucketManagerT>& book )
+    virtual uint32_t crossSpreadWalk( Order &order, Book<PriceBucketManagerT>& book )
     {
         // walks the order book match off orders, returns residual volume for
         // addition back into the LOB
@@ -176,6 +182,7 @@ private:
         auto orderIter = priceBucketIter->begin();
 
         bool price_condition;
+        std::deque<Order> orders_to_remove;
 
         while (volume > 0) // && order_i != priceBucketIter->end() // this is always true on first entry
         {
@@ -199,6 +206,7 @@ private:
             {
                 volume -= orderIter->volume;
                 priceBucketIter->adjustOrderVolume(*orderIter, -orderIter->volume);
+                orders_to_remove.push_back(*orderIter);
                 //TODO: generate execution msg, for both sides.
             }
             else
@@ -207,6 +215,7 @@ private:
                 volume = 0;
                 //TODO: generate execution msg, for both sides.
             }
+
             orderIter++; // walk orders in the same bucket
             if ( orderIter == priceBucketIter->end() )
             {
@@ -216,11 +225,15 @@ private:
             }
 
         }
+
+        for ( auto &i : orders_to_remove )
+            book.removeOrder(i);
+
         return volume;
     }
 
-    Book<PriceBucketManagerT> m_buyBook;
-    Book<PriceBucketManagerT> m_sellBook;
+    IBookType m_buyBook;
+    IBookType m_sellBook;
 
 };
 

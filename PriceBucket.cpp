@@ -2,19 +2,21 @@
 // Created by Uncle Chu on 9/5/18.
 //
 #include "PriceBucket.h"
+#include <algorithm>
 #include <iostream>
+#include <numeric>
 
 using namespace std;
 
 PriceBucket::PriceBucket(uint64_t pricePoint, Order const &order) :
-        m_pricePoint{pricePoint}, m_volume{0}, m_deletedCount{0}
+        m_pricePoint{pricePoint}
 
 {
     addOrder(order);
 }
 
 PriceBucket::PriceBucket(uint64_t pricePoint) :
-        m_pricePoint{pricePoint}, m_volume{0}, m_deletedCount{0}
+        m_pricePoint{pricePoint}
 
 {
 }
@@ -22,22 +24,26 @@ PriceBucket::PriceBucket(uint64_t pricePoint) :
 void PriceBucket::addOrder(Order const &order)
 {
     m_orders.push_back(order);
-    // this lets us go from orderId to item in the deque.
-    // we use it for logical delete of orders.
-    m_orderLookup[order.orderId] = m_orders.size() - 1;
-    m_volume += order.volume;
 }
 
 void PriceBucket::removeOrder(Order const &order)
 {
-    if (m_orderLookup.find(order.orderId) != m_orderLookup.end() )
+    if ( order.orderId == 0 ) {
+        // TODO : only adding this for passing lobster load. rework it out later.
+        auto it = std::find_if(m_orders.begin(), m_orders.end(), [](Order &o) { return o.orderId == 0; });
+        if (it != m_orders.end()) {
+            if (it->volume == order.volume)
+                m_orders.erase(it);
+            else
+                it->volume -= order.volume;
+        }
+    }
+    else
     {
-        cout << "m_orderLookup has " << m_orderLookup.size() << " items" << endl;
-        auto item_num = m_orderLookup[order.orderId];
-        cout << "item_num=" << item_num << "orderId=" << order.orderId << endl;
-        m_orders[item_num].active = false;
-        m_deletedCount++;
-        m_volume -= order.volume;
+        auto f = [&order]( Order &o1 ) { return o1.orderId == order.orderId; };
+        auto it = std::find_if( m_orders.begin(), m_orders.end(), f);
+        if ( it != m_orders.end() )
+            m_orders.erase(it);
     }
 }
 
@@ -49,15 +55,18 @@ void PriceBucket::adjustOrderVolume(Order &order, int32_t volume)
     // a summary of the volume
 
     order.volume += volume;
-    m_volume += volume;
 }
 
 uint32_t PriceBucket::numOrders()
 {
-    return m_orders.size() - m_deletedCount;
+    return m_orders.size();
 }
 
 uint32_t PriceBucket::totalVolume()
 {
-    return m_volume;
+    // count the total volume we have in this bucket.
+    auto f = []( int a, Order const& b)
+               { return a + b.volume; };
+    auto sum = accumulate( m_orders.begin(), m_orders.end(), 0, f);
+    return sum;
 }
