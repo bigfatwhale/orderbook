@@ -18,7 +18,6 @@ public:
 
     virtual void addOrder( Order const& order);
     virtual void removeOrder( Order const& order);
-    void adjustOrderVolume( Order &order, int32_t volume );
 
     std::deque<Order>::iterator begin() { return m_orders.begin(); }
     std::deque<Order>::iterator end()   { return m_orders.end();   }

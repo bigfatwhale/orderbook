@@ -56,7 +56,6 @@ public:
     // PriceBucketManager::iterator.
     class iterator : public boost::iterator_facade<
             iterator,
-            //PriceBucket,
             typename PriceBucketManagerT::iterator::value_type,
             boost::bidirectional_traversal_tag >
     {
@@ -206,13 +205,13 @@ private:
             if ( volume >= orderIter->volume )
             {
                 volume -= orderIter->volume;
-                priceBucketIter->adjustOrderVolume(*orderIter, -orderIter->volume);
+                orderIter->volume = 0;
                 orders_to_remove.push_back(*orderIter);
                 //TODO: generate execution msg, for both sides.
             }
             else
             {
-                priceBucketIter->adjustOrderVolume(*orderIter, -volume);
+                orderIter->volume -= volume;
                 volume = 0;
                 //TODO: generate execution msg, for both sides.
             }

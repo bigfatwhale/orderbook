@@ -91,13 +91,13 @@ private:
                 if ( volume >= orderIter.volume )
                 {
                     volume -= orderIter.volume;
-                    priceBucketIter->adjustOrderVolume(orderIter, -orderIter.volume);
+                    orderIter.volume = 0;
                     orders_to_remove.push_back(orderIter);
                     //TODO: generate execution msg, for both sides.
                 }
                 else
                 {
-                    priceBucketIter->adjustOrderVolume(orderIter, -volume);
+                    orderIter.volume -= volume;
                     volume = 0;
                     //TODO: generate execution msg, for both sides.
                 }
