@@ -273,8 +273,8 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
 
     BOOST_AUTO_TEST_CASE( test_book_iter )
     {
-        auto buybook  = Book<PriceBucketManager<>>(BookType::BUY);
-        auto sellbook = Book<PriceBucketManager<>>(BookType::SELL);
+        auto buybook  = Book<PriceBucketManager<>, Bid>(BookType::BUY);
+        auto sellbook = Book<PriceBucketManager<>, Ask>(BookType::SELL);
 
         auto o1 = Order(2001, 10000, 100, BookType::BUY, "Acme Corp.");
         auto o2 = Order(2002, 10050, 200, BookType::BUY, "Acme Corp.");

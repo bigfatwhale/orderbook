@@ -65,7 +65,10 @@ class LOBSim : public LimitOrderBook<
 {
 private:
 
-    uint32_t crossSpreadWalk( Order &order, LOBSim::IBookType &book ) override
+    uint32_t crossSpreadWalk( Order &order, LOBSim::SellBookType &book ) override {
+    }
+
+    uint32_t crossSpreadWalk( Order &order, LOBSim::BuyBookType &book ) override
     {
         // walks the order book match off orders, returns residual volume for
         // addition back into the LOB
