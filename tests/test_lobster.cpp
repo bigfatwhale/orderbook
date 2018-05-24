@@ -21,6 +21,7 @@
 #include "../lobster/AuctionTradeMsg.hpp"
 #include "../lobster/TradeHaltMsg.hpp"
 #include "PriceBucketManager.hpp"
+#include "PriceBucket.h"
 #include "OrderBook.hpp"
 #include "Order.h"
 
@@ -32,7 +33,35 @@ using boost::iostreams::stream;
 
 using tokenizer = boost::tokenizer<boost::char_separator<char>>;
 
-class LOBSim : public LimitOrderBook<>
+class TestPriceBucket : public PriceBucket
+{
+public:
+    TestPriceBucket() : PriceBucket() {}
+    TestPriceBucket(uint64_t pricePoint) : PriceBucket(pricePoint) {}
+    void removeOrder(Order const &order) override
+    {
+        if ( order.orderId == 0 ) {
+            // TODO : only adding this for passing lobster load. rework it out later.
+            auto it = std::find_if(m_orders.begin(), m_orders.end(), [](Order &o) { return o.orderId == 0; });
+            if (it != m_orders.end()) {
+                if (it->volume == order.volume)
+                    m_orders.erase(it);
+                else
+                    it->volume -= order.volume;
+            }
+        }
+        else
+        {
+            auto f = [&order]( Order &o1 ) { return o1.orderId == order.orderId; };
+            auto it = std::find_if( m_orders.begin(), m_orders.end(), f);
+            if ( it != m_orders.end() )
+                m_orders.erase(it);
+        }
+    }
+};
+
+class LOBSim : public LimitOrderBook<
+        PriceBucketManager< default_bucket_set<TestPriceBucket>, TestPriceBucket> >
 {
 private:
 

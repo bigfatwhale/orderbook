@@ -56,7 +56,8 @@ public:
     // PriceBucketManager::iterator.
     class iterator : public boost::iterator_facade<
             iterator,
-            PriceBucket,
+            //PriceBucket,
+            typename PriceBucketManagerT::iterator::value_type,
             boost::bidirectional_traversal_tag >
     {
 
@@ -78,7 +79,7 @@ public:
             return this->m_bucket_iter == other.m_bucket_iter;
         }
 
-        PriceBucket& dereference() const { return *m_bucket_iter; }
+        typename PriceBucketManagerT::iterator::value_type& dereference() const { return *m_bucket_iter; }
     };
 
     iterator begin() { return iterator( m_priceBucketManager, bestPrice(), m_bookType ); }
