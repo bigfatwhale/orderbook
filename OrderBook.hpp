@@ -114,10 +114,6 @@ class LimitOrderBook {
     // see https://arxiv.org/abs/1012.0349 for general survey of limit order books.
 public:
 
-    //using IBookType = Book<PriceBucketManagerT>;
-    using BuyBookType = Book<PriceBucketManagerT, Bid>;
-    using SellBookType = Book<PriceBucketManagerT, Ask>;
-
     LimitOrderBook() : m_buyBook{BookType::BUY}, m_sellBook{BookType::SELL} {}
 
     template <typename B, typename Comp>
@@ -220,11 +216,9 @@ private:
                 //TODO: generate execution msg, for both sides.
             }
 
-            orderIter++; // walk orders in the same bucket
-            if ( orderIter == priceBucketIter->end() )
+            if ( ++orderIter == priceBucketIter->end() )
             {
-                priceBucketIter++;
-                if ( priceBucketIter == book.end() )
+                if ( ++priceBucketIter == book.end() )
                     break;
             }
 
