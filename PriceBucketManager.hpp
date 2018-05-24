@@ -13,33 +13,34 @@
 #include <boost/iterator/iterator_facade.hpp>
 #include "PriceBucket.h"
 
+template <typename PriceBucketT = PriceBucket>
 class default_bucket_set
 {
     // wrapper class which forward calls to std::map, just to conform with
     // our api contract with PriceBucketManager
-    using bucket_set_t = std::map<uint64_t, std::shared_ptr<PriceBucket>>;
+    using bucket_set_t = std::map<uint64_t, std::shared_ptr<PriceBucketT>>;
 
 public:
 
-    std::shared_ptr<PriceBucket> find( uint64_t price )
+    std::shared_ptr<PriceBucketT> find( uint64_t price )
     {
         auto item = m_map.find( price );
         if ( item != m_map.end() )
             return item->second;
         else
-            return std::shared_ptr<PriceBucket>();
+            return std::shared_ptr<PriceBucketT>();
     }
 
-    std::shared_ptr<PriceBucket> successor( uint64_t price )
+    std::shared_ptr<PriceBucketT> successor( uint64_t price )
     {
         auto item = m_map.upper_bound( price );
         if ( item != m_map.end() )
             return item->second;
         else
-            return std::shared_ptr<PriceBucket>();
+            return std::shared_ptr<PriceBucketT>();
     }
 
-    std::shared_ptr<PriceBucket> predecessor( uint64_t price )
+    std::shared_ptr<PriceBucketT> predecessor( uint64_t price )
     {
         auto item = m_map.find( price );
         if ( item != m_map.begin() )
@@ -47,14 +48,14 @@ public:
             item--;
             return item->second;
         }
-        return std::shared_ptr<PriceBucket>();
+        return std::shared_ptr<PriceBucketT>();
     }
 
-    std::shared_ptr<PriceBucket> insert( bucket_set_t::value_type keyValPair )
+    std::shared_ptr<PriceBucketT> insert( typename bucket_set_t::value_type keyValPair )
     {
         // use the convenience of structured bindings offered by C++17
         auto [item, ok] = m_map.insert( keyValPair );
-        return ok ? item->second : std::shared_ptr<PriceBucket>();
+        return ok ? item->second : std::shared_ptr<PriceBucketT>();
     }
 
     void remove( uint64_t price ) { m_map.erase(price); }
@@ -75,7 +76,8 @@ private:
     bucket_set_t m_map;
 };
 
-template < typename BucketSetT=default_bucket_set >
+template < typename BucketSetT=default_bucket_set<>,
+           typename PriceBucketT=PriceBucket >
 class PriceBucketManager
 {
 public:
@@ -85,24 +87,18 @@ public:
     // 3. find the predecessor bucket for the specified price-level
     // 4. add a new price-bucket for a given price-level
 
-    //PriceBucketManager(BookType t) : m_bookType{t}
-    //{
-        // unfortunately we need to know book type (BUY or SELL) to do iterators.
-        // if it's BUY, we iterate from highest to lowest, and the reverse for SELL.
-    //}
-
-    std::shared_ptr<PriceBucket>
+    std::shared_ptr<PriceBucketT>
     findBucket( uint64_t price ) { return m_buckets.find(price); }
 
-    std::shared_ptr<PriceBucket>
+    std::shared_ptr<PriceBucketT>
     nextBucket( uint64_t price ) { return m_buckets.successor(price); }
 
-    std::shared_ptr<PriceBucket>
+    std::shared_ptr<PriceBucketT>
     prevBucket( uint64_t price ) { return m_buckets.predecessor(price); }
 
-    std::shared_ptr<PriceBucket> addBucket( uint64_t price )
+    std::shared_ptr<PriceBucketT> addBucket( uint64_t price )
     {
-        auto bucket = std::make_shared<PriceBucket>(price);
+        auto bucket = std::make_shared<PriceBucketT>(price);
         auto ret = m_buckets.insert(std::make_pair(price, bucket));
         return ret;
     }
@@ -112,23 +108,18 @@ public:
     uint64_t minPrice() { return m_buckets.minPrice(); }
     uint64_t maxPrice() { return m_buckets.maxPrice(); }
 
-    // SetT must be a type which supports find/successor/predecessor/insert/min/max
+    // BucketSetT must be a type which supports find/successor/predecessor/insert/min/max
     // By default we use a wrapper around std::map (log n lookups). We also can
     // switch in a veb-based set type (log(log(u)) lookups) and compare the performance.
     BucketSetT m_buckets;
-    //BookType   m_bookType;
 
-    //
-    //
-    //
     friend class iterator;
 
-    // boost::iterator_facade uses CRTP.
     class iterator :
             public boost::iterator_facade<
-                    iterator,    // CRTP
-                    PriceBucket, // what we are iterating over
-                    boost::bidirectional_traversal_tag >// type of iterator
+                    iterator,     // boost::iterator_facade uses CRTP.
+                    PriceBucketT, // what we are iterating over
+                    boost::bidirectional_traversal_tag > // type of iterator
     {
     public:
         iterator( PriceBucketManager& pbm, uint32_t price, BookType t) :
@@ -160,16 +151,20 @@ public:
             return this->m_price == other.m_price;
         }
 
-        PriceBucket& dereference() const
+        PriceBucketT& dereference() const
         {
-            std::shared_ptr<PriceBucket> p_bucket = m_priceBucketManager.findBucket(m_price);
+            std::shared_ptr<PriceBucketT> p_bucket = m_priceBucketManager.findBucket(m_price);
             return *p_bucket;
         }
 
         uint32_t m_price; // which price point we are currently at.
         PriceBucketManager& m_priceBucketManager;
-        boost::function< std::shared_ptr<PriceBucket> (PriceBucketManager<BucketSetT>*, uint64_t) > m_incFunc;
-        boost::function< std::shared_ptr<PriceBucket> (PriceBucketManager<BucketSetT>*, uint64_t) > m_decFunc;
+
+        boost::function< std::shared_ptr<PriceBucketT>
+                (PriceBucketManager<BucketSetT, PriceBucketT>*, uint64_t) > m_incFunc;
+
+        boost::function< std::shared_ptr<PriceBucketT>
+                (PriceBucketManager<BucketSetT, PriceBucketT>*, uint64_t) > m_decFunc;
 
     };
 

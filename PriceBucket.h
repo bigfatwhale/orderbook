@@ -13,20 +13,21 @@ class PriceBucket
 {
 public:
     PriceBucket() : m_pricePoint{0} {}
-    PriceBucket(uint64_t pricePoint, Order const& order);
     PriceBucket(uint64_t pricePoint);
-    void addOrder( Order const& order);
-    void removeOrder( Order const& order);
+    virtual ~PriceBucket() {}
+
+    virtual void addOrder( Order const& order);
+    virtual void removeOrder( Order const& order);
     void adjustOrderVolume( Order &order, int32_t volume );
 
     std::deque<Order>::iterator begin() { return m_orders.begin(); }
-    std::deque<Order>::iterator end() { return m_orders.end(); }
+    std::deque<Order>::iterator end()   { return m_orders.end();   }
 
     uint32_t totalVolume();
     uint32_t numOrders();
     uint64_t m_pricePoint;
 
-private:
+protected:
     std::deque<Order> m_orders;
 
 };
