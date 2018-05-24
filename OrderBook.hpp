@@ -7,26 +7,38 @@
 
 #include <algorithm>
 #include <deque>
+#include <functional>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <memory>
 #include <iostream>
+#include <type_traits>
 #include <boost/function.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include "Order.h"
 #include "PriceBucket.h"
 #include "PriceBucketManager.hpp"
 
-template <typename PriceBucketManagerT>
+class Ask;
+class Bid;
+
+// use template traits to wire buy/sell price direction related stuff
+// during compile time.
+template <typename P, typename AskBidT> struct BookTrait;
+
+template <typename P>
+struct BookTrait<P, Bid> { static uint64_t bestPrice(P &pbm) { return pbm.maxPrice(); } };
+
+template <typename P>
+struct BookTrait<P, Ask> { static uint64_t bestPrice(P &pbm) { return pbm.minPrice(); } };
+
+template <typename PriceBucketManagerT, typename AskBidTrait>
 class Book
 {
 public:
-    Book(BookType t) : m_bookType{t},
-                       m_bestPriceFunc{t == BookType::BUY ?
-                                       &PriceBucketManagerT::maxPrice :
-                                       &PriceBucketManagerT::minPrice} {
-    }
+
+    Book(BookType t) : m_bookType{t} {}
 
     void addOrder( Order &order )
     {
@@ -50,13 +62,15 @@ public:
         return bucket->totalVolume();
     }
 
-    uint64_t bestPrice() { return m_bestPriceFunc( &m_priceBucketManager ); }
+    uint64_t bestPrice()
+    {
+        return BookTrait<PriceBucketManagerT, AskBidTrait>::bestPrice(m_priceBucketManager);
+    }
 
     // This is just a forwarding iterator which forwards all calls to a
     // PriceBucketManager::iterator.
     class iterator : public boost::iterator_facade<
             iterator,
-            //PriceBucket,
             typename PriceBucketManagerT::iterator::value_type,
             boost::bidirectional_traversal_tag >
     {
@@ -99,7 +113,24 @@ class LimitOrderBook {
     // class implementing the facilities for a "continuous double auction"
     // see https://arxiv.org/abs/1012.0349 for general survey of limit order books.
 public:
+
+    //using IBookType = Book<PriceBucketManagerT>;
+    using BuyBookType = Book<PriceBucketManagerT, Bid>;
+    using SellBookType = Book<PriceBucketManagerT, Ask>;
+
     LimitOrderBook() : m_buyBook{BookType::BUY}, m_sellBook{BookType::SELL} {}
+
+    template <typename B, typename Comp>
+    void doCrossSpread(Order &order, B &book, Comp& f)
+    {
+        int32_t residual_volume;
+        // iterate and walk through the prices, generating filled order msgs.
+        if ( ( book.bestPrice() > 0 ) && f(order.price, book.bestPrice()) )
+        {
+            residual_volume = crossSpreadWalk(order, book, f);
+            order.volume = residual_volume;
+        }
+    }
 
     void addOrder(Order &order)
     {
@@ -107,36 +138,26 @@ public:
         // for some particular stock is $100.00 and the ask is $100.10, and then some one puts
         // in a new order with bid at $100.10, then we have to match this with the sell book
         // and generate an execution msg.
-        int32_t residual_volume;
+
+        static std::greater_equal<uint64_t> ge;
+        static std::less_equal<uint64_t>    le;
+
         if ( order.side == BookType::BUY )
         {
-            // iterate and walk through the prices, generating filled order msgs.
-            if ( ( m_sellBook.bestPrice() > 0 ) && ( order.price >= m_sellBook.bestPrice() ) )
-            {
-                residual_volume = crossSpreadWalk(order, m_sellBook);
+            doCrossSpread(order, m_sellBook, ge);
 
-                if (residual_volume > 0)
-                    order.volume = residual_volume;
-                else
-                    return;
-            }
-
-            m_buyBook.addOrder(order);
+            // if order.volume is still +ve, the can be either there is no cross-spread walk done
+            // or the cross-spread walk only filled part of the volume. In that case we continue to
+            // add the left-over volume in a new order.
+            if (order.volume > 0)
+                m_buyBook.addOrder(order);
         }
         else
         {
-            // iterate and walk through the prices, generating filled order msgs.
-            if ( ( m_buyBook.bestPrice() > 0 ) && ( order.price <= m_buyBook.bestPrice() ) )
-            {
-                residual_volume = crossSpreadWalk(order, m_buyBook);
-
-                if (residual_volume > 0)
-                    order.volume = residual_volume;
-                else
-                    return;
-            }
-
-            m_sellBook.addOrder(order);
+            doCrossSpread(order, m_buyBook, le);
+            // see explanation for if-clause.
+            if (order.volume > 0)
+                m_sellBook.addOrder(order);
         }
     }
 
@@ -159,22 +180,18 @@ public:
     uint64_t bestBid() { return m_buyBook.bestPrice();  }
     uint64_t bestAsk() { return m_sellBook.bestPrice(); }
 
-    using BookIter = typename Book<PriceBucketManagerT>::iterator;
+    using BuyBookIter  = typename Book<PriceBucketManagerT, Bid>::iterator;
+    using SellBookIter = typename Book<PriceBucketManagerT, Ask>::iterator;
 
-    BookIter bids_begin() { return m_buyBook.begin();  }
-    BookIter asks_begin() { return m_sellBook.begin(); }
-    BookIter bids_end()   { return m_buyBook.end();    }
-    BookIter asks_end()   { return m_sellBook.end();   }
-
-    // for unittest convenience only
-    void addOrderToBuyBook(  Order &order ) { m_buyBook.addOrder(order); }
-    void addOrderToSellBook( Order &order ) { m_sellBook.addOrder(order); }
-
-    using IBookType = Book<PriceBucketManagerT>;
+    BuyBookIter  bids_begin()  { return m_buyBook.begin();  }
+    BuyBookIter  bids_end()    { return m_buyBook.end();    }
+    SellBookIter asks_begin()  { return m_sellBook.begin(); }
+    SellBookIter asks_end()    { return m_sellBook.end();   }
 
 private:
 
-    virtual uint32_t crossSpreadWalk( Order &order, Book<PriceBucketManagerT>& book )
+    template <typename B, typename Comp>
+    uint32_t crossSpreadWalk( Order &order, B &book, Comp &f )
     {
         // walks the order book match off orders, returns residual volume for
         // addition back into the LOB
@@ -182,37 +199,23 @@ private:
         auto priceBucketIter = book.begin();
         auto orderIter = priceBucketIter->begin();
 
-        bool price_condition;
         std::deque<Order> orders_to_remove;
 
         while (volume > 0) // && order_i != priceBucketIter->end() // this is always true on first entry
         {
-            if ( book.bookType() == BookType::BUY ) // order is a sell order, orderIter is walking through
-            {
-                // order is a sell order, orderIter is walking through buy orders in the book.
-                // so we process any order in the book where sell price is less than buy price.
-                price_condition = order.price <= orderIter->price;
-            }
-            else
-            {
-                // order is a buy order, orderIter is walking through sell orders in the book.
-                // so we process any order in the book where sell price is less than buy price.
-                price_condition = order.price >= orderIter->price;
-            }
-
-            if (!price_condition)
+            if ( !f( order.price, orderIter->price) )
                 break;
 
             if ( volume >= orderIter->volume )
             {
                 volume -= orderIter->volume;
-                priceBucketIter->adjustOrderVolume(*orderIter, -orderIter->volume);
+                orderIter->volume = 0;
                 orders_to_remove.push_back(*orderIter);
                 //TODO: generate execution msg, for both sides.
             }
             else
             {
-                priceBucketIter->adjustOrderVolume(*orderIter, -volume);
+                orderIter->volume -= volume;
                 volume = 0;
                 //TODO: generate execution msg, for both sides.
             }
@@ -221,7 +224,7 @@ private:
             if ( orderIter == priceBucketIter->end() )
             {
                 priceBucketIter++;
-                if ( priceBucketIter == asks_end() )
+                if ( priceBucketIter == book.end() )
                     break;
             }
 
@@ -233,9 +236,8 @@ private:
         return volume;
     }
 
-    IBookType m_buyBook;
-    IBookType m_sellBook;
-
+    Book<PriceBucketManagerT, Bid> m_buyBook;
+    Book<PriceBucketManagerT, Ask> m_sellBook;
 };
 
 

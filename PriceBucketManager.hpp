@@ -9,7 +9,6 @@
 #include <utility>
 #include <memory>
 #include <iostream>
-#include <boost/function.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include "PriceBucket.h"
 
@@ -113,6 +112,8 @@ public:
     // switch in a veb-based set type (log(log(u)) lookups) and compare the performance.
     BucketSetT m_buckets;
 
+    typedef decltype( &PriceBucketManager<BucketSetT,PriceBucketT>::nextBucket ) ptrIncDecMember;
+
     friend class iterator;
 
     class iterator :
@@ -136,13 +137,15 @@ public:
 
         void increment()
         {
-            auto bucket = m_incFunc( &m_priceBucketManager, m_price);
+            //auto bucket = m_incFunc( &m_priceBucketManager, m_price);
+            auto bucket = (m_priceBucketManager.*m_incFunc)(m_price);
             m_price = bucket == nullptr ? 0 : bucket->m_pricePoint;
         }
 
         void decrement()
         {
-            auto bucket = m_decFunc( &m_priceBucketManager, m_price);
+            //auto bucket = m_decFunc( &m_priceBucketManager, m_price);
+            auto bucket = (m_priceBucketManager.*m_decFunc)(m_price);
             m_price = bucket == nullptr ? 0 : bucket->m_pricePoint;
         }
 
@@ -160,11 +163,8 @@ public:
         uint32_t m_price; // which price point we are currently at.
         PriceBucketManager& m_priceBucketManager;
 
-        boost::function< std::shared_ptr<PriceBucketT>
-                (PriceBucketManager<BucketSetT, PriceBucketT>*, uint64_t) > m_incFunc;
-
-        boost::function< std::shared_ptr<PriceBucketT>
-                (PriceBucketManager<BucketSetT, PriceBucketT>*, uint64_t) > m_decFunc;
+        ptrIncDecMember m_incFunc;
+        ptrIncDecMember m_decFunc;
 
     };
 

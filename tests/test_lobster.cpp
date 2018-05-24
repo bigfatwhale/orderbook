@@ -65,7 +65,11 @@ class LOBSim : public LimitOrderBook<
 {
 private:
 
-    uint32_t crossSpreadWalk( Order &order, LOBSim::IBookType &book ) override
+//    uint32_t crossSpreadWalk( Order &order, LOBSim::SellBookType &book ) override {
+//    }
+//
+//    uint32_t crossSpreadWalk( Order &order, LOBSim::BuyBookType &book ) override
+    uint32_t crossSpreadWalk( Order &order, LOBSim::BuyBookType &book )
     {
         // walks the order book match off orders, returns residual volume for
         // addition back into the LOB
@@ -91,13 +95,13 @@ private:
                 if ( volume >= orderIter.volume )
                 {
                     volume -= orderIter.volume;
-                    priceBucketIter->adjustOrderVolume(orderIter, -orderIter.volume);
+                    orderIter.volume = 0;
                     orders_to_remove.push_back(orderIter);
                     //TODO: generate execution msg, for both sides.
                 }
                 else
                 {
-                    priceBucketIter->adjustOrderVolume(orderIter, -volume);
+                    orderIter.volume -= volume;
                     volume = 0;
                     //TODO: generate execution msg, for both sides.
                 }
