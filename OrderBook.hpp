@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <deque>
+#include <functional>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -24,15 +25,15 @@ class Bid;
 
 // use template traits to wire buy/sell price direction related stuff
 // during compile time.
-template <typename P, typename AskBidT> struct Trait;
+template <typename P, typename AskBidT> struct BookTrait;
 
 template <typename P>
-struct Trait<P, Bid> { static uint64_t bestPrice(P &pbm) { return pbm.maxPrice(); } };
+struct BookTrait<P, Bid> { static uint64_t bestPrice(P &pbm) { return pbm.maxPrice(); } };
 
 template <typename P>
-struct Trait<P, Ask> { static uint64_t bestPrice(P &pbm) { return pbm.minPrice(); } };
+struct BookTrait<P, Ask> { static uint64_t bestPrice(P &pbm) { return pbm.minPrice(); } };
 
-template <typename PriceBucketManagerT, typename BookTraitT>
+template <typename PriceBucketManagerT, typename AskBidTrait>
 class Book
 {
 public:
@@ -61,9 +62,9 @@ public:
         return bucket->totalVolume();
     }
 
-    uint64_t bestPrice() {
-    //return m_bestPriceFunc( &m_priceBucketManager );
-        return Trait<PriceBucketManagerT, BookTraitT>::bestPrice(m_priceBucketManager);
+    uint64_t bestPrice()
+    {
+        return BookTrait<PriceBucketManagerT, AskBidTrait>::bestPrice(m_priceBucketManager);
     }
 
     // This is just a forwarding iterator which forwards all calls to a
@@ -119,51 +120,14 @@ public:
 
     LimitOrderBook() : m_buyBook{BookType::BUY}, m_sellBook{BookType::SELL} {}
 
-//    template<typename T>
-//    void doCrossSpread(Order &order,
-//                        std::enable_if_t<std::is_same_v<T, BuyBookType>> &book)
-//    {
-//        int32_t residual_volume;
-//        // iterate and walk through the prices, generating filled order msgs.
-//        if ( ( book.bestPrice() > 0 ) && order.price >= book.bestPrice() )
-//        {
-//            residual_volume = crossSpreadWalk(order, book);
-//            order.volume = residual_volume;
-//        }
-//    }
-//
-//    template<typename T>
-//    void doCrossSpread(Order &order,
-//                        std::enable_if_t<std::is_same_v<T, SellBookType> > &book)
-//    {
-//        int32_t residual_volume;
-//        // iterate and walk through the prices, generating filled order msgs.
-//        if ( ( book.bestPrice() > 0 ) && order.price <= book.bestPrice() )
-//        {
-//            residual_volume = crossSpreadWalk(order, book);
-//            order.volume = residual_volume;
-//        }
-//    }
-
-
-    void doCrossSpread(Order &order, BuyBookType &book)
+    template <typename B, typename Comp>
+    void doCrossSpread(Order &order, B &book, Comp& f)
     {
         int32_t residual_volume;
         // iterate and walk through the prices, generating filled order msgs.
-        if ( ( book.bestPrice() > 0 ) && order.price >= book.bestPrice() )
+        if ( ( book.bestPrice() > 0 ) && f(order.price, book.bestPrice()) )
         {
-            residual_volume = crossSpreadWalk(order, book);
-            order.volume = residual_volume;
-        }
-    }
-
-    void doCrossSpread(Order &order, SellBookType &book)
-    {
-        int32_t residual_volume;
-        // iterate and walk through the prices, generating filled order msgs.
-        if ( ( book.bestPrice() > 0 ) && order.price <= book.bestPrice() )
-        {
-            residual_volume = crossSpreadWalk(order, book);
+            residual_volume = crossSpreadWalk(order, book, f);
             order.volume = residual_volume;
         }
     }
@@ -175,9 +139,12 @@ public:
         // in a new order with bid at $100.10, then we have to match this with the sell book
         // and generate an execution msg.
 
+        static std::greater_equal<uint64_t> ge;
+        static std::less_equal<uint64_t>    le;
+
         if ( order.side == BookType::BUY )
         {
-            doCrossSpread(order, m_sellBook);
+            doCrossSpread(order, m_sellBook, ge);
 
             // if order.volume is still +ve, the can be either there is no cross-spread walk done
             // or the cross-spread walk only filled part of the volume. In that case we continue to
@@ -187,7 +154,7 @@ public:
         }
         else
         {
-            doCrossSpread(order, m_buyBook);
+            doCrossSpread(order, m_buyBook, le);
             // see explanation for if-clause.
             if (order.volume > 0)
                 m_sellBook.addOrder(order);
@@ -223,12 +190,8 @@ public:
 
 private:
 
-    virtual uint32_t crossSpreadWalk( Order &order, SellBookType &book )
-    {
-
-    }
-
-    virtual uint32_t crossSpreadWalk( Order &order, BuyBookType &book )
+    template <typename B, typename Comp>
+    uint32_t crossSpreadWalk( Order &order, B &book, Comp &f )
     {
         // walks the order book match off orders, returns residual volume for
         // addition back into the LOB
@@ -241,20 +204,7 @@ private:
 
         while (volume > 0) // && order_i != priceBucketIter->end() // this is always true on first entry
         {
-            if ( book.bookType() == BookType::BUY ) // order is a sell order, orderIter is walking through
-            {
-                // order is a sell order, orderIter is walking through buy orders in the book.
-                // so we process any order in the book where sell price is less than buy price.
-                price_condition = order.price <= orderIter->price;
-            }
-            else
-            {
-                // order is a buy order, orderIter is walking through sell orders in the book.
-                // so we process any order in the book where sell price is less than buy price.
-                price_condition = order.price >= orderIter->price;
-            }
-
-            if (!price_condition)
+            if ( !f(orderIter->price, order.price) )
                 break;
 
             if ( volume >= orderIter->volume )
@@ -287,10 +237,7 @@ private:
         return volume;
     }
 
-//    IBookType m_buyBook;
-//    IBookType m_sellBook;
-
-    Book<PriceBucketManagerT, Bid>  m_buyBook;
+    Book<PriceBucketManagerT, Bid> m_buyBook;
     Book<PriceBucketManagerT, Ask> m_sellBook;
 };
 
