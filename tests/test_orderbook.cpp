@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
         BOOST_TEST( it2->m_pricePoint == 10300 );
 
         it2++;
-        isEnd = it2 == buybook.end();
+        isEnd = it2 == sellbook.end();
         BOOST_TEST( isEnd );
 
     }
