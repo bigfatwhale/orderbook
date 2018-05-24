@@ -199,12 +199,11 @@ private:
         auto priceBucketIter = book.begin();
         auto orderIter = priceBucketIter->begin();
 
-        bool price_condition;
         std::deque<Order> orders_to_remove;
 
         while (volume > 0) // && order_i != priceBucketIter->end() // this is always true on first entry
         {
-            if ( !f(orderIter->price, order.price) )
+            if ( !f( order.price, orderIter->price) )
                 break;
 
             if ( volume >= orderIter->volume )
