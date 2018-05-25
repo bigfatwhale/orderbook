@@ -114,8 +114,6 @@ public:
     // switch in a veb-based set type (log(log(u)) lookups) and compare the performance.
     BucketSetT m_buckets;
 
-    typedef decltype( &PriceBucketManager<BucketSetT,PriceBucketT>::nextBucket ) ptrIncDecMember;
-
     friend class iterator;
 
     template <typename T, typename U> using EnableIfAsk = std::enable_if_t< std::is_same_v<T, Ask>, U >;
@@ -188,9 +186,6 @@ public:
 
         uint32_t m_price; // which price point we are currently at.
         PriceBucketManager& m_priceBucketManager;
-
-        ptrIncDecMember m_incFunc;
-        ptrIncDecMember m_decFunc;
 
     };
 
