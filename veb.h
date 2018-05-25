@@ -54,6 +54,7 @@ public:
     int  successor( int x );
     int  predecessor( int x );
     int  findMin();
+    int  findMax();
 
 public:
 

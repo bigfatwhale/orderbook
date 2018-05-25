@@ -57,26 +57,11 @@ public:
 		m_veb.remove(price);  
 		m_map.erase(price); 
 	}
+    
+    uint64_t minPrice() { return m_veb.findMin(); }
+    uint64_t maxPrice() { return m_veb.findMax(); }
 
 private:
 	veb m_veb;
 	MapType m_map;
 };
-
-// template <typename PriceBucketT = PriceBucket>
-// class default_bucket_set
-// {
-//     // wrapper class which forward calls to std::map, just to conform with
-//     // our api contract with PriceBucketManager
-//     using bucket_set_t = std::map<uint64_t, std::shared_ptr<PriceBucketT>>;
-
-// public:
-
-//     void remove( uint64_t price ) { m_map.erase(price); }
-
-//     uint64_t minPrice() { return m_map.begin() == m_map.end() ? 0 : m_map.begin()->first; }
-//     uint64_t maxPrice() { return m_map.rbegin() == m_map.rend() ? 0 : m_map.rbegin()->first; }
-
-// private:
-//     bucket_set_t m_map;
-// };

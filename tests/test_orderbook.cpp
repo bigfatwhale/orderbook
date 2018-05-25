@@ -201,6 +201,8 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
 
         BOOST_TEST( s.successor(20)->m_pricePoint == 25 );
         BOOST_TEST( s.predecessor(25)->m_pricePoint == 20 );
+        BOOST_TEST( s.minPrice() == 20 );
+        BOOST_TEST( s.maxPrice() == 25 );
 
         s.remove(20);
         BOOST_TEST( s.find(20) == nullptr );        

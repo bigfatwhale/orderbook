@@ -70,6 +70,12 @@ int veb::findMin()
     return m_min;
 }
 
+int veb::findMax()
+{
+    // returns the max element in the veb
+    return m_max;
+}
+
 bool veb::isMember(int x)
 {
     if (m_min == x || m_max == x)
