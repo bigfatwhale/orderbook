@@ -5,12 +5,12 @@
 #include <unordered_map>
 #include "veb.h"
 
-template< typename PriceBucketT = PriceBucket >
+template< typename PriceBucketT = PriceBucket, int numBits=20 >
 class vebBucketSet
 {
 	using MapType = std::unordered_map<uint64_t, std::shared_ptr<PriceBucketT>>;
 public:
-	vebBucketSet(int numBits) : m_veb{numBits} {}
+	vebBucketSet() : m_veb{numBits} {}
 
     std::shared_ptr<PriceBucketT> find( uint64_t price )
     { 
@@ -61,8 +61,16 @@ public:
 		m_map.erase(price); 
 	}
     
-    uint64_t minPrice() { return m_veb.findMin(); }
-    uint64_t maxPrice() { return m_veb.findMax(); }
+    uint64_t minPrice()
+	{
+	    auto i = m_veb.findMin();
+		return i == -1 ? 0 : i;
+	}
+    uint64_t maxPrice()
+    {
+        auto i = m_veb.findMax();
+        return i == -1 ? 0 : i;
+    }
 
 private:
 	veb m_veb;

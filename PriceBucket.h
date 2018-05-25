@@ -24,7 +24,7 @@ public:
 
     uint32_t totalVolume();
     uint32_t numOrders();
-    uint64_t m_pricePoint;
+    uint64_t m_pricePoint{0};
 
 protected:
     std::deque<Order> m_orders;

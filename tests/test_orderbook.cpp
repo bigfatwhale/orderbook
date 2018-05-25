@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
 
     BOOST_AUTO_TEST_CASE( test_veb_bucket_set )
     {
-        vebBucketSet s{16};
+        vebBucketSet<PriceBucket, 16> s;
         BOOST_TEST( s.find(9999) == nullptr );
 
         auto p = std::make_shared<PriceBucket>(20);
