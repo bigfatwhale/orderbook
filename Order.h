@@ -9,6 +9,9 @@
 
 enum class BookType {BUY, SELL};
 
+class Ask;
+class Bid;
+
 struct Order
 {
     Order(uint64_t id, uint64_t price, uint32_t volume, BookType side, std::string const &partId) :

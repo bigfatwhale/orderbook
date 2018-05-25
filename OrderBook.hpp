@@ -20,9 +20,6 @@
 #include "PriceBucket.h"
 #include "PriceBucketManager.hpp"
 
-class Ask;
-class Bid;
-
 // use template traits to wire buy/sell price direction related stuff
 // during compile time.
 template <typename P, typename AskBidT> struct BookTrait;
@@ -71,14 +68,13 @@ public:
     // PriceBucketManager::iterator.
     class iterator : public boost::iterator_facade<
             iterator,
-            typename PriceBucketManagerT::iterator::value_type,
+            typename PriceBucketManagerT:: template iterator<AskBidTrait>::value_type,
             boost::bidirectional_traversal_tag >
     {
+        using PriceBucketManagerIter = typename PriceBucketManagerT:: template iterator<AskBidTrait>;
 
-        using PriceBucketManagerIter = typename PriceBucketManagerT::iterator;
     public:
-        iterator( PriceBucketManagerT& pbm, uint32_t price, BookType t) :
-                m_bucket_iter{pbm, price, t} {}
+        iterator( PriceBucketManagerT& pbm, bool isEnd=false) : m_bucket_iter{pbm, isEnd} {}
 
     private:
         friend class boost::iterator_core_access;
@@ -88,16 +84,14 @@ public:
         void increment() { m_bucket_iter++; }
         void decrement() { m_bucket_iter--; }
 
-        bool equal( iterator const& other ) const
-        {
-            return this->m_bucket_iter == other.m_bucket_iter;
-        }
+        bool equal( iterator const& other ) const { return this->m_bucket_iter == other.m_bucket_iter; }
 
-        typename PriceBucketManagerT::iterator::value_type& dereference() const { return *m_bucket_iter; }
+        typename PriceBucketManagerT:: template iterator<AskBidTrait>::value_type&
+        dereference() const { return *m_bucket_iter; }
     };
 
-    iterator begin() { return iterator( m_priceBucketManager, bestPrice(), m_bookType ); }
-    iterator end()   { return iterator(m_priceBucketManager, 0, m_bookType ); }
+    iterator begin() { return iterator( m_priceBucketManager ); }
+    iterator end()   { return iterator( m_priceBucketManager, true ); }
 
     BookType bookType() { return m_bookType; }
 

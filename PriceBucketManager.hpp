@@ -9,7 +9,9 @@
 #include <utility>
 #include <memory>
 #include <iostream>
+#include <type_traits>
 #include <boost/iterator/iterator_facade.hpp>
+#include "Order.h"
 #include "PriceBucket.h"
 
 template <typename PriceBucketT = PriceBucket>
@@ -116,38 +118,62 @@ public:
 
     friend class iterator;
 
+    template <typename T, typename U> using EnableIfAsk = std::enable_if_t< std::is_same_v<T, Ask>, U >;
+    template <typename T, typename U> using EnableIfBid = std::enable_if_t< std::is_same_v<T, Bid>, U >;
+
+    template <typename AskBidTrait>
     class iterator :
             public boost::iterator_facade<
-                    iterator,     // boost::iterator_facade uses CRTP.
+                    iterator<AskBidTrait>,     // boost::iterator_facade uses CRTP.
                     PriceBucketT, // what we are iterating over
                     boost::bidirectional_traversal_tag > // type of iterator
     {
     public:
-        iterator( PriceBucketManager& pbm, uint32_t price, BookType t) :
-                 m_price{price}, m_priceBucketManager{pbm},
-                 m_incFunc{t == BookType::BUY ?
-                           &PriceBucketManager::prevBucket : &PriceBucketManager::nextBucket},
-                 m_decFunc{t == BookType::BUY ?
-                           &PriceBucketManager::nextBucket : &PriceBucketManager::prevBucket}
+        iterator( PriceBucketManager& pbm, bool isEnd=false) : m_priceBucketManager{pbm}
         {
+            m_price = isEnd ? 0 : initialPrice();
         }
 
     private:
         friend class boost::iterator_core_access;
 
-        void increment()
+        template <typename U = AskBidTrait>
+        EnableIfAsk<U, uint64_t > initialPrice() { return m_priceBucketManager.minPrice(); }
+
+        template <typename U = AskBidTrait>
+        EnableIfBid<U, uint64_t > initialPrice() { return m_priceBucketManager.maxPrice(); }
+
+        // increment/decrement function pair if we are in Ask book
+        template <typename U = AskBidTrait>
+        EnableIfAsk<U, void> increment()
         {
-            //auto bucket = m_incFunc( &m_priceBucketManager, m_price);
-            auto bucket = (m_priceBucketManager.*m_incFunc)(m_price);
+            auto bucket = m_priceBucketManager.nextBucket(m_price);
             m_price = bucket == nullptr ? 0 : bucket->m_pricePoint;
         }
 
-        void decrement()
+        template <typename U = AskBidTrait>
+        EnableIfAsk<U, void> decrement()
         {
-            //auto bucket = m_decFunc( &m_priceBucketManager, m_price);
-            auto bucket = (m_priceBucketManager.*m_decFunc)(m_price);
+            auto bucket = m_priceBucketManager.prevBucket(m_price);
             m_price = bucket == nullptr ? 0 : bucket->m_pricePoint;
         }
+        // end increment/decrement function pair
+
+        // increment/decrement function pairs if we are in Bid book
+        template <typename U = AskBidTrait>
+        EnableIfBid<U, void> increment()
+        {
+            auto bucket = m_priceBucketManager.prevBucket(m_price);
+            m_price = bucket == nullptr ? 0 : bucket->m_pricePoint;
+        }
+
+        template <typename U = AskBidTrait>
+        EnableIfBid<U, void> decrement()
+        {
+            auto bucket = m_priceBucketManager.nextBucket(m_price);
+            m_price = bucket == nullptr ? 0 : bucket->m_pricePoint;
+        }
+        // end increment/decrement function pair
 
         bool equal( iterator const& other ) const
         {
@@ -168,15 +194,16 @@ public:
 
     };
 
-    iterator begin(BookType t = BookType::BUY)
+    template <typename AskBidTrait>
+    iterator<AskBidTrait> begin()
     {
-        auto bestPrice = t == BookType::BUY ? maxPrice() : minPrice();
-        return iterator( *this, bestPrice, t );
+        return iterator<AskBidTrait>( *this );
     }
 
-    iterator end(BookType t = BookType::BUY)
+    template <typename AskBidTrait>
+    iterator<AskBidTrait> end()
     {
-        return iterator( *this, 0, t );
+        return iterator<AskBidTrait>( *this, true );
     }
 
 };
