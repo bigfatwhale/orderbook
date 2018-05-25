@@ -1,4 +1,7 @@
 
+#ifndef ORDERBOOK_VEBBUCKETSET_H
+#define ORDERBOOK_VEBBUCKETSET_H
+
 #include <unordered_map>
 #include "veb.h"
 
@@ -65,3 +68,5 @@ private:
 	veb m_veb;
 	MapType m_map;
 };
+
+#endif

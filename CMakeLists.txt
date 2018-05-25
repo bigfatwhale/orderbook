@@ -5,7 +5,7 @@ project(orderbook VERSION 0.01 DESCRIPTION "Limit Order Book")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-O3 -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall")
-set(SOURCE_FILES OrderBook.hpp veb.cpp veb.h vebBucketSet.hpp PriceBucket.cpp PriceBucket.h Order.h PriceBucketManager.hpp )
+set(SOURCE_FILES OrderBook.hpp veb.cpp veb.h vebBucketSet.hpp defaultBucketSet.hpp PriceBucket.cpp PriceBucket.h Order.h PriceBucketManager.hpp )
 set(LOBSTER_SOURCE_FILES lobster/AddOrderMsg.hpp lobster/MessageBase.cpp lobster/MessageBase.h lobster/MsgParser.cpp lobster/MsgParser.h lobster/MsgFactory.cpp lobster/MsgFactory.h lobster/CancelOrderMsg.hpp lobster/DeleteOrderMsg.hpp lobster/OrderExecutedMsg.hpp lobster/AuctionTradeMsg.hpp lobster/TradeHaltMsg.hpp)
 
 add_library(lobster SHARED ${LOBSTER_SOURCE_FILES})
