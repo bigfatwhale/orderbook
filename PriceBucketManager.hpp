@@ -24,33 +24,13 @@ class default_bucket_set
 public:
 
     std::shared_ptr<PriceBucketT> find( uint64_t price )
-    {
-        auto item = m_map.find( price );
-        if ( item != m_map.end() )
-            return item->second;
-        else
-            return std::shared_ptr<PriceBucketT>();
-    }
+    { return m_map.find( price ) != m_map.end() ? m_map.find( price )->second : nullptr; }
 
     std::shared_ptr<PriceBucketT> successor( uint64_t price )
-    {
-        auto item = m_map.upper_bound( price );
-        if ( item != m_map.end() )
-            return item->second;
-        else
-            return std::shared_ptr<PriceBucketT>();
-    }
+    { return m_map.upper_bound(price) != m_map.end() ? m_map.upper_bound(price)->second : nullptr; }
 
     std::shared_ptr<PriceBucketT> predecessor( uint64_t price )
-    {
-        auto item = m_map.find( price );
-        if ( item != m_map.begin() )
-        {
-            item--;
-            return item->second;
-        }
-        return std::shared_ptr<PriceBucketT>();
-    }
+    { return m_map.find(price) != m_map.begin() ? (--m_map.find(price))->second : nullptr; }
 
     std::shared_ptr<PriceBucketT> insert( typename bucket_set_t::value_type keyValPair )
     {
@@ -61,17 +41,8 @@ public:
 
     void remove( uint64_t price ) { m_map.erase(price); }
 
-    uint64_t minPrice()
-    {
-        auto it = m_map.begin();
-        return it == m_map.end() ? 0 : it->first;
-    }
-
-    uint64_t maxPrice()
-    {
-        auto it = m_map.rbegin();
-        return it == m_map.rend() ? 0 : it->first;
-    }
+    uint64_t minPrice() { return m_map.begin() == m_map.end() ? 0 : m_map.begin()->first; }
+    uint64_t maxPrice() { return m_map.rbegin() == m_map.rend() ? 0 : m_map.rbegin()->first; }
 
 private:
     bucket_set_t m_map;
@@ -190,16 +161,10 @@ public:
     };
 
     template <typename AskBidTrait>
-    iterator<AskBidTrait> begin()
-    {
-        return iterator<AskBidTrait>( *this );
-    }
+    iterator<AskBidTrait> begin() { return iterator<AskBidTrait>( *this ); }
 
     template <typename AskBidTrait>
-    iterator<AskBidTrait> end()
-    {
-        return iterator<AskBidTrait>( *this, true );
-    }
+    iterator<AskBidTrait> end() { return iterator<AskBidTrait>( *this, true ); }
 
 };
 
