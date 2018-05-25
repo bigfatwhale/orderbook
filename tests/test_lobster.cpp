@@ -62,63 +62,7 @@ public:
 
 class LOBSim : public LimitOrderBook<
         PriceBucketManager< default_bucket_set<TestPriceBucket>, TestPriceBucket> >
-{
-private:
-
-//    uint32_t crossSpreadWalk( Order &order, LOBSim::SellBookType &book ) override {
-//    }
-//
-//    uint32_t crossSpreadWalk( Order &order, LOBSim::BuyBookType &book ) override
-    uint32_t crossSpreadWalk( Order &order, LOBSim::BuyBookType &book )
-    {
-        // walks the order book match off orders, returns residual volume for
-        // addition back into the LOB
-        auto volume = order.volume;
-        auto priceBucketIter = book.begin();
-        //auto orderIter = priceBucketIter->begin();
-
-        // get to the right price bucket
-        while ( priceBucketIter->m_pricePoint != order.price && priceBucketIter != book.end() )
-            priceBucketIter++;
-
-        std::deque<Order> orders_to_remove;
-
-        auto bucket = *priceBucketIter;
-        cout << "PriceBucket(" << bucket.m_pricePoint << ") has the followins orders," << endl;
-        for ( auto x : bucket )
-            cout << "oid=" << x.orderId << ", vol=" << x.volume << endl;
-
-        for ( auto &orderIter : *priceBucketIter )
-        {
-            if ( volume > 0 )
-            {
-                if ( volume >= orderIter.volume )
-                {
-                    volume -= orderIter.volume;
-                    orderIter.volume = 0;
-                    orders_to_remove.push_back(orderIter);
-                    //TODO: generate execution msg, for both sides.
-                }
-                else
-                {
-                    orderIter.volume -= volume;
-                    volume = 0;
-                    //TODO: generate execution msg, for both sides.
-                }
-            }
-            else
-                break;
-
-        }
-
-        for ( auto &i : orders_to_remove )
-            book.removeOrder(i);
-
-        return volume;
-    }
-
-};
-
+{};
 
 
 BOOST_AUTO_TEST_SUITE( test_lobster_suite )
