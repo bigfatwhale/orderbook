@@ -17,7 +17,9 @@
 #include <boost/dynamic_bitset.hpp>
 #include "OrderBook.hpp"
 #include "PriceBucketManager.hpp"
+#include "PriceBucket.h"
 #include "veb.h"
+#include "vebBucketSet.hpp"
 
 using namespace std;
 
@@ -178,6 +180,19 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
         };
         BOOST_TEST( runall(16, 4) == true ); // 16 items representable with 4-bit veb
         BOOST_TEST( runall(32, 5) == true ); // 32 items representable with 5-bit veb
+    }
+
+    BOOST_AUTO_TEST_CASE( test_veb_bucket_set )
+    {
+        vebBucketSet s{16};
+        BOOST_TEST( s.find(9999) == nullptr );
+
+        auto p = std::make_shared<PriceBucket>(20);
+        s.insert(std::make_pair(20, p));
+
+        auto x = s.find(20);
+        BOOST_TEST( x != nullptr );
+        BOOST_TEST( x->m_pricePoint == 20 );
     }
 
     BOOST_AUTO_TEST_CASE( test_veb_fail1 )
