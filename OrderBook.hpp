@@ -177,11 +177,8 @@ private:
 
         std::deque<Order> orders_to_remove;
 
-        while (volume > 0) // && order_i != priceBucketIter->end() // this is always true on first entry
+        while (volume > 0 && f( order.price, orderIter->price)) // && order_i != priceBucketIter->end() // this is always true on first entry
         {
-            if ( !f( order.price, orderIter->price) )
-                break;
-
             if ( volume >= orderIter->volume )
             {
                 volume -= orderIter->volume;
