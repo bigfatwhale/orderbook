@@ -59,10 +59,7 @@ public:
         return bucket->totalVolume();
     }
 
-    uint64_t bestPrice()
-    {
-        return BookTrait<PriceBucketManagerT, AskBidTrait>::bestPrice(m_priceBucketManager);
-    }
+    uint64_t bestPrice() { return BookTrait<PriceBucketManagerT, AskBidTrait>::bestPrice(m_priceBucketManager); }
 
     // This is just a forwarding iterator which forwards all calls to a
     // PriceBucketManager::iterator.
@@ -93,13 +90,9 @@ public:
     iterator begin() { return iterator( m_priceBucketManager ); }
     iterator end()   { return iterator( m_priceBucketManager, true ); }
 
-    BookType bookType() { return m_bookType; }
-
 private:
     BookType m_bookType;
     PriceBucketManagerT m_priceBucketManager;
-    boost::function<uint64_t (PriceBucketManagerT*) > m_bestPriceFunc;
-
 };
 
 template <typename PriceBucketManagerT=PriceBucketManager<> >
