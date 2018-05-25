@@ -52,6 +52,12 @@ public:
         	return std::shared_ptr<PriceBucketT>();
     }
 
+	void remove( uint64_t price ) 
+	{
+		m_veb.remove(price);  
+		m_map.erase(price); 
+	}
+
 private:
 	veb m_veb;
 	MapType m_map;
