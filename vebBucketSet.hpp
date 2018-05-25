@@ -20,6 +20,15 @@ public:
     		return nullptr;
 	}
 
+    std::shared_ptr<PriceBucketT> successor( uint64_t price )
+    {
+    	auto successor = m_veb.successor(price);
+    	if ( successor == -1 )
+    		return nullptr;
+
+    	return m_map.find(successor)->second;
+    }
+
     std::shared_ptr<PriceBucketT> insert( typename MapType::value_type keyValPair )
     {
         // use the convenience of structured bindings offered by C++17
