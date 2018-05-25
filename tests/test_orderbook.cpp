@@ -198,8 +198,9 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
 
         auto p2 = std::make_shared<PriceBucket>(25);
         s.insert(std::make_pair(25, p2));
-        
+
         BOOST_TEST( s.successor(20)->m_pricePoint == 25 );
+        BOOST_TEST( s.predecessor(25)->m_pricePoint == 20 );
     }
 
     BOOST_AUTO_TEST_CASE( test_veb_fail1 )

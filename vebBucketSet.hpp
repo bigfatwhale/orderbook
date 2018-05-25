@@ -29,6 +29,15 @@ public:
     	return m_map.find(successor)->second;
     }
 
+    std::shared_ptr<PriceBucketT> predecessor( uint64_t price )
+    {
+    	auto predecessor = m_veb.predecessor(price);
+    	if ( predecessor == -1 )
+    		return nullptr;
+
+    	return m_map.find(predecessor)->second;
+    }
+
     std::shared_ptr<PriceBucketT> insert( typename MapType::value_type keyValPair )
     {
         // use the convenience of structured bindings offered by C++17
@@ -56,22 +65,6 @@ private:
 //     using bucket_set_t = std::map<uint64_t, std::shared_ptr<PriceBucketT>>;
 
 // public:
-
-//     std::shared_ptr<PriceBucketT> find( uint64_t price )
-//     { return m_map.find( price ) != m_map.end() ? m_map.find( price )->second : nullptr; }
-
-//     std::shared_ptr<PriceBucketT> successor( uint64_t price )
-//     { return m_map.upper_bound(price) != m_map.end() ? m_map.upper_bound(price)->second : nullptr; }
-
-//     std::shared_ptr<PriceBucketT> predecessor( uint64_t price )
-//     { return m_map.find(price) != m_map.begin() ? (--m_map.find(price))->second : nullptr; }
-
-//     std::shared_ptr<PriceBucketT> insert( typename bucket_set_t::value_type keyValPair )
-//     {
-//         // use the convenience of structured bindings offered by C++17
-//         auto [item, ok] = m_map.insert( keyValPair );
-//         return ok ? item->second : std::shared_ptr<PriceBucketT>();
-//     }
 
 //     void remove( uint64_t price ) { m_map.erase(price); }
 
