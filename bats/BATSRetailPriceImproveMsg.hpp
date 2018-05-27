@@ -7,9 +7,7 @@
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
-#include <boost/python.hpp>
 #include <string>
-#include <sstream>
 #include "BATSMessageBase.h"
 #include "BATSUtil.h"
 
@@ -35,24 +33,6 @@ public:
                               m_symbol(symbol),
                               m_retail_price_improve(retail_price_improve)
     {
-    }
-  
-    std::string repr()
-    {
-        std::stringstream ss;
-        ss  << "BATSRetailPriceImproveMsg(timestamp=" << m_timestamp << ", msgtype=" << m_msgtype << ", orderId=" 
-            << ", symbol=" << m_symbol << ", retail_price_improve" << m_retail_price_improve << ")";
-        return ss.str();
-    }
-
-    static void export_to_python()
-    {
-        boost::python::class_<BATSRetailPriceImproveMsg, boost::python::bases<BATSMessageBase>>("BATSRetailPriceImproveMsg")
-                .def(boost::python::init<>())
-                .def(boost::python::init<int, char, std::string, char>())
-                .def_readwrite("symbol", &BATSRetailPriceImproveMsg::m_symbol)
-                .def_readwrite("retail_price_improve", &BATSRetailPriceImproveMsg::m_retail_price_improve)
-                .def("__repr__", &BATSRetailPriceImproveMsg::repr);
     }
   
     std::string m_symbol;

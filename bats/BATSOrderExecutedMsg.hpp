@@ -7,7 +7,6 @@
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
-#include <boost/python.hpp>
 #include <sstream>
 #include "BATSMessageBase.h"
 #include "BATSUtil.h"
@@ -43,17 +42,6 @@ public:
         ss  << "BATSOrderExecutedMsg(timestamp=" << m_timestamp << ", msgtype=" << m_msgtype << ", orderId=" 
             << m_orderId << ", shares=" << m_shares << ", execId=" << m_execId << ")";
         return ss.str();
-    }
-
-    static void export_to_python()
-    {
-        boost::python::class_<BATSOrderExecutedMsg, boost::python::bases<BATSMessageBase>>("BATSOrderExecutedMsg")
-                .def(boost::python::init<>())
-                .def(boost::python::init<int, char, uint64_t , uint32_t , uint64_t>())
-                .def_readwrite("orderId", &BATSOrderExecutedMsg::m_orderId)
-                .def_readwrite("shares", &BATSOrderExecutedMsg::m_shares)
-                .def_readwrite("execId", &BATSOrderExecutedMsg::m_execId)
-                .def("__repr__", &BATSOrderExecutedMsg::repr);
     }
 
     uint64_t    m_orderId;

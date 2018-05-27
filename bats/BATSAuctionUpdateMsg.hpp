@@ -7,8 +7,6 @@
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
-#include <boost/python.hpp>
-#include <sstream>
 #include "BATSMessageBase.h"
 #include "BATSUtil.h"
 
@@ -44,32 +42,6 @@ public:
             m_indicative_price(indicative_price),
             m_auction_only_price(auction_only_price)
     {
-    }
-
-    std::string repr()
-    {
-        std::stringstream ss;
-        ss << "BATSAuctionUpdateMsg(timestamp=" << m_timestamp << ", msgtype=" << m_msgtype << ", symbol="
-           << m_symbol << ", auction_type=" << m_auction_type
-           << ", reference_price=" << m_reference_price << ", buyshares=" << m_buyshares << ", sellshares="
-           << m_sellshares << ", indicative_price=" << m_indicative_price
-           << ", m_auction_only_price=" << m_auction_only_price << ")";
-        return ss.str();
-    }
-
-    static void export_to_python()
-    {
-        boost::python::class_<BATSAuctionUpdateMsg, boost::python::bases<BATSMessageBase>>("BATSAuctionUpdateMsg")
-                .def(boost::python::init<>())
-                .def(boost::python::init<int, char, std::string, char, uint64_t, uint32_t, uint32_t, uint64_t, uint64_t>())
-                .def_readwrite("symbol", &BATSAuctionUpdateMsg::m_symbol)
-                .def_readwrite("auction_type", &BATSAuctionUpdateMsg::m_auction_type)
-                .def_readwrite("reference_price", &BATSAuctionUpdateMsg::m_reference_price)
-                .def_readwrite("buyshares", &BATSAuctionUpdateMsg::m_buyshares)
-                .def_readwrite("sellshares", &BATSAuctionUpdateMsg::m_sellshares)
-                .def_readwrite("indicative_price", &BATSAuctionUpdateMsg::m_indicative_price)
-                .def_readwrite("auction_only_price", &BATSAuctionUpdateMsg::m_auction_only_price)
-                .def("__repr__", &BATSAuctionUpdateMsg::repr);
     }
     
     std::string m_symbol;

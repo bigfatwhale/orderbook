@@ -15,7 +15,7 @@ class BATSPitchMsgParser
 {
 public:
     std::shared_ptr<BATSMessageBase>  parse_msg( const std::string &input );
-    static void export_to_python();
+   
 private:
     static const uint32_t msgtype_idx{8};
 };

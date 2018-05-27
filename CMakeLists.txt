@@ -41,13 +41,16 @@ message( STATUS "Generating global includes")
 
 find_package(PythonLibs REQUIRED)
 find_package(PythonInterp REQUIRED)
-find_package(Boost COMPONENTS python27 REQUIRED)
+find_package(Boost COMPONENTS python27 iostreams unit_test_framework REQUIRED)
 include_directories (${PYTHON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/bats 
 					 ${CMAKE_SOURCE_DIR}/lobster)
 
+message( STATUS "Boost Boost_LIBRARIES=${Boost_LIBRARIES}")
+message( STATUS "Boost Boost_PYTHON27_LIBRARIES=${Boost_PYTHON27_LIBRARIES}")
 message( STATUS "Generating bats_pitch_parser library")
 add_library(bats_pitch_parser SHARED ${BATS_SOURCE_FILES})
-target_link_libraries(bats_pitch_parser ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+target_link_libraries(bats_pitch_parser ${Boost_LIBRARIES})
+#target_link_libraries(bats_pitch_parser ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 
 message( STATUS "Generating bats_api library")
 add_library(bats_api SHARED ${PYAPI_SOURCES})
@@ -61,7 +64,7 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     set_target_properties(bats_api PROPERTIES PREFIX "")
 endif()
 
-target_link_libraries(bats_api bats_pitch_parser)
+target_link_libraries(bats_api bats_pitch_parser ${Boost_PYTHON27_LIBRARIES} ${PYTHON_LIBRARY})
 
 
 add_library(lobster SHARED ${LOBSTER_SOURCE_FILES})
@@ -69,14 +72,11 @@ add_library(orderbook SHARED ${SOURCE_FILES})
 
 enable_testing()
 
-find_package(Boost COMPONENTS python27 iostreams unit_test_framework REQUIRED)
-include_directories (${PYTHON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR} )
-
 file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tests/*.cpp)
 foreach(testSrc ${TEST_SRCS})
     get_filename_component(testName ${testSrc} NAME_WE)
     add_executable(${testName} ${testSrc})
-    target_link_libraries(${testName} ${Boost_LIBRARIES} orderbook lobster bats_pitch_parser)
+    target_link_libraries(${testName} ${Boost_LIBRARIES} ${PYTHON_LIBRARY} orderbook lobster bats_pitch_parser)
     set_target_properties(${testName} PROPERTIES
                             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests)
 

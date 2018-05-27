@@ -7,7 +7,6 @@
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
-#include <boost/python.hpp>
 #include "BATSMessageBase.h"
 #include "BATSUtil.h"
 
@@ -41,29 +40,6 @@ public:
     {
     }
     
-    std::string repr()
-    {
-        std::stringstream ss;
-        ss  << "BATSTradeMsg(timestamp=" << m_timestamp << ", msgtype=" << m_msgtype << ", orderId=" 
-            << m_orderId << ", side=" << m_side << ", shares=" << m_shares << ", symbol=" << m_symbol
-            << ", price" << m_price << ", execId" << m_execId << ")";
-        return ss.str();
-    }
-  
-    static void export_to_python()
-    {
-        boost::python::class_<BATSTradeMsg, boost::python::bases<BATSMessageBase>>("BATSTradeMsg")
-                .def(boost::python::init<>())
-                .def(boost::python::init<int, char, uint64_t, char, uint32_t, std::string, uint64_t, uint64_t>())
-                .def_readwrite("orderId", &BATSTradeMsg::m_orderId)
-                .def_readwrite("side", &BATSTradeMsg::m_side)
-                .def_readwrite("shares", &BATSTradeMsg::m_shares)
-                .def_readwrite("symbol", &BATSTradeMsg::m_symbol)
-                .def_readwrite("price", &BATSTradeMsg::m_price)
-                .def_readwrite("execId", &BATSTradeMsg::m_execId)
-                .def("__repr__", &BATSTradeMsg::repr);
-    }
-
     uint64_t    m_orderId; // Base 36 Numeric values come over the wire in ascii
     char        m_side;
     uint32_t    m_shares;

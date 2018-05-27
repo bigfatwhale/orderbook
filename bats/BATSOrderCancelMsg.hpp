@@ -5,11 +5,8 @@
 #ifndef PITCH_SPIRIT_BATSORDERCANCELMSG_HPP
 #define PITCH_SPIRIT_BATSORDERCANCELMSG_HPP
 
-
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
-#include <boost/python.hpp>
-#include <sstream>
 #include "BATSMessageBase.h"
 #include "BATSUtil.h"
 
@@ -34,24 +31,6 @@ public:
             m_orderId(orderId),
             m_shares(shares)
     {
-    }
-
-    std::string repr()
-    {
-        std::stringstream ss;
-        ss  << "BATSOrderCancelMsg(timestamp=" << m_timestamp << ", msgtype=" << m_msgtype << ", orderId=" 
-            << m_orderId << ", shares=" << m_shares << ")";
-        return ss.str();
-    }
-
-    static void export_to_python()
-    {
-        boost::python::class_<BATSOrderCancelMsg, boost::python::bases<BATSMessageBase>>("BATSOrderCancelMsg")
-                .def(boost::python::init<>())
-                .def(boost::python::init<int, char, uint64_t , uint32_t>())
-                .def_readwrite("orderId", &BATSOrderCancelMsg::m_orderId)
-                .def_readwrite("shares", &BATSOrderCancelMsg::m_shares)
-                .def("__repr__", &BATSOrderCancelMsg::repr);
     }
     
     uint64_t    m_orderId;

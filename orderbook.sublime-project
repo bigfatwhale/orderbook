@@ -1,0 +1,17 @@
+{
+    "folders":
+    [
+        {
+            "path": "/Users/unclechu/SublimeTextProjects/orderbook"
+        }
+    ],
+    "build_systems":
+    [
+        {
+            "name": "cmake",
+            "working_dir" : "$project_path",
+            "shell_cmd": "make -C /Users/unclechu/SublimeTextProjects/orderbook/build",
+            "file_regex": "/([^/:]+):(\\d+):(\\d+): "
+        }
+    ]
+}
