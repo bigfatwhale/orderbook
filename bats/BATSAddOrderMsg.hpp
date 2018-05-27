@@ -105,6 +105,27 @@ BATSAddOrderMsg::add_order_decoder<Iterator>::add_order_decoder(char msgtype) :
     // m_price       = m_fixed_point; // this converts to double from fixed point
     // m_fixed_point = int_part >> dec_part;
 
+    // Not sure what's the issue with Boost Spirit for the below duplication of code.
+    // Doing something like the below fails, 
+    // 
+    // auto shared = p_ts >> qi::char_(BATSAddOrderMsg::longMsgCode)
+    //                    >> p_orderId
+    //                    >> qi::char_(BATSAddOrderMsg::sideFlag)
+    //                    >> p_shares
+    //                    >> qi::as_string[qi::repeat(6)[qi::char_]]
+    //                    >> m_price
+    //                    >> qi::char_(BATSAddOrderMsg::displayFlag);
+    //
+    // if (msgtype == BATSAddOrderMsg::longMsgCode)
+    //    m_wire_msg = shared >> qi::as_string[qi::repeat(4)[qi::char_]] )
+    //                        [qi::_val = phi::construct<BATSAddOrderMsg>(
+    //                               qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7, qi::_8, qi::_9)];
+    //
+    // else if (msgtype == BATSAddOrderMsg::shortMsgCode)
+    //    m_wire_msg = shared[qi::_val = phi::construct<BATSAddOrderMsg>(
+    //                                qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7, qi::_8, "")];
+
+
     if (msgtype == BATSAddOrderMsg::longMsgCode)
         m_wire_msg = ( p_ts >> qi::char_(BATSAddOrderMsg::longMsgCode)
                             >> p_orderId
