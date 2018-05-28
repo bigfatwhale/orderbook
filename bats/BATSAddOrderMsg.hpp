@@ -98,30 +98,20 @@ BATSAddOrderMsg::add_order_decoder<Iterator>::add_order_decoder(char msgtype) :
     // else if (msgtype == BATSAddOrderMsg::shortMsgCode)
     //    m_wire_msg = shared[qi::_val = phi::construct<BATSAddOrderMsg>(
     //                                qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7, qi::_8, "")];
+    // 
+    // Finally switched to suggestion below from,
+    // https://stackoverflow.com/questions/42833307/assign-default-value-to-variable-using-boost-spirit/42837701#42837701
 
-
-    if (msgtype == BATSAddOrderMsg::longMsgCode)
-        m_wire_msg = ( p_ts >> qi::char_(BATSAddOrderMsg::longMsgCode)
-                            >> p_orderId
-                            >> qi::char_(BATSAddOrderMsg::sideFlag)
-                            >> p_shares
-                            >> qi::as_string[qi::repeat(6)[qi::char_]]
-                            >> m_price
-                            >> qi::char_(BATSAddOrderMsg::displayFlag)
-                            >> qi::as_string[qi::repeat(4)[qi::char_]] )
-                            [qi::_val = phi::construct<BATSAddOrderMsg>(
-                                    qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7, qi::_8, qi::_9)];
-
-    else if (msgtype == BATSAddOrderMsg::shortMsgCode)
-        m_wire_msg = ( p_ts >> qi::char_(BATSAddOrderMsg::shortMsgCode)
-                            >> p_orderId
-                            >> qi::char_(BATSAddOrderMsg::sideFlag)
-                            >> p_shares
-                            >> qi::as_string[qi::repeat(6)[qi::char_]]
-                            >> m_price
-                            >> qi::char_(BATSAddOrderMsg::displayFlag) )
-                            [qi::_val = phi::construct<BATSAddOrderMsg>(
-                                    qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7, qi::_8, "")];
+    m_wire_msg = ( p_ts >> ( qi::char_(BATSAddOrderMsg::longMsgCode) | qi::char_(BATSAddOrderMsg::shortMsgCode) )
+                        >> p_orderId
+                        >> qi::char_(BATSAddOrderMsg::sideFlag)
+                        >> p_shares
+                        >> qi::as_string[qi::repeat(6)[qi::char_]]
+                        >> m_price
+                        >> qi::char_(BATSAddOrderMsg::displayFlag)
+                        >> ( qi::as_string[qi::repeat(4)[qi::char_]] | qi::as_string[qi::attr("")] ) ) 
+                        [qi::_val = phi::construct<BATSAddOrderMsg>(
+                                qi::_1, qi::_2, qi::_3, qi::_4, qi::_5, qi::_6, qi::_7, qi::_8, qi::_9)];
 
 }
 
