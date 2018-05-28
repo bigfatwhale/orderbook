@@ -102,7 +102,7 @@ BATSAddOrderMsg::add_order_decoder<Iterator>::add_order_decoder(char msgtype) :
     // Finally switched to suggestion below from,
     // https://stackoverflow.com/questions/42833307/assign-default-value-to-variable-using-boost-spirit/42837701#42837701
 
-    m_wire_msg = ( p_ts >> ( qi::char_(BATSAddOrderMsg::longMsgCode) | qi::char_(BATSAddOrderMsg::shortMsgCode) )
+    m_wire_msg = ( p_ts >> qi::char_(msgtype)
                         >> p_orderId
                         >> qi::char_(BATSAddOrderMsg::sideFlag)
                         >> p_shares
