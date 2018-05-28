@@ -18,13 +18,28 @@ class default_bucket_set
 public:
 
     std::shared_ptr<PriceBucketT> find( uint64_t price )
-    { return m_map.find( price ) != m_map.end() ? m_map.find( price )->second : nullptr; }
+    { 
+        if ( auto it( m_map.find( price ) ); it != m_map.end() ) //C++17
+            return it->second;
+        else
+            return nullptr;
+    }
 
     std::shared_ptr<PriceBucketT> successor( uint64_t price )
-    { return m_map.upper_bound(price) != m_map.end() ? m_map.upper_bound(price)->second : nullptr; }
+    { 
+        if ( auto it( m_map.upper_bound(price) ); it != m_map.end() ) //C++17
+            return it->second;
+        else
+            return nullptr;
+    }
 
     std::shared_ptr<PriceBucketT> predecessor( uint64_t price )
-    { return m_map.find(price) != m_map.begin() ? (--m_map.find(price))->second : nullptr; }
+    { 
+        if ( auto it( m_map.find(price) ); it != m_map.begin() ) //C++17
+            return (--m_map.find(price))->second;
+        else
+            return nullptr;
+    }
 
     std::shared_ptr<PriceBucketT> insert( typename bucket_set_t::value_type keyValPair )
     {
