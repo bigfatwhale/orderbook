@@ -21,9 +21,17 @@ set(BATS_SOURCE_FILES bats/BATSUtil.h bats/BATSTradeBreakMsg.hpp bats/BATSTradeM
 					  bats/BATSAuctionSummaryMsg.hpp bats/BATSAuctionUpdateMsg.hpp bats/BATSPitchMsgParser.cpp 
 					  bats/BATSPitchMsgParser.h)
 
+set(UI_SOURCES ui/main.cpp ui/mainwindow.cpp ui/mainwindow.h ui/mainwindow.ui )
+
 set(PYAPI_SOURCES bats/BATSPythonAPI.cpp)
 
 message( STATUS "CMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}")
+
+#set(CMAKE_PREFIX_PATH "/Users/unclechu/software/Qt/5.11.0/clang_64")
+
+#message( STATUS "CMAKE_PREFIX_PATH=$ENV{CMAKE_PREFIX_PATH}")
+
+message( STATUS "Qt5Widgets_DIR=${Qt5Widgets_DIR}")
 
 # figure out python paths
 execute_process(COMMAND python-config "--prefix"
@@ -69,6 +77,19 @@ target_link_libraries(bats_api bats_pitch_parser ${Boost_PYTHON27_LIBRARIES} ${P
 
 add_library(lobster SHARED ${LOBSTER_SOURCE_FILES})
 add_library(orderbook SHARED ${SOURCE_FILES})
+
+# ======== Qt stuff =========
+# Instruct CMake to run moc automatically when needed
+set(CMAKE_AUTOMOC ON)
+# Create code from a list of Qt designer ui files
+set(CMAKE_AUTOUIC ON)
+# Find the QtWidgets library
+find_package(Qt5Widgets CONFIG REQUIRED)
+# Tell CMake to create the helloworld executable
+add_executable(fast_orderbook_ui ${UI_SOURCES})
+# Use the Widgets module from Qt 5.
+target_link_libraries(fast_orderbook_ui Qt5::Widgets)
+# ======== Qt stuff - end =========
 
 enable_testing()
 
