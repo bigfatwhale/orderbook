@@ -103,24 +103,6 @@ public:
 
     LimitOrderBook() : m_buyBook{BookType::BUY}, m_sellBook{BookType::SELL} {}
 
-    template <typename B1, typename B2, typename Comp>
-    void doCrossSpread(Order &order, B1 &book, B2 &oppbook, Comp& f)
-    {
-        int32_t residual_volume;
-        // iterate and walk through the prices, generating filled order msgs.
-        if ( ( oppbook.bestPrice() > 0 ) && f(order.price, oppbook.bestPrice()) )
-        {
-            residual_volume = crossSpreadWalk(order, oppbook, f);
-            order.volume = residual_volume;
-        }
-
-        // if order.volume is still +ve, the can be either there is no cross-spread walk done
-        // or the cross-spread walk only filled part of the volume. In that case we continue to
-        // add the left-over volume in a new order.
-        if (order.volume > 0)
-            book.addOrder(order);
-    }
-
     void addOrder(Order &order)
     {
         // we need to check if this incoming order "crossed the spread", i.e. if the bid
@@ -166,6 +148,24 @@ public:
 
 private:
 
+    template <typename B1, typename B2, typename Comp>
+    void doCrossSpread(Order &order, B1 &book, B2 &oppbook, Comp& f)
+    {
+        int32_t residual_volume;
+        // iterate and walk through the prices, generating filled order msgs.
+        if ( ( oppbook.bestPrice() > 0 ) && f(order.price, oppbook.bestPrice()) )
+        {
+            residual_volume = crossSpreadWalk(order, oppbook, f);
+            order.volume = residual_volume;
+        }
+
+        // if order.volume is still +ve, the can be either there is no cross-spread walk done
+        // or the cross-spread walk only filled part of the volume. In that case we continue to
+        // add the left-over volume in a new order.
+        if (order.volume > 0)
+            book.addOrder(order);
+    }
+    
     template <typename B, typename Comp>
     uint32_t crossSpreadWalk( Order &order, B &book, Comp &f )
     {
