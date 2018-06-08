@@ -14,6 +14,7 @@ class Bid;
 
 struct Order
 {
+	Order() {};
     Order(uint64_t id, uint64_t price, uint32_t volume, BookType side, std::string const &partId) :
             orderId{id}, price{price}, volume{volume}, side{side}, partId{partId}, active{true} {};
     uint64_t orderId;

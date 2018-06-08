@@ -21,7 +21,9 @@ set(BATS_SOURCE_FILES bats/BATSUtil.h bats/BATSTradeBreakMsg.hpp bats/BATSTradeM
 					  bats/BATSAuctionSummaryMsg.hpp bats/BATSAuctionUpdateMsg.hpp bats/BATSPitchMsgParser.cpp 
 					  bats/BATSPitchMsgParser.h)
 
-set(PYAPI_SOURCES bats/BATSPythonAPI.cpp)
+set(PYAPI_BATS_SOURCES bats/BATSPythonAPI.cpp)
+
+set(PYAPI_LOB_SOURCES OrderBookPythonAPI.cpp)
 
 message( STATUS "CMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}")
 
@@ -52,8 +54,8 @@ add_library(bats_pitch_parser SHARED ${BATS_SOURCE_FILES})
 target_link_libraries(bats_pitch_parser ${Boost_LIBRARIES})
 #target_link_libraries(bats_pitch_parser ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 
-message( STATUS "Generating bats_api library")
-add_library(bats_api SHARED ${PYAPI_SOURCES})
+message( STATUS "Generating Python bats api library")
+add_library(bats_api SHARED ${PYAPI_BATS_SOURCES})
 
 # fix for osx. python only loads .so
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -66,6 +68,19 @@ endif()
 
 target_link_libraries(bats_api bats_pitch_parser ${Boost_PYTHON27_LIBRARIES} ${PYTHON_LIBRARY})
 
+message( STATUS "Generating Python orderbook api library")
+add_library(orderbook_api SHARED ${PYAPI_LOB_SOURCES})
+
+# fix for osx. python only loads .so
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set_target_properties(orderbook_api PROPERTIES PREFIX "")
+    set_target_properties(orderbook_api PROPERTIES OUTPUT_NAME "orderbook_api")
+    set_target_properties(orderbook_api PROPERTIES SUFFIX ".so")
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    set_target_properties(orderbook_api PROPERTIES PREFIX "")
+endif()
+
+target_link_libraries(orderbook_api orderbook ${Boost_PYTHON27_LIBRARIES} ${PYTHON_LIBRARY})
 
 add_library(lobster SHARED ${LOBSTER_SOURCE_FILES})
 add_library(orderbook SHARED ${SOURCE_FILES})
@@ -93,12 +108,16 @@ foreach(pytestSrc ${PY_TEST_SRCS})
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/${pytestSrc} )
 endforeach(pytestSrc)
 
+set(PY_SO_FILES bats_api orderbook_api)
+
+foreach(so_file ${PY_SO_FILES})
 ADD_CUSTOM_COMMAND(
-    TARGET bats_api
+    TARGET ${so_file}
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_CURRENT_BINARY_DIR}/bats_api.so 
-    ${CMAKE_CURRENT_BINARY_DIR}/tests/bats_api.so )
+    ${CMAKE_CURRENT_BINARY_DIR}/${so_file}.so 
+    ${CMAKE_CURRENT_BINARY_DIR}/tests/${so_file}.so )
+endforeach(so_file)
 
 set(TEST_FILES tests/AAPL_2012-06-21_message_50.csv tests/AAPL_2012-06-21_orderbook_50.csv
 			   tests/pitch_data_100k tests/pitch_example_data ${PY_TEST_SRCS} )
