@@ -6,6 +6,7 @@ use std::str::FromStr;
 #[cfg(test)]
 mod tests {
 	use super::parse_auction_summary;
+	use std::env;
 	use std::fs::File;
 	use std::io::BufRead;
 	use std::io::BufReader;
@@ -20,7 +21,10 @@ mod tests {
 
     #[test]
     fn test_parse_file() {
-    	let filename = "/Users/unclechu/code/rust_projects/bats_api/src/pitch_example_data";
+    	let path = env::current_dir().unwrap();
+		
+		println!("The current directory is {}", path.display());
+    	let filename = "src/pitch_example_data";
     	let f = File::open(filename).expect("file not found");
     	let f = BufReader::new(f);
 
