@@ -1,11 +1,14 @@
+
 #[macro_use]
 extern crate nom;
 
 use std::str::FromStr;
+use std::result::Result;
 
 #[cfg(test)]
 mod tests {
 	use super::parse_auction_summary;
+	use super::AuctionSummary;
 	use std::env;
 	use std::fs::File;
 	use std::io::BufRead;
@@ -32,7 +35,8 @@ mod tests {
     		let msg = line.unwrap();
     		let buf = msg.as_str();
     		if buf.chars().nth(8) == Some('J') {
-    			let res = parse_auction_summary(buf);
+    			let res = AuctionSummary::parse_msg(buf);
+    			println!("{:?}", res);
     			assert!(res.is_ok());
     			break;
     		}
@@ -41,13 +45,26 @@ mod tests {
 }
 
 #[derive(Debug)]
-struct AuctionSummary {
+pub struct AuctionSummary {
 	timestamp    : u32, 
 	msg_type     : char,
 	symbol       : String, 
 	auction_type : char, 
 	price        : u64, 
 	shares       : u32
+}
+
+impl AuctionSummary {
+
+	pub fn parse_msg( msg : &str ) -> Result<AuctionSummary, nom::Err<&str>> {
+
+		let o = parse_auction_summary(msg);
+		if o.is_ok() {
+			Ok(o.unwrap().1)
+		} else {
+			Err(o.unwrap_err())
+		}
+	}
 }
 
 named!(parse_auction_summary<&str, AuctionSummary>,  
@@ -67,3 +84,7 @@ named!(parse_auction_summary<&str, AuctionSummary>,
 					   } )  
 	)
 );
+
+
+
+
