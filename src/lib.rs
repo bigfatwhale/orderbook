@@ -128,9 +128,9 @@ named!(parse_auction_summary<&str, AuctionSummary>,
         _1 : map_res!(take!(8),  FromStr::from_str) >>
         _2 : char!('J')                             >>
         _3 : map_res!(take!(8),  FromStr::from_str) >>
-        _4  : map_res!(take!(1),  FromStr::from_str) >>
-        _5  : map_res!(take!(10), FromStr::from_str) >>
-        _6  : map_res!(take!(10), FromStr::from_str) >>
+        _4 : map_res!(take!(1),  FromStr::from_str) >>
+        _5 : map_res!(take!(10), FromStr::from_str) >>
+        _6 : map_res!(take!(10), FromStr::from_str) >>
         (AuctionSummary{ timestamp    : _1, 
                          msg_type     : _2, 
                          symbol       : _3, 
