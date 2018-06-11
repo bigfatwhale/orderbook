@@ -1,16 +1,19 @@
 
 #[macro_use]
 extern crate nom;
+
 use nom::IResult;
 
 use std::str::FromStr;
 use std::result::Result;
 
+
 #[cfg(test)]
 mod tests {
     //use super::parse_auction_summary;
-    use super::AuctionSummary;
+    use super::AuctionSummaryMsg;
     use super::AddOrderMsg;
+    use super::BATSMsgFactory;
     use std::env;
     use std::fs::File;
     use std::io::BufRead;
@@ -19,7 +22,7 @@ mod tests {
     #[test]
     fn test_parse_auction_summary() {
         let msg = "28800168JAAPLSPOTC00010068000000020000";
-        let res = AuctionSummary::parse_msg(msg);
+        let res = AuctionSummaryMsg::parse_msg(msg);
         println!("{:?}", res);
         assert!(res.is_ok());
     }
@@ -61,17 +64,45 @@ mod tests {
             let msg = line.unwrap();
             let buf = msg.as_str();
             if buf.chars().nth(8) == Some('J') {
-                let res = AuctionSummary::parse_msg(buf);
+                let res = AuctionSummaryMsg::parse_msg(buf);
                 println!("{:?}", res);
                 assert!(res.is_ok());
                 break;
             }
         }
     }
+
+    #[test]
+    fn test_factory() {
+        let obj = BATSMsgFactory::parse("28800168A1K27GA00000YS000100AAPL  0001831900Y");
+        println!("Return result from msg factory {:?}", obj);
+
+        //println!("lah {}", obj.order_id);
+    }
 }
 
 #[derive(Debug)]
-pub struct AuctionSummary {
+pub enum BATSMessage { // For implementing message factory
+    AuctionSummaryMsg(AuctionSummaryMsg), 
+    AddOrderMsg(AddOrderMsg)
+}
+
+pub struct BATSMsgFactory {}
+
+impl BATSMsgFactory {
+    pub fn parse( msg : &str ) -> BATSMessage {
+        let code = &msg[8..9];
+        let obj = match code {
+            "A" => BATSMessage::AddOrderMsg( AddOrderMsg::parse_msg(msg).unwrap() ), 
+            "d" => BATSMessage::AddOrderMsg( AddOrderMsg::parse_msg(msg).unwrap() ),
+            &_ => unimplemented!(),
+        };
+        obj
+    }
+}
+
+#[derive(Debug)]
+pub struct AuctionSummaryMsg {
     timestamp    : u32, 
     msg_type     : char,
     symbol       : String, 
@@ -93,9 +124,9 @@ pub struct AddOrderMsg {
     part_id      : String  
 }
 
-impl AuctionSummary {
+impl AuctionSummaryMsg {
 
-    pub fn parse_msg( msg : &str ) -> Result<AuctionSummary, nom::Err<&str>> {
+    pub fn parse_msg( msg : &str ) -> Result<AuctionSummaryMsg, nom::Err<&str>> {
 
         let o = parse_auction_summary(msg);
         if o.is_ok() {
@@ -123,7 +154,7 @@ fn from_hex(input: &str) -> Result<u64, std::num::ParseIntError> {
     u64::from_str_radix(input, 36)
 }
 
-named!(parse_auction_summary<&str, AuctionSummary>,  
+named!(parse_auction_summary<&str, AuctionSummaryMsg>,  
     do_parse!(
         _1 : map_res!(take!(8),  FromStr::from_str) >>
         _2 : char!('J')                             >>
@@ -131,7 +162,7 @@ named!(parse_auction_summary<&str, AuctionSummary>,
         _4 : map_res!(take!(1),  FromStr::from_str) >>
         _5 : map_res!(take!(10), FromStr::from_str) >>
         _6 : map_res!(take!(10), FromStr::from_str) >>
-        (AuctionSummary{ timestamp    : _1, 
+        (AuctionSummaryMsg{ timestamp    : _1, 
                          msg_type     : _2, 
                          symbol       : _3, 
                          auction_type : _4, 
@@ -174,3 +205,5 @@ named!(parse_add_order<&str, AddOrderMsg>,
                     })  
     )
 );
+
+
