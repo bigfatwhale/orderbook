@@ -33,6 +33,16 @@ mod tests {
         println!("{:?}", res);
         assert!(res.is_ok());
 
+        let o = res.unwrap();        
+        assert_eq!(o.timestamp, 28800168);
+        assert_eq!( o.msg_type, 'A');
+        assert_eq!( o.order_id,  204969015920664610);
+        assert_eq!( o.side,     'S');
+        assert_eq!( o.shares,   100);
+        assert_eq!( o.symbol,   "AAPL  ");
+        assert_eq!( o.price,    1831900);
+        assert_eq!( o.display,  'Y');
+
         let res = AddOrderMsg::parse_msg(msg_long);
         println!("{:?}", res);
         assert!(res.is_ok());
@@ -115,18 +125,18 @@ fn from_hex(input: &str) -> Result<u64, std::num::ParseIntError> {
 
 named!(parse_auction_summary<&str, AuctionSummary>,  
     do_parse!(
-        ts : map_res!(take!(8),  FromStr::from_str) >>
-        m  : char!('J')                             >>
-        s  : map_res!(take!(8),  FromStr::from_str) >>
-        a  : map_res!(take!(1),  FromStr::from_str) >>
-        p  : map_res!(take!(10), FromStr::from_str) >>
-        v  : map_res!(take!(10), FromStr::from_str) >>
-        (AuctionSummary{ timestamp    : ts, 
-                         msg_type     : m, 
-                         symbol       : s, 
-                         auction_type : a, 
-                         price        : p, 
-                         shares       : v 
+        _1 : map_res!(take!(8),  FromStr::from_str) >>
+        _2 : char!('J')                             >>
+        _3 : map_res!(take!(8),  FromStr::from_str) >>
+        _4  : map_res!(take!(1),  FromStr::from_str) >>
+        _5  : map_res!(take!(10), FromStr::from_str) >>
+        _6  : map_res!(take!(10), FromStr::from_str) >>
+        (AuctionSummary{ timestamp    : _1, 
+                         msg_type     : _2, 
+                         symbol       : _3, 
+                         auction_type : _4, 
+                         price        : _5, 
+                         shares       : _6 
                        } )  
     )
 );
@@ -143,24 +153,24 @@ fn parse_opt_part_id( input : &str ) -> IResult<&str, String>
 
 named!(parse_add_order<&str, AddOrderMsg>,  
     do_parse!(
-        ts : map_res!(take!(8),  FromStr::from_str) >>
-        m  : alt!(char!('A') | char!('d'))          >>
-        o  : map_res!(take!(12), from_hex)          >>
-        s  : map_res!(take!(1),  FromStr::from_str) >>
-        v  : map_res!(take!(6),  FromStr::from_str) >>
-        t  : map_res!(take!(6),  FromStr::from_str) >>
-        p  : map_res!(take!(10), FromStr::from_str) >>
-        d  : map_res!(take!(1),  FromStr::from_str) >>
-        pi : parse_opt_part_id                      >>
-        (AddOrderMsg{ timestamp : ts, 
-                      msg_type  : m, 
-                      order_id  : o, 
-                      side      : s,
-                      shares    : v, 
-                      symbol    : t, 
-                      price     : p, 
-                      display   : d,
-                      part_id   : pi
+        _1 : map_res!(take!(8),  FromStr::from_str) >>
+        _2 : alt!(char!('A') | char!('d'))          >>
+        _3 : map_res!(take!(12), from_hex)          >>
+        _4 : map_res!(take!(1),  FromStr::from_str) >>
+        _5 : map_res!(take!(6),  FromStr::from_str) >>
+        _6 : map_res!(take!(6),  FromStr::from_str) >>
+        _7 : map_res!(take!(10), FromStr::from_str) >>
+        _8 : map_res!(take!(1),  FromStr::from_str) >>
+        _9 : parse_opt_part_id                      >>
+        (AddOrderMsg{ timestamp : _1, 
+                      msg_type  : _2, 
+                      order_id  : _3, 
+                      side      : _4,
+                      shares    : _5, 
+                      symbol    : _6, 
+                      price     : _7, 
+                      display   : _8,
+                      part_id   : _9
                     })  
     )
 );
