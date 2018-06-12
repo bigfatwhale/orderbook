@@ -6,7 +6,7 @@ use nom::IResult;
 
 use std::str::FromStr;
 use std::result::Result;
-
+use std::convert::Into;
 
 #[cfg(test)]
 mod tests {
@@ -76,8 +76,8 @@ mod tests {
     fn test_factory() {
         let obj = BATSMsgFactory::parse("28800168A1K27GA00000YS000100AAPL  0001831900Y");
         println!("Return result from msg factory {:?}", obj);
-
-        //println!("lah {}", obj.order_id);
+        let msg_obj : Option<AddOrderMsg> = obj.into();
+        println!("After into {:?}", msg_obj);
     }
 }
 
@@ -87,8 +87,18 @@ pub enum BATSMessage { // For implementing message factory
     AddOrderMsg(AddOrderMsg)
 }
 
-pub struct BATSMsgFactory {}
+impl Into<Option<AddOrderMsg>> for BATSMessage {
 
+    fn into(self) -> Option<AddOrderMsg> {
+        match self {
+            BATSMessage::AddOrderMsg(u) => Some(u), 
+            _ => None,
+        }
+    }
+} 
+
+pub struct BATSMsgFactory {} // this coupled with impl below makes it like a 
+                             // factory method exposed via a static class method.
 impl BATSMsgFactory {
     pub fn parse( msg : &str ) -> BATSMessage {
         let code = &msg[8..9];
