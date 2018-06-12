@@ -6,3 +6,4 @@ extern crate nom;
 mod test;
 
 pub mod messages;
+pub mod orderbook;
