@@ -17,6 +17,7 @@ mod tests {
     use super::OrderCancelMsg;
     use super::OrderExecutedMsg;
     use super::RetailPriceImproveMsg;
+    use super::TradeBreakMsg;
     use super::BATSMsgFactory;
     use std::env;
     use std::fs::File;
@@ -83,6 +84,14 @@ mod tests {
     fn test_parse_retail_price_improve() {
         let msg = "28800168RAAPLSPOTS"; 
         let res = RetailPriceImproveMsg::parse_msg(msg);
+        println!("{:?}", res);
+        assert!(res.is_ok());    
+    }
+
+    #[test]
+    fn test_parse_trade_break() {
+        let msg = "28800168B1K27GA00000Y"; 
+        let res = TradeBreakMsg::parse_msg(msg);
         println!("{:?}", res);
         assert!(res.is_ok());    
     }
@@ -159,7 +168,8 @@ pub enum BATSMessage { // For implementing message factory
     AuctionUpdateMsg(AuctionUpdateMsg),
     OrderCancelMsg(OrderCancelMsg),
     OrderExecutedMsg(OrderExecutedMsg),
-    RetailPriceImproveMsg(RetailPriceImproveMsg)
+    RetailPriceImproveMsg(RetailPriceImproveMsg),
+    TradeBreakMsg(TradeBreakMsg)
 }
 
 // use macros to generate into functions for all msgs
@@ -169,6 +179,7 @@ create_into_function!(AuctionUpdateMsg);
 create_into_function!(OrderCancelMsg);
 create_into_function!(OrderExecutedMsg);
 create_into_function!(RetailPriceImproveMsg);
+create_into_function!(TradeBreakMsg);
 
 // use macros to generate impl parse_msg functions for all msgs
 create_parse_impl!(AddOrderMsg, parse_add_order);
@@ -177,6 +188,7 @@ create_parse_impl!(AuctionUpdateMsg, parse_auction_update);
 create_parse_impl!(OrderCancelMsg, parse_order_cancel);
 create_parse_impl!(OrderExecutedMsg, parse_order_executed);
 create_parse_impl!(RetailPriceImproveMsg, parse_retail_price_improve);
+create_parse_impl!(TradeBreakMsg, parse_trade_break);
 
 pub struct BATSMsgFactory {} // this coupled with impl below makes it like a 
                              // factory method exposed via a static class method.
@@ -191,6 +203,7 @@ impl BATSMsgFactory {
             "X" => BATSMessage::OrderCancelMsg( OrderCancelMsg::parse_msg(msg).unwrap() ),
             "E" => BATSMessage::OrderExecutedMsg( OrderExecutedMsg::parse_msg(msg).unwrap() ),
             "R" => BATSMessage::RetailPriceImproveMsg( RetailPriceImproveMsg::parse_msg(msg).unwrap() ),
+            "B" => BATSMessage::TradeBreakMsg( TradeBreakMsg::parse_msg(msg).unwrap() ),
             &_ => unimplemented!(),
         };
         obj
@@ -256,6 +269,13 @@ pub struct RetailPriceImproveMsg {
     msg_type             : char,
     symbol               : String, 
     retail_price_improve : char
+}
+
+#[derive(Debug)]
+pub struct TradeBreakMsg {
+    timestamp : u32, 
+    msg_type  : char,
+    exec_id   : u64
 }
 
 fn from_base36(input: &str) -> Result<u64, std::num::ParseIntError> {
@@ -383,3 +403,22 @@ named!(parse_retail_price_improve<&str, RetailPriceImproveMsg>,
                     })  
     )
 );
+
+named!(parse_trade_break<&str, TradeBreakMsg>,  
+    do_parse!(
+        _1 : map_res!(take!(8), FromStr::from_str) >>
+        _2 : char!('B')                            >>
+        _3 : map_res!(take!(12), from_base36)      >>  
+        (TradeBreakMsg{ timestamp : _1, 
+                        msg_type  : _2, 
+                        exec_id   : _3, 
+                    })  
+    )
+);
+
+
+
+
+
+
+
