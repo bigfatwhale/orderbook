@@ -77,7 +77,14 @@ mod tests {
         let obj = BATSMsgFactory::parse("28800168A1K27GA00000YS000100AAPL  0001831900Y");
         println!("Return result from msg factory {:?}", obj);
         let msg_obj : Option<AddOrderMsg> = obj.into();
+        assert!(msg_obj.is_some());
         println!("After into {:?}", msg_obj);
+
+        let obj = BATSMsgFactory::parse("28800168JAAPLSPOTC00010068000000020000");
+        println!("Return result from msg factory {:?}", obj);
+        let msg_obj : Option<AuctionSummaryMsg> = obj.into();
+        println!("After into {:?}", msg_obj);
+        assert!(msg_obj.is_some());
     }
 }
 
@@ -131,6 +138,7 @@ impl BATSMsgFactory {
         let obj = match code {
             "A" => BATSMessage::AddOrderMsg( AddOrderMsg::parse_msg(msg).unwrap() ), 
             "d" => BATSMessage::AddOrderMsg( AddOrderMsg::parse_msg(msg).unwrap() ),
+            "J" => BATSMessage::AuctionSummaryMsg( AuctionSummaryMsg::parse_msg(msg).unwrap() ),
             &_ => unimplemented!(),
         };
         obj
