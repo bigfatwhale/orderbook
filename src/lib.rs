@@ -81,21 +81,29 @@ mod tests {
     }
 }
 
+macro_rules! create_into_function {
+    ($objname : ident) => (
+        impl Into<Option<$objname>> for BATSMessage {
+
+            fn into(self) -> Option<$objname> {
+                match self {
+                    BATSMessage::$objname(u) => Some(u), 
+                    _ => None,
+                }
+            }
+        }  
+    )
+}
+
 #[derive(Debug)]
 pub enum BATSMessage { // For implementing message factory
     AuctionSummaryMsg(AuctionSummaryMsg), 
     AddOrderMsg(AddOrderMsg)
 }
 
-impl Into<Option<AddOrderMsg>> for BATSMessage {
-
-    fn into(self) -> Option<AddOrderMsg> {
-        match self {
-            BATSMessage::AddOrderMsg(u) => Some(u), 
-            _ => None,
-        }
-    }
-} 
+// use macros to generate into functions for all msgs
+create_into_function!(AddOrderMsg);
+create_into_function!(AuctionSummaryMsg);
 
 pub struct BATSMsgFactory {} // this coupled with impl below makes it like a 
                              // factory method exposed via a static class method.
