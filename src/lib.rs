@@ -14,6 +14,7 @@ mod tests {
     use super::AuctionSummaryMsg;
     use super::AuctionUpdateMsg;
     use super::AddOrderMsg;
+    use super::OrderCancelMsg;
     use super::BATSMsgFactory;
     use std::env;
     use std::fs::File;
@@ -52,10 +53,18 @@ mod tests {
         assert!(res.is_ok());
     }
 
-        #[test]
+    #[test]
     fn test_parse_auction_update() {
         let msg = "28800168IAAPLSPOTC00010068000000020000000001000000015034000001309800"; 
         let res = AuctionUpdateMsg::parse_msg(msg);
+        println!("{:?}", res);
+        assert!(res.is_ok());    
+    }
+
+    #[test]
+    fn test_parse_order_cancel() {
+        let msg = "28800168X1K27GA00000Y000500"; 
+        let res = OrderCancelMsg::parse_msg(msg);
         println!("{:?}", res);
         assert!(res.is_ok());    
     }
@@ -130,17 +139,20 @@ pub enum BATSMessage { // For implementing message factory
     AuctionSummaryMsg(AuctionSummaryMsg), 
     AddOrderMsg(AddOrderMsg),
     AuctionUpdateMsg(AuctionUpdateMsg),
+    OrderCancelMsg(OrderCancelMsg),
 }
 
 // use macros to generate into functions for all msgs
 create_into_function!(AddOrderMsg);
 create_into_function!(AuctionSummaryMsg);
 create_into_function!(AuctionUpdateMsg);
+create_into_function!(OrderCancelMsg);
 
 // use macros to generate impl parse_msg functions for all msgs
 create_parse_impl!(AddOrderMsg, parse_add_order);
 create_parse_impl!(AuctionSummaryMsg, parse_auction_summary);
 create_parse_impl!(AuctionUpdateMsg, parse_auction_update);
+create_parse_impl!(OrderCancelMsg, parse_order_cancel);
 
 pub struct BATSMsgFactory {} // this coupled with impl below makes it like a 
                              // factory method exposed via a static class method.
@@ -152,6 +164,7 @@ impl BATSMsgFactory {
             "d" => BATSMessage::AddOrderMsg( AddOrderMsg::parse_msg(msg).unwrap() ),
             "J" => BATSMessage::AuctionSummaryMsg( AuctionSummaryMsg::parse_msg(msg).unwrap() ),
             "I" => BATSMessage::AuctionUpdateMsg( AuctionUpdateMsg::parse_msg(msg).unwrap() ),
+            "X" => BATSMessage::OrderCancelMsg( OrderCancelMsg::parse_msg(msg).unwrap() ),
             &_ => unimplemented!(),
         };
         obj
@@ -202,7 +215,7 @@ pub struct OrderCancelMsg {
     shares    : u32
 }
 
-fn from_hex(input: &str) -> Result<u64, std::num::ParseIntError> {
+fn from_base36(input: &str) -> Result<u64, std::num::ParseIntError> {
     u64::from_str_radix(input, 36)
 }
 
@@ -238,7 +251,7 @@ named!(parse_add_order<&str, AddOrderMsg>,
     do_parse!(
         _1 : map_res!(take!(8),  FromStr::from_str) >>
         _2 : alt!(char!('A') | char!('d'))          >>
-        _3 : map_res!(take!(12), from_hex)          >>
+        _3 : map_res!(take!(12), from_base36)       >>
         _4 : map_res!(take!(1),  FromStr::from_str) >>
         _5 : map_res!(take!(6),  FromStr::from_str) >>
         _6 : map_res!(take!(6),  FromStr::from_str) >>
@@ -269,15 +282,29 @@ named!(parse_auction_update<&str, AuctionUpdateMsg>,
         _7 : map_res!(take!(10), FromStr::from_str)                  >>
         _8 : map_res!(take!(10),  FromStr::from_str)                 >>
         _9 : map_res!(take!(10), FromStr::from_str)                  >>
-        (AuctionUpdateMsg{ timestamp     : _1, 
-                      msg_type           : _2, 
-                      symbol             : _3, 
-                      auction_type       : _4,
-                      reference_price    : _5, 
-                      buyshares          : _6, 
-                      sellshares         : _7, 
-                      indicative_price   : _8,
-                      auction_only_price : _9
+        (AuctionUpdateMsg{ timestamp          : _1, 
+                           msg_type           : _2, 
+                           symbol             : _3, 
+                           auction_type       : _4,
+                           reference_price    : _5, 
+                           buyshares          : _6, 
+                           sellshares         : _7, 
+                           indicative_price   : _8,
+                           auction_only_price : _9
+                    })  
+    )
+);
+
+named!(parse_order_cancel<&str, OrderCancelMsg>,  
+    do_parse!(
+        _1 : map_res!(take!(8),  FromStr::from_str) >>
+        _2 : char!('X')                             >>
+        _3 : map_res!(take!(12), from_base36)       >>
+        _4 : map_res!(take!(6),  FromStr::from_str) >>
+        (OrderCancelMsg{ timestamp : _1, 
+                         msg_type  : _2, 
+                         order_id  : _3, 
+                         shares    : _4,
                     })  
     )
 );
