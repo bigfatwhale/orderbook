@@ -84,7 +84,6 @@ mod tests {
 macro_rules! create_into_function {
     ($objname : ident) => (
         impl Into<Option<$objname>> for BATSMessage {
-
             fn into(self) -> Option<$objname> {
                 match self {
                     BATSMessage::$objname(u) => Some(u), 
@@ -92,6 +91,21 @@ macro_rules! create_into_function {
                 }
             }
         }  
+    )
+}
+
+macro_rules! create_parse_impl {
+    ($objname : ident, $parse_func : ident) => (
+        impl $objname {
+            pub fn parse_msg( msg : &str ) -> Result<$objname, nom::Err<&str>> {
+                let o = $parse_func(msg);
+                if o.is_ok() {
+                    Ok(o.unwrap().1)
+                } else {
+                    Err(o.unwrap_err())
+                }
+            }
+        }
     )
 }
 
@@ -104,6 +118,10 @@ pub enum BATSMessage { // For implementing message factory
 // use macros to generate into functions for all msgs
 create_into_function!(AddOrderMsg);
 create_into_function!(AuctionSummaryMsg);
+
+// use macros to generate impl parse_msg functions for all msgs
+create_parse_impl!(AddOrderMsg, parse_add_order);
+create_parse_impl!(AuctionSummaryMsg, parse_auction_summary);
 
 pub struct BATSMsgFactory {} // this coupled with impl below makes it like a 
                              // factory method exposed via a static class method.
@@ -140,32 +158,6 @@ pub struct AddOrderMsg {
     price        : u64, 
     display      : char,
     part_id      : String  
-}
-
-impl AuctionSummaryMsg {
-
-    pub fn parse_msg( msg : &str ) -> Result<AuctionSummaryMsg, nom::Err<&str>> {
-
-        let o = parse_auction_summary(msg);
-        if o.is_ok() {
-            Ok(o.unwrap().1)
-        } else {
-            Err(o.unwrap_err())
-        }
-    }
-}
-
-impl AddOrderMsg {
-
-    pub fn parse_msg( msg : &str ) -> Result<AddOrderMsg, nom::Err<&str>> {
-
-        let o = parse_add_order(msg);
-        if o.is_ok() {
-            Ok(o.unwrap().1)
-        } else {
-            Err(o.unwrap_err())
-        }
-    }
 }
 
 fn from_hex(input: &str) -> Result<u64, std::num::ParseIntError> {
