@@ -170,15 +170,15 @@ pub struct AuctionSummaryMsg {
 
 #[derive(Debug)]
 pub struct AddOrderMsg {
-    timestamp    : u32, 
-    msg_type     : char,
-    order_id     : u64, 
-    side         : char, 
-    shares       : u32, 
-    symbol       : String,  
-    price        : u64, 
-    display      : char,
-    part_id      : String  
+    timestamp : u32, 
+    msg_type  : char,
+    order_id  : u64, 
+    side      : char, 
+    shares    : u32, 
+    symbol    : String,  
+    price     : u64, 
+    display   : char,
+    part_id   : String  
 }
 
 #[derive(Debug)]
@@ -192,6 +192,14 @@ pub struct AuctionUpdateMsg {
     sellshares         : u32, 
     indicative_price   : u64, 
     auction_only_price : u64
+}
+
+#[derive(Debug)]
+pub struct OrderCancelMsg {
+    timestamp : u32, 
+    msg_type  : char,
+    order_id  : u64, 
+    shares    : u32
 }
 
 fn from_hex(input: &str) -> Result<u64, std::num::ParseIntError> {
