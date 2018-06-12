@@ -19,6 +19,7 @@ mod tests {
     use super::RetailPriceImproveMsg;
     use super::TradeBreakMsg;
     use super::TradeMsg;
+    use super::TradingStatusMsg;
     use super::BATSMsgFactory;
     use std::env;
     use std::fs::File;
@@ -111,6 +112,14 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_trade_status() {
+        let msg = "28800168HAAPLSPOTT0XY"; 
+        let res = TradingStatusMsg::parse_msg(msg);
+        println!("{:?}", res);
+        assert!(res.is_ok());    
+    }
+
+    #[test]
     fn test_parse_file() {
         let path = env::current_dir().unwrap();
         
@@ -185,6 +194,7 @@ pub enum BATSMessage { // For implementing message factory
     RetailPriceImproveMsg(RetailPriceImproveMsg),
     TradeBreakMsg(TradeBreakMsg), 
     TradeMsg(TradeMsg),
+    TradingStatusMsg(TradingStatusMsg)
 }
 
 // use macros to generate into functions for all msgs
@@ -196,6 +206,7 @@ create_into_function!(OrderExecutedMsg);
 create_into_function!(RetailPriceImproveMsg);
 create_into_function!(TradeBreakMsg);
 create_into_function!(TradeMsg);
+create_into_function!(TradingStatusMsg);
 
 // use macros to generate impl parse_msg functions for all msgs
 create_parse_impl!(AddOrderMsg, parse_add_order);
@@ -206,6 +217,7 @@ create_parse_impl!(OrderExecutedMsg, parse_order_executed);
 create_parse_impl!(RetailPriceImproveMsg, parse_retail_price_improve);
 create_parse_impl!(TradeBreakMsg, parse_trade_break);
 create_parse_impl!(TradeMsg, parse_trade);
+create_parse_impl!(TradingStatusMsg, parse_trading_status);
 
 pub struct BATSMsgFactory {} // this coupled with impl below makes it like a 
                              // factory method exposed via a static class method.
@@ -223,6 +235,7 @@ impl BATSMsgFactory {
             "B" => BATSMessage::TradeBreakMsg( TradeBreakMsg::parse_msg(msg).unwrap() ),
             "P" => BATSMessage::TradeMsg( TradeMsg::parse_msg(msg).unwrap() ),
             "r" => BATSMessage::TradeMsg( TradeMsg::parse_msg(msg).unwrap() ),
+            "H" => BATSMessage::TradingStatusMsg( TradingStatusMsg::parse_msg(msg).unwrap() ),
             &_ => unimplemented!(),
         };
         obj
@@ -307,6 +320,17 @@ pub struct TradeMsg {
     symbol    : String, 
     price     : u64,
     exec_id   : u64
+}
+
+#[derive(Debug)]
+pub struct TradingStatusMsg {
+    timestamp      : u32, 
+    msg_type       : char,
+    symbol         : String, 
+    halt_status    : char, 
+    reg_sho_action : u8, 
+    reserved1      : char, 
+    reserved2      : char 
 }
 
 fn from_base36(input: &str) -> Result<u64, std::num::ParseIntError> {
@@ -470,7 +494,25 @@ named!(parse_trade<&str, TradeMsg>,
     )
 );
 
-
+named!(parse_trading_status<&str, TradingStatusMsg>,  
+    do_parse!(
+        _1 : map_res!(take!(8), FromStr::from_str)      >>
+        _2 : char!('H')                                 >>
+        _3 : map_res!(take!(8), FromStr::from_str)      >>  
+        _4 : alt!(char!('H') | char!('Q') | char!('T')) >>  
+        _5 : map_res!(take!(1), FromStr::from_str)      >>
+        _6 : map_res!(take!(1), FromStr::from_str)      >>
+        _7 : map_res!(take!(1), FromStr::from_str)      >>
+        (TradingStatusMsg{ timestamp      : _1, 
+                           msg_type       : _2, 
+                           symbol         : _3, 
+                           halt_status    : _4, 
+                           reg_sho_action : _5, 
+                           reserved1      : _6, 
+                           reserved2      : _7
+                    })  
+    )
+);
 
 
 
