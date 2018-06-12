@@ -12,6 +12,7 @@ use std::convert::Into;
 mod tests {
     //use super::parse_auction_summary;
     use super::AuctionSummaryMsg;
+    use super::AuctionUpdateMsg;
     use super::AddOrderMsg;
     use super::BATSMsgFactory;
     use std::env;
@@ -51,6 +52,14 @@ mod tests {
         assert!(res.is_ok());
     }
 
+        #[test]
+    fn test_parse_auction_update() {
+        let msg = "28800168IAAPLSPOTC00010068000000020000000001000000015034000001309800"; 
+        let res = AuctionUpdateMsg::parse_msg(msg);
+        println!("{:?}", res);
+        assert!(res.is_ok());    
+    }
+    
     #[test]
     fn test_parse_file() {
         let path = env::current_dir().unwrap();
@@ -119,16 +128,19 @@ macro_rules! create_parse_impl {
 #[derive(Debug)]
 pub enum BATSMessage { // For implementing message factory
     AuctionSummaryMsg(AuctionSummaryMsg), 
-    AddOrderMsg(AddOrderMsg)
+    AddOrderMsg(AddOrderMsg),
+    AuctionUpdateMsg(AuctionUpdateMsg),
 }
 
 // use macros to generate into functions for all msgs
 create_into_function!(AddOrderMsg);
 create_into_function!(AuctionSummaryMsg);
+create_into_function!(AuctionUpdateMsg);
 
 // use macros to generate impl parse_msg functions for all msgs
 create_parse_impl!(AddOrderMsg, parse_add_order);
 create_parse_impl!(AuctionSummaryMsg, parse_auction_summary);
+create_parse_impl!(AuctionUpdateMsg, parse_auction_update);
 
 pub struct BATSMsgFactory {} // this coupled with impl below makes it like a 
                              // factory method exposed via a static class method.
@@ -139,6 +151,7 @@ impl BATSMsgFactory {
             "A" => BATSMessage::AddOrderMsg( AddOrderMsg::parse_msg(msg).unwrap() ), 
             "d" => BATSMessage::AddOrderMsg( AddOrderMsg::parse_msg(msg).unwrap() ),
             "J" => BATSMessage::AuctionSummaryMsg( AuctionSummaryMsg::parse_msg(msg).unwrap() ),
+            "I" => BATSMessage::AuctionUpdateMsg( AuctionUpdateMsg::parse_msg(msg).unwrap() ),
             &_ => unimplemented!(),
         };
         obj
@@ -168,8 +181,31 @@ pub struct AddOrderMsg {
     part_id      : String  
 }
 
+#[derive(Debug)]
+pub struct AuctionUpdateMsg {
+    timestamp          : u32, 
+    msg_type           : char,
+    symbol             : String,
+    auction_type       : char,
+    reference_price    : u64,
+    buyshares          : u32, 
+    sellshares         : u32, 
+    indicative_price   : u64, 
+    auction_only_price : u64
+}
+
 fn from_hex(input: &str) -> Result<u64, std::num::ParseIntError> {
     u64::from_str_radix(input, 36)
+}
+
+fn parse_opt_part_id( input : &str ) -> IResult<&str, String>
+{
+    if input.is_empty() {
+        Ok(("", String::from("")))
+    } else {
+        let (first, last) = input.split_at(4);
+        Ok((last, String::from(first)))
+    }
 }
 
 named!(parse_auction_summary<&str, AuctionSummaryMsg>,  
@@ -189,16 +225,6 @@ named!(parse_auction_summary<&str, AuctionSummaryMsg>,
                        } )  
     )
 );
-
-fn parse_opt_part_id( input : &str ) -> IResult<&str, String>
-{
-    if input.is_empty() {
-        Ok(("", String::from("")))
-    } else {
-        let (first, last) = input.split_at(4);
-        Ok((last, String::from(first)))
-    }
-}
 
 named!(parse_add_order<&str, AddOrderMsg>,  
     do_parse!(
@@ -224,4 +250,26 @@ named!(parse_add_order<&str, AddOrderMsg>,
     )
 );
 
-
+named!(parse_auction_update<&str, AuctionUpdateMsg>,  
+    do_parse!(
+        _1 : map_res!(take!(8),  FromStr::from_str)                  >>
+        _2 : char!('I')                                              >>
+        _3 : map_res!(take!(8), FromStr::from_str)                   >>
+        _4 : alt!(char!('O') | char!('C') | char!('H') | char!('I')) >>
+        _5 : map_res!(take!(10),  FromStr::from_str)                 >>
+        _6 : map_res!(take!(10),  FromStr::from_str)                 >>
+        _7 : map_res!(take!(10), FromStr::from_str)                  >>
+        _8 : map_res!(take!(10),  FromStr::from_str)                 >>
+        _9 : map_res!(take!(10), FromStr::from_str)                  >>
+        (AuctionUpdateMsg{ timestamp     : _1, 
+                      msg_type           : _2, 
+                      symbol             : _3, 
+                      auction_type       : _4,
+                      reference_price    : _5, 
+                      buyshares          : _6, 
+                      sellshares         : _7, 
+                      indicative_price   : _8,
+                      auction_only_price : _9
+                    })  
+    )
+);
