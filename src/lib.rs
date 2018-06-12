@@ -173,11 +173,11 @@ named!(parse_auction_summary<&str, AuctionSummaryMsg>,
         _5 : map_res!(take!(10), FromStr::from_str) >>
         _6 : map_res!(take!(10), FromStr::from_str) >>
         (AuctionSummaryMsg{ timestamp    : _1, 
-                         msg_type     : _2, 
-                         symbol       : _3, 
-                         auction_type : _4, 
-                         price        : _5, 
-                         shares       : _6 
+                            msg_type     : _2, 
+                            symbol       : _3, 
+                            auction_type : _4, 
+                            price        : _5, 
+                            shares       : _6 
                        } )  
     )
 );
