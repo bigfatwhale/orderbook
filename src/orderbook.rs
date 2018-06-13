@@ -131,12 +131,28 @@ impl BestPrice for BidBook {
 }
 
 impl LimitOrderBook {
-	pub fn new() -> LimitOrderBook {
+    pub fn new() -> LimitOrderBook {
         LimitOrderBook{ ask_book : AskBook::new(), bid_book : BidBook::new() }
     }
 
     pub fn best_bid(&self) -> u64 { return self.bid_book.best_price() }
     pub fn best_ask(&self) -> u64 { return self.ask_book.best_price() }
+
+    fn check_and_do_cross_spread_walk<B1, B2: BestPrice>( mut order : Order, 
+                                                               book : &mut B1, 
+                                                           opp_book : &mut B2, 
+                                                               func : fn(u64, u64) -> bool ) {
+        if opp_book.best_price() > 0 && func( order.price, opp_book.best_price() ) {
+            let residual_volume = LimitOrderBook::cross_spread_walk(order);
+            order.volume = residual_volume;
+        }
+    }
+
+    fn cross_spread_walk( mut order : Order, ) -> u32 {
+        let volume = order.volume;
+        let orders_to_remove : Vec<Order> = Vec::new();
+        volume 
+    }
 }
 
 impl OrderManager for LimitOrderBook {
@@ -159,3 +175,7 @@ impl OrderManager for LimitOrderBook {
         }
     }
 }
+
+
+
+
