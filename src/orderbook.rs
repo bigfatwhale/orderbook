@@ -47,8 +47,12 @@ impl OrderManager for PriceBucket {
 
 impl PriceBucket {
 
-    pub fn new(price_level : u64) -> PriceBucket {
+    pub fn from_price(price_level : u64) -> PriceBucket {
         PriceBucket{ price_level : price_level, orders : Vec::new() }
+    } 
+
+    pub fn from_order(order : Order) -> PriceBucket {
+        PriceBucket{ price_level : order.price, orders : vec![order] }
     } 
 
     pub fn volume(&self) -> u32 {
@@ -59,18 +63,16 @@ impl PriceBucket {
 impl OrderManager for Book {
 
     fn add_order( &mut self, order : Order ) {
-        if !self.price_buckets.contains_key(&order.price) {
-            let price = order.price;
-            let mut price_bucket = PriceBucket::new(price);
-            price_bucket.add_order(order);
-            self.price_buckets.insert( price, price_bucket );
-        } else {
-
-            let opt_bucket = self.price_buckets.get_mut(&order.price);
-            if opt_bucket.is_some() {
-                opt_bucket.unwrap().add_order(order);
+        {
+            if let Some(bucket) = self.price_buckets.get_mut(&order.price) {
+                bucket.add_order(order);
+                return; // needed for the else clause to not complain about second borrow.
             }
         }
+         
+        let price = order.price;
+        let price_bucket = PriceBucket::from_order(order);
+        self.price_buckets.insert( price, price_bucket );
     }
 
     fn remove_order( &mut self, order : Order ) {

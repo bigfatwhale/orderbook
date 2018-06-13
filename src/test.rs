@@ -153,7 +153,7 @@ fn test_factory() {
 #[test]
 fn test_price_bucket() {
 
-    let mut pb = PriceBucket::new(1200000);
+    let mut pb = PriceBucket::from_price(1200000);
     let o = Order{order_id : 2001, price : 1200000, volume : 100, side : 1, 
                   part_id : String::from("Acme Corp.") };
     let o2 = Order{order_id : 2002, price : 1200000, volume : 220, side : 1, 
