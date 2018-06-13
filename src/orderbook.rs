@@ -63,22 +63,21 @@ impl PriceBucket {
 impl OrderManager for Book {
 
     fn add_order( &mut self, order : Order ) {
-        {
+        {   // scope here needed for the else clause to not complain about second borrow.
             if let Some(bucket) = self.price_buckets.get_mut(&order.price) {
                 bucket.add_order(order);
-                return; // needed for the else clause to not complain about second borrow.
+                return; 
             }
         }
-         
+        // else - this is the else clause...
         let price = order.price;
         let price_bucket = PriceBucket::from_order(order);
         self.price_buckets.insert( price, price_bucket );
     }
 
     fn remove_order( &mut self, order : Order ) {
-        if self.price_buckets.contains_key(&order.price) {
-            let opt_bucket = self.price_buckets.get_mut(&order.price);
-            opt_bucket.unwrap().remove_order(order);
+        if let Some(bucket) = self.price_buckets.get_mut(&order.price) {
+            bucket.remove_order(order);
         }
     }
 }
