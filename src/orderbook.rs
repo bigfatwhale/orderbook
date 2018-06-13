@@ -1,6 +1,7 @@
 
 use std::collections::BTreeMap;
 
+#[derive(Clone)]
 pub struct Order {
 	pub order_id : u64, 
 	pub price    : u64, 
@@ -45,6 +46,7 @@ impl OrderManager for PriceBucket {
 }
 
 impl PriceBucket {
+
 	pub fn new(price_level : u64) -> PriceBucket {
 		PriceBucket{ price_level : price_level, orders : Vec::new() }
 	} 

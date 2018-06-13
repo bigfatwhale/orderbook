@@ -156,11 +156,17 @@ fn test_price_bucket() {
     let o = Order{order_id : 2001, price : 1200000, volume : 100, side : 1, 
                   part_id : String::from("Acme Corp.") };
     let o2 = Order{order_id : 2002, price : 1200000, volume : 220, side : 1, 
-                  part_id : String::from("TH Inc.") };                
+                  part_id : String::from("TH Inc.") };     
+
     pb.add_order( o );
-    pb.add_order( o2 );
+    pb.add_order( o2.clone() );
+
     assert_eq!( pb.price_level, 1200000 );
     assert_eq!( pb.volume(), 320 );
+
+    pb.remove_order( o2 );
+    
+    assert_eq!( pb.volume(), 100 );
 }
 
 
