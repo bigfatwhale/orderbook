@@ -15,6 +15,7 @@ use orderbook::PriceBucket;
 use orderbook::Order;
 use orderbook::OrderManager;
 use orderbook::AskBook;
+use orderbook::BestPrice;
 
 use std::env;
 use std::fs::File;
@@ -175,12 +176,18 @@ fn test_price_bucket() {
 fn test_book() {
     
     let mut book = AskBook::new();
-    let o = Order{order_id : 2001, price : 1200000, volume : 150, side : 1, 
+    let o = Order{order_id : 2001, price : 1200000, volume : 150, side : -1, 
                   part_id : String::from("Acme Corp.") };
 
+    let o2 = Order{order_id : 2002, price : 1300000, volume : 220, side : -1, 
+                  part_id : String::from("TH Inc.") };     
+
     book.add_order(o.clone());
+    book.add_order(o2.clone());
     assert_eq!(book.volume_at_price_level(1200000), 150);
+    assert_eq!(book.volume_at_price_level(1300000), 220);
     book.remove_order(o);
     assert_eq!(book.volume_at_price_level(1200000), 0);
+    assert_eq!(book.best_price(), 1200000 );
 }
 
