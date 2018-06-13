@@ -91,9 +91,7 @@ impl Book {
     pub fn volume_at_price_level( &self, price : u64 ) -> u32 {
         if let Some(b) = self.price_buckets.get(&price) {
             b.volume()
-        } else {
-            0
-        }
+        } else {0}
     }
 }
 
