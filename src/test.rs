@@ -16,6 +16,7 @@ use orderbook::Order;
 use orderbook::OrderManager;
 use orderbook::AskBook;
 use orderbook::BestPrice;
+use orderbook::LimitOrderBook;
 
 use std::env;
 use std::fs::File;
@@ -189,5 +190,27 @@ fn test_book() {
     book.remove_order(o);
     assert_eq!(book.volume_at_price_level(1200000), 0);
     assert_eq!(book.best_price(), 1200000 );
+}
+
+#[test]
+fn test_limit_order_book() {
+
+    let mut b = LimitOrderBook::new();
+    let o1 = Order{order_id : 2001, price : 10000, volume : 100, side : 1, part_id : String::from("Acme Corp.")};
+    let o2 = Order{order_id : 2002, price : 10050, volume : 200, side : 1, part_id : String::from("Acme Corp.")};
+    let o3 = Order{order_id : 2003, price : 10100, volume : 300, side : 1, part_id : String::from("Acme Corp.")};
+    let o4 = Order{order_id : 2004, price : 10200, volume : 400, side : -1, part_id : String::from("Acme Corp.")};
+    let o5 = Order{order_id : 2005, price : 10250, volume : 500, side : -1, part_id : String::from("Acme Corp.")};
+    let o6 = Order{order_id : 2006, price : 10300, volume : 600, side : -1, part_id : String::from("Acme Corp.")};
+
+    b.add_order(o1);
+    b.add_order(o2);
+    b.add_order(o3);
+    b.add_order(o4);
+    b.add_order(o5);
+    b.add_order(o6);
+
+    assert_eq!(b.best_bid(), 10100 );
+    assert_eq!(b.best_ask(), 10200 );
 }
 

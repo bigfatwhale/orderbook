@@ -130,6 +130,15 @@ impl BestPrice for BidBook {
     }
 }
 
+impl LimitOrderBook {
+	pub fn new() -> LimitOrderBook {
+        LimitOrderBook{ ask_book : AskBook::new(), bid_book : BidBook::new() }
+    }
+
+    pub fn best_bid(&self) -> u64 { return self.bid_book.best_price() }
+    pub fn best_ask(&self) -> u64 { return self.ask_book.best_price() }
+}
+
 impl OrderManager for LimitOrderBook {
 
     fn add_order( &mut self, order : Order ) {
