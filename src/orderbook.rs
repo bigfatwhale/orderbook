@@ -9,16 +9,9 @@ pub struct Order {
 	pub part_id  : String, 
 }
 
-trait OrderManager {
-
-	fn add_order( &mut self, order : Order );
-	fn remove_order( &mut self, order : Order );
-
-}
-
 pub struct PriceBucket {
 
-	price_level : u64, 
+	pub price_level : u64, 
 	orders      : Vec<Order>, 
 
 }
@@ -26,6 +19,13 @@ pub struct PriceBucket {
 pub struct Book {
 
 	price_buckets : BTreeMap<u64, PriceBucket>
+
+}
+
+pub trait OrderManager {
+
+	fn add_order( &mut self, order : Order );
+	fn remove_order( &mut self, order : Order );
 
 }
 
@@ -43,4 +43,15 @@ impl OrderManager for PriceBucket {
 		}
 	}
 }
+
+impl PriceBucket {
+	pub fn new(price_level : u64) -> PriceBucket {
+		PriceBucket{ price_level : price_level, orders : Vec::new() }
+	} 
+
+	pub fn volume(&self) -> u32 {
+		self.orders.iter().map(|x| x.volume ).sum()
+	} 
+}
+
 

@@ -11,6 +11,10 @@ use messages::TradeMsg;
 use messages::TradingStatusMsg;
 use messages::BATSMsgFactory;
 
+use orderbook::PriceBucket;
+use orderbook::Order;
+use orderbook::OrderManager;
+
 use std::env;
 use std::fs::File;
 use std::io::BufRead;
@@ -144,3 +148,24 @@ fn test_factory() {
     println!("After into {:?}", msg_obj);
     assert!(msg_obj.is_some());
 }
+
+#[test]
+fn test_price_bucket() {
+
+    let mut pb = PriceBucket::new(1200000);
+    let o = Order{order_id : 2001, price : 1200000, volume : 100, side : 1, 
+                  part_id : String::from("Acme Corp.") };
+    let o2 = Order{order_id : 2002, price : 1200000, volume : 220, side : 1, 
+                  part_id : String::from("TH Inc.") };                
+    pb.add_order( o );
+    pb.add_order( o2 );
+    assert_eq!( pb.price_level, 1200000 );
+    assert_eq!( pb.volume(), 320 );
+}
+
+
+    // pub order_id : u64, 
+    // pub price    : u64, 
+    // pub volume   : u32, 
+    // pub side     : i8, 
+    // pub part_id  : String, 
