@@ -17,17 +17,15 @@ pub struct PriceBucket {
 
 }
 
-pub struct Book {
-
-    price_buckets : BTreeMap<u64, PriceBucket>
-
-}
-
 pub trait OrderManager {
 
     fn add_order( &mut self, order : Order );
     fn remove_order( &mut self, order : Order );
 
+}
+
+pub trait BestPrice {
+    fn best_price( &self ) -> u64;
 }
 
 impl OrderManager for PriceBucket {
@@ -60,42 +58,67 @@ impl PriceBucket {
     } 
 }
 
-impl OrderManager for Book {
+#[macro_export]
+macro_rules! expand_book_struct {
 
-    fn add_order( &mut self, order : Order ) {
-        {   // scope here needed for the else clause to not complain about second borrow.
-            if let Some(bucket) = self.price_buckets.get_mut(&order.price) {
-                bucket.add_order(order);
-                return; 
+    ($book_struct_name : ident) => (
+
+        pub struct $book_struct_name {
+            price_buckets : BTreeMap<u64, PriceBucket>
+        }
+
+        impl $book_struct_name {
+
+            pub fn new() -> $book_struct_name {
+                $book_struct_name{ price_buckets : BTreeMap::new() }
+            }
+
+            pub fn volume_at_price_level( &self, price : u64 ) -> u32 {
+                if let Some(b) = self.price_buckets.get(&price) {
+                    b.volume()
+                } else {0}
             }
         }
-        // else - this is the else clause...
-        let price = order.price;
-        let price_bucket = PriceBucket::from_order(order);
-        self.price_buckets.insert( price, price_bucket );
-    }
 
-    fn remove_order( &mut self, order : Order ) {
-        if let Some(bucket) = self.price_buckets.get_mut(&order.price) {
-            bucket.remove_order(order);
+        impl OrderManager for $book_struct_name  {
+
+            fn add_order( &mut self, order : Order ) {
+                {   // scope here needed for the else clause to not complain about second borrow.
+                    if let Some(bucket) = self.price_buckets.get_mut(&order.price) {
+                        bucket.add_order(order);
+                        return; 
+                    }
+                }
+                // else - this is the else clause...
+                let price = order.price;
+                let price_bucket = PriceBucket::from_order(order);
+                self.price_buckets.insert( price, price_bucket );
+            }
+
+            fn remove_order( &mut self, order : Order ) {
+                if let Some(bucket) = self.price_buckets.get_mut(&order.price) {
+                    bucket.remove_order(order);
+                }
+            }
         }
-    }
+    )
 }
 
-impl Book {
+expand_book_struct!(BidBook);
+expand_book_struct!(AskBook);
 
-    pub fn new() -> Book {
-        Book{ price_buckets : BTreeMap::new() }
-    }
-
-    pub fn volume_at_price_level( &self, price : u64 ) -> u32 {
-        if let Some(b) = self.price_buckets.get(&price) {
-            b.volume()
+impl BestPrice for AskBook {
+    fn best_price(&self) -> u64 { // best price for ask is the min price
+        if let Some(&price) = self.price_buckets.keys().nth(0) {
+            price
         } else {0}
     }
 }
 
-
-
-
-
+impl BestPrice for BidBook {
+    fn best_price(&self) -> u64 { // best price for bid is the max price
+        if let Some(&price) = self.price_buckets.keys().last() {
+            price
+        } else {0}
+    }
+}

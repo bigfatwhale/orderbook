@@ -14,12 +14,13 @@ use messages::BATSMsgFactory;
 use orderbook::PriceBucket;
 use orderbook::Order;
 use orderbook::OrderManager;
-use orderbook::Book;
+use orderbook::AskBook;
 
 use std::env;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
+
 
 #[test]
 fn test_parse_auction_summary() {
@@ -172,7 +173,8 @@ fn test_price_bucket() {
 
 #[test]
 fn test_book() {
-    let mut book = Book::new();
+    
+    let mut book = AskBook::new();
     let o = Order{order_id : 2001, price : 1200000, volume : 150, side : 1, 
                   part_id : String::from("Acme Corp.") };
 
