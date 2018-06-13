@@ -66,19 +66,37 @@ impl OrderManager for Book {
             self.price_buckets.insert( price, price_bucket );
         } else {
 
-            let mut opt_bucket = self.price_buckets.get(&order.price);
+            let opt_bucket = self.price_buckets.get_mut(&order.price);
             if opt_bucket.is_some() {
                 opt_bucket.unwrap().add_order(order);
             }
-            
-            
-            
         }
-
-        
     }
 
     fn remove_order( &mut self, order : Order ) {
-
+        if self.price_buckets.contains_key(&order.price) {
+            let opt_bucket = self.price_buckets.get_mut(&order.price);
+            opt_bucket.unwrap().remove_order(order);
+        }
     }
 }
+
+impl Book {
+
+    pub fn new() -> Book {
+        Book{ price_buckets : BTreeMap::new() }
+    }
+
+    pub fn volume_at_price_level( &self, price : u64 ) -> u32 {
+        if let Some(b) = self.price_buckets.get(&price) {
+            b.volume()
+        } else {
+            0
+        }
+    }
+}
+
+
+
+
+

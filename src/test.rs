@@ -14,6 +14,7 @@ use messages::BATSMsgFactory;
 use orderbook::PriceBucket;
 use orderbook::Order;
 use orderbook::OrderManager;
+use orderbook::Book;
 
 use std::env;
 use std::fs::File;
@@ -165,13 +166,19 @@ fn test_price_bucket() {
     assert_eq!( pb.volume(), 320 );
 
     pb.remove_order( o2 );
-    
+
     assert_eq!( pb.volume(), 100 );
 }
 
+#[test]
+fn test_book() {
+    let mut book = Book::new();
+    let o = Order{order_id : 2001, price : 1200000, volume : 150, side : 1, 
+                  part_id : String::from("Acme Corp.") };
 
-    // pub order_id : u64, 
-    // pub price    : u64, 
-    // pub volume   : u32, 
-    // pub side     : i8, 
-    // pub part_id  : String, 
+    book.add_order(o.clone());
+    assert_eq!(book.volume_at_price_level(1200000), 150);
+    book.remove_order(o);
+    assert_eq!(book.volume_at_price_level(1200000), 0);
+}
+
