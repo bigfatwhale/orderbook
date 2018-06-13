@@ -17,6 +17,13 @@ pub struct PriceBucket {
 
 }
 
+pub struct LimitOrderBook {
+
+    ask_book : AskBook, 
+    bid_book : BidBook
+
+}
+
 pub trait OrderManager {
 
     fn add_order( &mut self, order : Order );
@@ -120,5 +127,26 @@ impl BestPrice for BidBook {
         if let Some(&price) = self.price_buckets.keys().last() {
             price
         } else {0}
+    }
+}
+
+impl OrderManager for LimitOrderBook {
+
+    fn add_order( &mut self, order : Order ) {
+        if order.side == -1 {
+            self.ask_book.add_order(order)
+        }
+        else {
+            self.bid_book.add_order(order)
+        }
+    }
+
+    fn remove_order( &mut self, order : Order ) {
+        if order.side == -1 {
+            self.ask_book.remove_order(order)
+        }
+        else {
+            self.bid_book.remove_order(order)
+        }
     }
 }
