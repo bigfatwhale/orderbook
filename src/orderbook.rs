@@ -32,16 +32,25 @@ pub struct LimitOrderBook {
 
 }
 
-pub struct BookIter<'a> {
+pub struct BookIter<'a, T:'a> {
     price : u64,
-    price_bucket : Option<&'a mut PriceBucket>
+    price_bucket : Option<&'a mut PriceBucket>, 
+    book : Option<&'a mut T>
 }
 
-impl<'a> Iterator for BookIter<'a> {
-    type Item = &'a PriceBucket;
+impl<'a> Iterator for BookIter<'a, BidBook> {
+    type Item = &'a mut PriceBucket;
 
     fn next(&mut self) -> Option<Self::Item> {
-        None
+        self.book.unwrap().price_buckets.get_mut(&self.price)
+    }
+}
+
+impl<'a> Iterator for BookIter<'a, AskBook> {
+    type Item = &'a mut PriceBucket;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.book.unwrap().price_buckets.get_mut(&self.price)
     }
 }
 
@@ -131,15 +140,17 @@ macro_rules! expand_book_struct {
         }
 
         impl<'a> IntoIterator for &'a mut $book_struct_name {
-            type Item = &'a PriceBucket;
-            type IntoIter = BookIter<'a>;
+            type Item = &'a mut PriceBucket;
+            type IntoIter = BookIter<'a, $book_struct_name >;
 
-            fn into_iter(self) -> BookIter<'a> {
+            fn into_iter(self) -> BookIter<'a, $book_struct_name > {
                 let price = self.best_price();
                 if price != 0 {
-                    BookIter{price:price, price_bucket:self.price_buckets.get_mut(&price)}
+                    BookIter{price:price, 
+                             price_bucket:self.price_buckets.get_mut(&price), 
+                             book : Some(self) }
                 } else {
-                    BookIter{price:0, price_bucket:None}
+                    BookIter{price:0, price_bucket:None, book : None}
                 }
             }
         }
@@ -189,7 +200,7 @@ impl LimitOrderBook {
         volume 
     }
 
-    pub fn ask_iter(&mut self) -> BookIter {
+    pub fn ask_iter(&mut self) -> BookIter<AskBook> {
         self.ask_book.into_iter()
     }
 }
