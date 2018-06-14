@@ -1,5 +1,6 @@
 
 use std::collections::BTreeMap;
+use std::iter::{Iterator, IntoIterator};
 
 #[derive(Clone)]
 pub struct Order {
@@ -22,6 +23,19 @@ pub struct LimitOrderBook {
     ask_book : AskBook, 
     bid_book : BidBook
 
+}
+
+pub struct BookIter<'a> {
+    price : u64,
+    price_bucket : Option<&'a PriceBucket>
+}
+
+impl<'a> Iterator for BookIter<'a> {
+    type Item = &'a PriceBucket;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        None
+    }
 }
 
 pub trait OrderManager {
@@ -106,6 +120,15 @@ macro_rules! expand_book_struct {
                 if let Some(bucket) = self.price_buckets.get_mut(&order.price) {
                     bucket.remove_order(order);
                 }
+            }
+        }
+
+        impl<'a> IntoIterator for &'a $book_struct_name {
+            type Item = &'a PriceBucket;
+            type IntoIter = BookIter<'a>;
+
+            fn into_iter(self) -> BookIter<'a> {
+                BookIter{price:0, price_bucket:None}
             }
         }
     )
