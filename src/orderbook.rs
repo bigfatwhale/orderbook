@@ -1,6 +1,7 @@
 
 use std::collections::BTreeMap;
 use std::iter::{Iterator, IntoIterator};
+use std::fmt;
 
 #[derive(Clone)]
 pub struct Order {
@@ -18,6 +19,12 @@ pub struct PriceBucket {
 
 }
 
+impl fmt::Debug for PriceBucket {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "PriceBucket {{ price_level: {} }}", self.price_level)
+    }
+}
+
 pub struct LimitOrderBook {
 
     ask_book : AskBook, 
@@ -27,7 +34,7 @@ pub struct LimitOrderBook {
 
 pub struct BookIter<'a> {
     price : u64,
-    price_bucket : Option<&'a PriceBucket>
+    price_bucket : Option<&'a mut PriceBucket>
 }
 
 impl<'a> Iterator for BookIter<'a> {
@@ -123,12 +130,17 @@ macro_rules! expand_book_struct {
             }
         }
 
-        impl<'a> IntoIterator for &'a $book_struct_name {
+        impl<'a> IntoIterator for &'a mut $book_struct_name {
             type Item = &'a PriceBucket;
             type IntoIter = BookIter<'a>;
 
             fn into_iter(self) -> BookIter<'a> {
-                BookIter{price:0, price_bucket:None}
+                let price = self.best_price();
+                if price != 0 {
+                    BookIter{price:price, price_bucket:self.price_buckets.get_mut(&price)}
+                } else {
+                    BookIter{price:0, price_bucket:None}
+                }
             }
         }
     )
@@ -175,6 +187,10 @@ impl LimitOrderBook {
         let volume = order.volume;
         let orders_to_remove : Vec<Order> = Vec::new();
         volume 
+    }
+
+    pub fn ask_iter(&mut self) -> BookIter {
+        self.ask_book.into_iter()
     }
 }
 

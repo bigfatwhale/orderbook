@@ -212,5 +212,9 @@ fn test_limit_order_book() {
 
     assert_eq!(b.best_bid(), 10100 );
     assert_eq!(b.best_ask(), 10200 );
+
+    let mut iter = b.ask_iter();
+    let y = iter.next();
+    println!("Value from iter : {:?}", y)
 }
 
