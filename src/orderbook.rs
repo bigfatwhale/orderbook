@@ -166,6 +166,10 @@ impl LimitOrderBook {
     pub fn ask_iter(&mut self) -> IterMut<u64, PriceBucket> {
         self.ask_book.price_buckets.iter_mut()
     }
+
+    pub fn bid_iter(&mut self) -> IterMut<u64, PriceBucket> {
+        self.bid_book.price_buckets.iter_mut()
+    }
 }
 
 impl OrderManager for LimitOrderBook {
