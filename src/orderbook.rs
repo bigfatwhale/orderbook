@@ -1,6 +1,7 @@
 
 use std::collections::BTreeMap;
-use std::collections::btree_map::IterMut;
+use std::collections::btree_map;
+use std::slice;
 use std::iter::{Iterator, IntoIterator};
 use std::fmt;
 
@@ -39,6 +40,8 @@ pub trait OrderManager {
     fn remove_order( &mut self, order : Order );
 
 }
+
+
 
 pub trait BestPrice {
     fn best_price( &self ) -> u64;
@@ -116,12 +119,57 @@ macro_rules! expand_book_struct {
                     bucket.remove_order(order);
                 }
             }
+
+
         }
     )
 }
 
 expand_book_struct!(BidBook);
 expand_book_struct!(AskBook);
+
+pub struct BookOrderIterMut<'a> {
+
+    outer : btree_map::IterMut<'a, u64, PriceBucket>, 
+    inner : slice::IterMut<'a, Order>
+
+}
+
+impl<'a> BookOrderIterMut<'a> {
+
+    pub fn new<B:PriceBucketIter>( book: &'a mut B ) {
+
+    }
+}
+
+pub trait PriceBucketIter {
+    // iterates through orders in price-time order.
+    fn iter_mut(&mut self) -> btree_map::IterMut<u64, PriceBucket>;
+}
+
+struct WrappedIterMut<T> {
+    iter : T
+}
+
+impl<T> Iterator for WrappedIterMut<T> {
+    fn next(&mut self) -> (u64, PriceBucket) {
+        self.iter.next()
+    }
+}
+
+impl PriceBucketIter for AskBook {
+//    fn iter_mut(&mut self) -> btree_map::IterMut<u64, PriceBucket> {
+    fn iter_mut(&mut self) -> WrappedIterMut {
+        WrappedIterMut{ iter : self.price_buckets.iter_mut() }
+    }
+}
+
+impl PriceBucketIter for BidBook {
+//    fn iter_mut(&mut self) -> btree_map::IterMut<u64, PriceBucket> {
+    fn iter_mut(&mut self) -> WrappedIterMut {
+        WrappedIterMut{ iter : self.price_buckets.iter_mut().rev().into_iter() }
+    }
+}
 
 impl BestPrice for AskBook {
     fn best_price(&self) -> u64 { // best price for ask is the min price
@@ -147,27 +195,36 @@ impl LimitOrderBook {
     pub fn best_bid(&self) -> u64 { return self.bid_book.best_price() }
     pub fn best_ask(&self) -> u64 { return self.ask_book.best_price() }
 
-    fn check_and_do_cross_spread_walk<B1, B2: BestPrice>( mut order : Order, 
-                                                               book : &mut B1, 
-                                                           opp_book : &mut B2, 
-                                                               func : fn(u64, u64) -> bool ) {
+    fn check_and_do_cross_spread_walk<B1, B2: BestPrice + OrderManager>
+        ( mut order : Order, 
+               book : &mut B1, 
+           opp_book : &mut B2, 
+               func : fn(u64, u64) -> bool ) {
         if opp_book.best_price() > 0 && func( order.price, opp_book.best_price() ) {
-            let residual_volume = LimitOrderBook::cross_spread_walk(order);
+            let residual_volume = LimitOrderBook::cross_spread_walk(order, opp_book, func);
             order.volume = residual_volume;
         }
     }
 
-    fn cross_spread_walk( mut order : Order, ) -> u32 {
+    fn cross_spread_walk<B:OrderManager>( mut order : Order, book : &mut B, 
+                          func : fn(u64, u64) -> bool ) -> u32 {
         let volume = order.volume;
         let orders_to_remove : Vec<Order> = Vec::new();
-        volume 
+
+
+
+        while volume > 0 && func(1, 10) {
+
+        }
+
+        volume
     }
 
-    pub fn ask_iter(&mut self) -> IterMut<u64, PriceBucket> {
+    pub fn ask_iter(&mut self) -> btree_map::IterMut<u64, PriceBucket> {
         self.ask_book.price_buckets.iter_mut()
     }
 
-    pub fn bid_iter(&mut self) -> IterMut<u64, PriceBucket> {
+    pub fn bid_iter(&mut self) -> btree_map::IterMut<u64, PriceBucket> {
         self.bid_book.price_buckets.iter_mut()
     }
 }
