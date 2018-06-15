@@ -4,6 +4,7 @@ use std::collections::btree_map;
 use std::slice;
 use std::iter::{Iterator, IntoIterator};
 use std::fmt;
+use std::iter::Rev;
 
 #[derive(Clone)]
 pub struct Order {
@@ -40,8 +41,6 @@ pub trait OrderManager {
     fn remove_order( &mut self, order : Order );
 
 }
-
-
 
 pub trait BestPrice {
     fn best_price( &self ) -> u64;
@@ -125,7 +124,7 @@ macro_rules! expand_book_struct {
     )
 }
 
-expand_book_struct!(BidBook);
+expand_book_struct!(BidBook); 
 expand_book_struct!(AskBook);
 
 pub struct BookOrderIterMut<'a> {
@@ -135,39 +134,28 @@ pub struct BookOrderIterMut<'a> {
 
 }
 
-impl<'a> BookOrderIterMut<'a> {
-
-    pub fn new<B:PriceBucketIter>( book: &'a mut B ) {
-
-    }
+pub enum IterVariant<'a> {
+    // all this trouble because iter_mut().rev() returns not an IterMut
+    // but a Rev(IterMut)! argh.
+    AskBookIter(btree_map::IterMut<'a, u64, PriceBucket>), 
+    BidBookIter(Rev<btree_map::IterMut<'a, u64, PriceBucket>>), 
+    None
 }
 
 pub trait PriceBucketIter {
     // iterates through orders in price-time order.
-    fn iter_mut(&mut self) -> btree_map::IterMut<u64, PriceBucket>;
-}
-
-struct WrappedIterMut<T> {
-    iter : T
-}
-
-impl<T> Iterator for WrappedIterMut<T> {
-    fn next(&mut self) -> (u64, PriceBucket) {
-        self.iter.next()
-    }
+    fn iter_mut(&mut self) -> IterVariant;
 }
 
 impl PriceBucketIter for AskBook {
-//    fn iter_mut(&mut self) -> btree_map::IterMut<u64, PriceBucket> {
-    fn iter_mut(&mut self) -> WrappedIterMut {
-        WrappedIterMut{ iter : self.price_buckets.iter_mut() }
+    fn iter_mut(&mut self) -> IterVariant {
+        IterVariant::AskBookIter( self.price_buckets.iter_mut() )
     }
 }
 
 impl PriceBucketIter for BidBook {
-//    fn iter_mut(&mut self) -> btree_map::IterMut<u64, PriceBucket> {
-    fn iter_mut(&mut self) -> WrappedIterMut {
-        WrappedIterMut{ iter : self.price_buckets.iter_mut().rev().into_iter() }
+    fn iter_mut(&mut self) -> IterVariant {
+        IterVariant::BidBookIter( self.price_buckets.iter_mut().rev() )
     }
 }
 
@@ -195,7 +183,7 @@ impl LimitOrderBook {
     pub fn best_bid(&self) -> u64 { return self.bid_book.best_price() }
     pub fn best_ask(&self) -> u64 { return self.ask_book.best_price() }
 
-    fn check_and_do_cross_spread_walk<B1, B2: BestPrice + OrderManager>
+    fn check_and_do_cross_spread_walk<B1, B2: BestPrice + OrderManager + PriceBucketIter>
         ( mut order : Order, 
                book : &mut B1, 
            opp_book : &mut B2, 
@@ -206,15 +194,23 @@ impl LimitOrderBook {
         }
     }
 
-    fn cross_spread_walk<B:OrderManager>( mut order : Order, book : &mut B, 
-                          func : fn(u64, u64) -> bool ) -> u32 {
+    fn cross_spread_walk<B:OrderManager+PriceBucketIter>
+        ( mut order : Order, book : &mut B, func : fn(u64, u64) -> bool ) -> u32 {
         let volume = order.volume;
         let orders_to_remove : Vec<Order> = Vec::new();
 
+        let price_bucket_iter = book.iter_mut();
+        let mut it : Box<Iterator<Item=(&u64, &mut PriceBucket)>> = match price_bucket_iter {
+            IterVariant::AskBookIter(x) => Box::new(x.into_iter()),
+            IterVariant::BidBookIter(y) => Box::new(y.into_iter()),
+            _ => unimplemented!()
+        };
 
+        let bucket = it.next();
 
         while volume > 0 && func(1, 10) {
-
+            
+            // TODO
         }
 
         volume
