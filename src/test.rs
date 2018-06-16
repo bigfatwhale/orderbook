@@ -210,10 +210,14 @@ fn test_limit_order_book() {
     b.add_order(o5);
     b.add_order(o6);
 
+    println!("==========> HERE");
     assert_eq!(b.best_bid(), 10100 );
     assert_eq!(b.best_ask(), 10200 );
 
     assert_eq!(b.ask_iter().next().unwrap().0, &10200 );
     assert_eq!(b.ask_iter().next_back().unwrap().0, &10300 );
+
+    let o7 = Order{order_id : 2007, price : 10225, volume : 300, side : 1, part_id : String::from("Acme Corp.")};
+    b.add_order(o7);
 }
 

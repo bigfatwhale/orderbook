@@ -6,7 +6,7 @@ use std::iter::{Iterator, IntoIterator};
 use std::fmt;
 use std::iter::Rev;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Order {
     pub order_id : u64, 
     pub price    : u64, 
@@ -183,34 +183,57 @@ impl LimitOrderBook {
     pub fn best_bid(&self) -> u64 { return self.bid_book.best_price() }
     pub fn best_ask(&self) -> u64 { return self.ask_book.best_price() }
 
-    fn check_and_do_cross_spread_walk<B1, B2: BestPrice + OrderManager + PriceBucketIter>
+    fn check_and_do_cross_spread_walk<B1 : OrderManager, B2: BestPrice + OrderManager + PriceBucketIter>
         ( mut order : Order, 
                book : &mut B1, 
            opp_book : &mut B2, 
                func : fn(u64, u64) -> bool ) {
         if opp_book.best_price() > 0 && func( order.price, opp_book.best_price() ) {
-            let residual_volume = LimitOrderBook::cross_spread_walk(order, opp_book, func);
+            let residual_volume = LimitOrderBook::cross_spread_walk(&mut order, opp_book, func);
             order.volume = residual_volume;
+        }
+
+        // if order.volume is still +ve, the can be either there is no cross-spread walk done
+        // or the cross-spread walk only filled part of the volume. In that case we continue to
+        // add the left-over volume in a new order.
+        if order.volume > 0 {
+            book.add_order(order)
         }
     }
 
     fn cross_spread_walk<B:OrderManager+PriceBucketIter>
-        ( mut order : Order, book : &mut B, func : fn(u64, u64) -> bool ) -> u32 {
-        let volume = order.volume;
-        let orders_to_remove : Vec<Order> = Vec::new();
+        ( order : &mut Order, book : &mut B, func : fn(u64, u64) -> bool ) -> u32 {
+        let mut volume = order.volume;
+        let mut orders_to_remove : Vec<&Order> = Vec::new();
 
         let price_bucket_iter = book.iter_mut();
+
         let mut it : Box<Iterator<Item=(&u64, &mut PriceBucket)>> = match price_bucket_iter {
             IterVariant::AskBookIter(x) => Box::new(x.into_iter()),
             IterVariant::BidBookIter(y) => Box::new(y.into_iter()),
             _ => unimplemented!()
         };
 
-        let bucket = it.next();
+        for bucket_order in it.flat_map(|x| x.1.orders.iter_mut()) {
 
-        while volume > 0 && func(1, 10) {
-            
-            // TODO
+            if ! (volume > 0 && func(order.price, bucket_order.price) ) {
+                break;
+            }
+
+            if volume >= bucket_order.volume {
+                println!("Taking {} from order id {}, left {}", 
+                         bucket_order.volume, bucket_order.order_id, volume - bucket_order.volume);
+                volume -= bucket_order.volume;
+                bucket_order.volume = 0;
+                orders_to_remove.push(bucket_order);
+            } else {
+                bucket_order.volume -= volume;
+                volume = 0;
+            }
+        }
+
+        for o in orders_to_remove {
+            book.remove_order(o);
         }
 
         volume
@@ -229,10 +252,14 @@ impl OrderManager for LimitOrderBook {
 
     fn add_order( &mut self, order : Order ) {
         if order.side == -1 {
-            self.ask_book.add_order(order)
+            //self.ask_book.add_order(order)
+            LimitOrderBook::check_and_do_cross_spread_walk(
+                order, &mut self.ask_book, &mut self.bid_book, |x, y| x <= y)
         }
         else {
-            self.bid_book.add_order(order)
+            //self.bid_book.add_order(order)
+            LimitOrderBook::check_and_do_cross_spread_walk(
+                order, &mut self.bid_book, &mut self.ask_book, |x, y| x >= y)
         }
     }
 
