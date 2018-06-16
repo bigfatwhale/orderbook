@@ -1,0 +1,7 @@
+[package]
+name = "bats_api"
+version = "0.1.0"
+authors = ["bigfatwhale <bigfatwhale@gmail.com>"]
+
+[dependencies]
+nom = "^4.0"
