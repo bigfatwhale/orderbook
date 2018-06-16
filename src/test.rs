@@ -219,5 +219,6 @@ fn test_limit_order_book() {
 
     let o7 = Order{order_id : 2007, price : 10225, volume : 300, side : 1, part_id : String::from("Acme Corp.")};
     b.add_order(o7);
+    assert_eq!(b.ask_volume_at_price_level(10200), 100);
 }
 

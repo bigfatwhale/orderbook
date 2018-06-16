@@ -1,7 +1,6 @@
 
 use std::collections::BTreeMap;
 use std::collections::btree_map;
-use std::slice;
 use std::iter::{Iterator, IntoIterator};
 use std::fmt;
 use std::iter::Rev;
@@ -127,13 +126,6 @@ macro_rules! expand_book_struct {
 expand_book_struct!(BidBook); 
 expand_book_struct!(AskBook);
 
-pub struct BookOrderIterMut<'a> {
-
-    outer : btree_map::IterMut<'a, u64, PriceBucket>, 
-    inner : slice::IterMut<'a, Order>
-
-}
-
 pub enum IterVariant<'a> {
     // all this trouble because iter_mut().rev() returns not an IterMut
     // but a Rev(IterMut)! argh.
@@ -183,14 +175,30 @@ impl LimitOrderBook {
     pub fn best_bid(&self) -> u64 { return self.bid_book.best_price() }
     pub fn best_ask(&self) -> u64 { return self.ask_book.best_price() }
 
+    pub fn ask_volume_at_price_level(&self, price : u64) -> u32 {
+        if let Some(bucket) = self.ask_book.price_buckets.get(&price) {
+            bucket.volume()
+        } else {0}
+    }
+
+    pub fn bid_volume_at_price_level(&self, price : u64) -> u32 {
+        if let Some(bucket) = self.bid_book.price_buckets.get(&price) {
+            bucket.volume()
+        } else {0}
+    }
+
     fn check_and_do_cross_spread_walk<B1 : OrderManager, B2: BestPrice + OrderManager + PriceBucketIter>
         ( mut order : Order, 
                book : &mut B1, 
            opp_book : &mut B2, 
                func : fn(u64, u64) -> bool ) {
         if opp_book.best_price() > 0 && func( order.price, opp_book.best_price() ) {
-            let residual_volume = LimitOrderBook::cross_spread_walk(&mut order, opp_book, func);
+            let ( residual_volume, orders_to_remove ) = 
+                LimitOrderBook::cross_spread_walk(&mut order, opp_book, func);
             order.volume = residual_volume;
+            for o in orders_to_remove {
+                opp_book.remove_order(o);
+            }
         }
 
         // if order.volume is still +ve, the can be either there is no cross-spread walk done
@@ -202,13 +210,14 @@ impl LimitOrderBook {
     }
 
     fn cross_spread_walk<B:OrderManager+PriceBucketIter>
-        ( order : &mut Order, book : &mut B, func : fn(u64, u64) -> bool ) -> u32 {
+        ( order : &mut Order, book : &mut B, func : fn(u64, u64) -> bool ) 
+        -> ( u32, Vec<Order> ) {
         let mut volume = order.volume;
-        let mut orders_to_remove : Vec<&Order> = Vec::new();
+        let mut orders_to_remove : Vec<Order> = Vec::new();
 
         let price_bucket_iter = book.iter_mut();
 
-        let mut it : Box<Iterator<Item=(&u64, &mut PriceBucket)>> = match price_bucket_iter {
+        let it : Box<Iterator<Item=(&u64, &mut PriceBucket)>> = match price_bucket_iter {
             IterVariant::AskBookIter(x) => Box::new(x.into_iter()),
             IterVariant::BidBookIter(y) => Box::new(y.into_iter()),
             _ => unimplemented!()
@@ -225,18 +234,18 @@ impl LimitOrderBook {
                          bucket_order.volume, bucket_order.order_id, volume - bucket_order.volume);
                 volume -= bucket_order.volume;
                 bucket_order.volume = 0;
-                orders_to_remove.push(bucket_order);
+
+                // take a clone for now, until we come up with a better plan.
+                orders_to_remove.push(bucket_order.clone());
             } else {
                 bucket_order.volume -= volume;
                 volume = 0;
             }
         }
 
-        for o in orders_to_remove {
-            book.remove_order(o);
-        }
-
-        volume
+        // return orders_to_remove to make borrow checker happy.
+        // we can do book.remove_order(o) here without compiler complaining.
+        ( volume, orders_to_remove ) 
     }
 
     pub fn ask_iter(&mut self) -> btree_map::IterMut<u64, PriceBucket> {
