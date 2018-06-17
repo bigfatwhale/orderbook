@@ -9,19 +9,19 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall")
 set(SOURCE_FILES cpp/OrderBook.hpp cpp/veb.cpp cpp/veb.h cpp/vebBucketSet.hpp cpp/defaultBucketSet.hpp 
 				 cpp/PriceBucket.cpp cpp/PriceBucket.h cpp/Order.h cpp/PriceBucketManager.hpp )
 
-set(LOBSTER_SOURCE_FILES lobster/AddOrderMsg.hpp lobster/MessageBase.cpp lobster/MessageBase.h 
-						 lobster/MsgParser.cpp lobster/MsgParser.h lobster/MsgFactory.cpp 
-						 lobster/MsgFactory.h lobster/CancelOrderMsg.hpp lobster/DeleteOrderMsg.hpp 
-						 lobster/OrderExecutedMsg.hpp lobster/AuctionTradeMsg.hpp lobster/TradeHaltMsg.hpp)
+set(LOBSTER_SOURCE_FILES cpp/lobster/AddOrderMsg.hpp cpp/lobster/MessageBase.cpp cpp/lobster/MessageBase.h 
+						 cpp/lobster/MsgParser.cpp cpp/lobster/MsgParser.h cpp/lobster/MsgFactory.cpp 
+						 cpp/lobster/MsgFactory.h cpp/lobster/CancelOrderMsg.hpp cpp/lobster/DeleteOrderMsg.hpp 
+						 cpp/lobster/OrderExecutedMsg.hpp cpp/lobster/AuctionTradeMsg.hpp cpp/lobster/TradeHaltMsg.hpp)
 
-set(BATS_SOURCE_FILES bats/BATSUtil.h bats/BATSTradeBreakMsg.hpp bats/BATSTradeMsg.hpp 
-					  bats/BATSTradingStatusMsg.hpp bats/BATSOrderCancelMsg.hpp bats/BATSOrderExecutedMsg.hpp 
-					  bats/BATSRetailPriceImproveMsg.hpp bats/BATSMessageBase.cpp bats/BATSMessageBase.h 
-					  bats/BATSMsgFactory.cpp bats/BATSMsgFactory.h bats/BATSAddOrderMsg.hpp 
-					  bats/BATSAuctionSummaryMsg.hpp bats/BATSAuctionUpdateMsg.hpp bats/BATSPitchMsgParser.cpp 
-					  bats/BATSPitchMsgParser.h)
+set(BATS_SOURCE_FILES cpp/bats/BATSUtil.h cpp/bats/BATSTradeBreakMsg.hpp cpp/bats/BATSTradeMsg.hpp 
+					  cpp/bats/BATSTradingStatusMsg.hpp cpp/bats/BATSOrderCancelMsg.hpp cpp/bats/BATSOrderExecutedMsg.hpp 
+					  cpp/bats/BATSRetailPriceImproveMsg.hpp cpp/bats/BATSMessageBase.cpp cpp/bats/BATSMessageBase.h 
+					  cpp/bats/BATSMsgFactory.cpp cpp/bats/BATSMsgFactory.h cpp/bats/BATSAddOrderMsg.hpp 
+					  cpp/bats/BATSAuctionSummaryMsg.hpp cpp/bats/BATSAuctionUpdateMsg.hpp cpp/bats/BATSPitchMsgParser.cpp 
+					  cpp/bats/BATSPitchMsgParser.h)
 
-set(PYAPI_BATS_SOURCES bats/BATSPythonAPI.cpp)
+set(PYAPI_BATS_SOURCES cpp/bats/BATSPythonAPI.cpp)
 
 set(PYAPI_LOB_SOURCES cpp/OrderBookPythonAPI.cpp)
 
@@ -44,8 +44,8 @@ message( STATUS "Generating global includes")
 find_package(PythonLibs REQUIRED)
 find_package(PythonInterp REQUIRED)
 find_package(Boost COMPONENTS python27 iostreams unit_test_framework REQUIRED)
-include_directories (${PYTHON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/cpp ${CMAKE_SOURCE_DIR}/bats 
-					 ${CMAKE_SOURCE_DIR}/lobster)
+include_directories (${PYTHON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/cpp ${CMAKE_SOURCE_DIR}/cpp/bats 
+					 ${CMAKE_SOURCE_DIR}/cpp/lobster)
 
 message( STATUS "Boost Boost_LIBRARIES=${Boost_LIBRARIES}")
 message( STATUS "Boost Boost_PYTHON27_LIBRARIES=${Boost_PYTHON27_LIBRARIES}")
