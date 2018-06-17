@@ -15,10 +15,8 @@ pub struct Order {
 }
 
 pub struct PriceBucket {
-
     pub price_level : u64, 
     orders      : Vec<Order>, 
-
 }
 
 impl fmt::Debug for PriceBucket {
@@ -28,22 +26,23 @@ impl fmt::Debug for PriceBucket {
 }
 
 pub struct LimitOrderBook {
-
     ask_book : AskBook, 
     bid_book : BidBook
-
 }
 
 pub trait OrderManager {
-
     fn add_order( &mut self, order : Order );
     fn remove_order( &mut self, order : Order );
-
 }
 
 pub trait BestPrice {
     fn best_price( &self ) -> u64;
 }
+
+pub trait OrderBook : BestPrice + OrderManager + PriceBucketIter {}
+
+impl OrderBook for AskBook {} // Just tell compiler that we have implemented OrderBook trait
+impl OrderBook for BidBook {} // for AskBook/BidBook. Separate impls appear later in the code. 
 
 impl OrderManager for PriceBucket {
 
@@ -187,7 +186,7 @@ impl LimitOrderBook {
         } else {0}
     }
 
-    fn check_and_do_cross_spread_walk<B1 : OrderManager, B2: BestPrice + OrderManager + PriceBucketIter>
+    fn check_and_do_cross_spread_walk<B1 : OrderBook, B2: OrderBook>
         ( mut order : Order, 
                book : &mut B1, 
            opp_book : &mut B2, 
@@ -209,7 +208,7 @@ impl LimitOrderBook {
         }
     }
 
-    fn cross_spread_walk<B:OrderManager+PriceBucketIter>
+    fn cross_spread_walk<B: OrderBook>
         ( order : &mut Order, book : &mut B, func : fn(u64, u64) -> bool ) 
         -> ( u32, Vec<Order> ) {
         let mut volume = order.volume;

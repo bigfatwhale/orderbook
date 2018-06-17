@@ -1,5 +1,5 @@
 [package]
-name = "bats_api"
+name = "rust_orderbook"
 version = "0.1.0"
 authors = ["bigfatwhale <bigfatwhale@gmail.com>"]
 
