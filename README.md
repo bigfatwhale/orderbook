@@ -35,5 +35,7 @@ Build and Install
    - nom.
  - The Rust build has not been incorporated into the main cmake build system (yet). To build it we need to run cargo in the rust/ dir. 
 
-
+TODO :
+ - Concurrency.
+ - UI for simple visualization using Qt framework.
 
