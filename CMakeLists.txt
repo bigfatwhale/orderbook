@@ -6,8 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-O3 -Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall")
 
-set(SOURCE_FILES OrderBook.hpp veb.cpp veb.h vebBucketSet.hpp defaultBucketSet.hpp 
-				 PriceBucket.cpp PriceBucket.h Order.h PriceBucketManager.hpp )
+set(SOURCE_FILES cpp/OrderBook.hpp cpp/veb.cpp cpp/veb.h cpp/vebBucketSet.hpp cpp/defaultBucketSet.hpp 
+				 cpp/PriceBucket.cpp cpp/PriceBucket.h cpp/Order.h cpp/PriceBucketManager.hpp )
 
 set(LOBSTER_SOURCE_FILES lobster/AddOrderMsg.hpp lobster/MessageBase.cpp lobster/MessageBase.h 
 						 lobster/MsgParser.cpp lobster/MsgParser.h lobster/MsgFactory.cpp 
@@ -23,7 +23,7 @@ set(BATS_SOURCE_FILES bats/BATSUtil.h bats/BATSTradeBreakMsg.hpp bats/BATSTradeM
 
 set(PYAPI_BATS_SOURCES bats/BATSPythonAPI.cpp)
 
-set(PYAPI_LOB_SOURCES OrderBookPythonAPI.cpp)
+set(PYAPI_LOB_SOURCES cpp/OrderBookPythonAPI.cpp)
 
 message( STATUS "CMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}")
 
@@ -44,7 +44,7 @@ message( STATUS "Generating global includes")
 find_package(PythonLibs REQUIRED)
 find_package(PythonInterp REQUIRED)
 find_package(Boost COMPONENTS python27 iostreams unit_test_framework REQUIRED)
-include_directories (${PYTHON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/bats 
+include_directories (${PYTHON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/cpp ${CMAKE_SOURCE_DIR}/bats 
 					 ${CMAKE_SOURCE_DIR}/lobster)
 
 message( STATUS "Boost Boost_LIBRARIES=${Boost_LIBRARIES}")
