@@ -5,3 +5,4 @@ authors = ["bigfatwhale <bigfatwhale@gmail.com>"]
 
 [dependencies]
 nom = "^4.0"
+crossbeam = "0.3.2"

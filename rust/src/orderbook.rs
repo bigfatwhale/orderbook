@@ -1,9 +1,10 @@
-
 use std::collections::BTreeMap;
 use std::collections::btree_map;
 use std::iter::{Iterator, IntoIterator};
 use std::fmt;
 use std::iter::Rev;
+use crossbeam::sync::MsQueue;
+
 
 #[derive(Clone, Debug)]
 pub struct Order {
@@ -27,7 +28,8 @@ impl fmt::Debug for PriceBucket {
 
 pub struct LimitOrderBook {
     ask_book : AskBook, 
-    bid_book : BidBook
+    bid_book : BidBook, 
+    requests : MsQueue<Order>
 }
 
 pub trait OrderManager {
@@ -168,7 +170,19 @@ impl BestPrice for BidBook {
 
 impl LimitOrderBook {
     pub fn new() -> LimitOrderBook {
-        LimitOrderBook{ ask_book : AskBook::new(), bid_book : BidBook::new() }
+        LimitOrderBook{ ask_book : AskBook::new(), 
+                        bid_book : BidBook::new(), 
+                        requests : MsQueue::new() }
+    }
+
+    pub fn start_workers(&self) {
+        // start all the worker threads
+        
+    }
+
+    pub fn add_request(&self, order : Order ) {
+        // entry point for multiple threads to post requests to add/cancel
+        self.requests.push(order);
     }
 
     pub fn best_bid(&self) -> u64 { return self.bid_book.best_price() }
