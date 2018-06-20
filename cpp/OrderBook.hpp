@@ -59,10 +59,7 @@ public:
         return bucket->totalVolume();
     }
 
-    uint64_t bestPrice()
-    {
-        return BookTrait<PriceBucketManagerT, AskBidTrait>::bestPrice(m_priceBucketManager);
-    }
+    uint64_t bestPrice() { return BookTrait<PriceBucketManagerT, AskBidTrait>::bestPrice(m_priceBucketManager); }
 
     // This is just a forwarding iterator which forwards all calls to a
     // PriceBucketManager::iterator.
@@ -93,13 +90,9 @@ public:
     iterator begin() { return iterator( m_priceBucketManager ); }
     iterator end()   { return iterator( m_priceBucketManager, true ); }
 
-    BookType bookType() { return m_bookType; }
-
 private:
     BookType m_bookType;
     PriceBucketManagerT m_priceBucketManager;
-    boost::function<uint64_t (PriceBucketManagerT*) > m_bestPriceFunc;
-
 };
 
 template <typename PriceBucketManagerT=PriceBucketManager<> >
@@ -109,24 +102,6 @@ class LimitOrderBook {
 public:
 
     LimitOrderBook() : m_buyBook{BookType::BUY}, m_sellBook{BookType::SELL} {}
-
-    template <typename B1, typename B2, typename Comp>
-    void doCrossSpread(Order &order, B1 &book, B2 &oppbook, Comp& f)
-    {
-        int32_t residual_volume;
-        // iterate and walk through the prices, generating filled order msgs.
-        if ( ( oppbook.bestPrice() > 0 ) && f(order.price, oppbook.bestPrice()) )
-        {
-            residual_volume = crossSpreadWalk(order, oppbook, f);
-            order.volume = residual_volume;
-        }
-
-        // if order.volume is still +ve, the can be either there is no cross-spread walk done
-        // or the cross-spread walk only filled part of the volume. In that case we continue to
-        // add the left-over volume in a new order.
-        if (order.volume > 0)
-            book.addOrder(order);
-    }
 
     void addOrder(Order &order)
     {
@@ -173,6 +148,24 @@ public:
 
 private:
 
+    template <typename B1, typename B2, typename Comp>
+    void doCrossSpread(Order &order, B1 &book, B2 &oppbook, Comp& f)
+    {
+        int32_t residual_volume;
+        // iterate and walk through the prices, generating filled order msgs.
+        if ( ( oppbook.bestPrice() > 0 ) && f(order.price, oppbook.bestPrice()) )
+        {
+            residual_volume = crossSpreadWalk(order, oppbook, f);
+            order.volume = residual_volume;
+        }
+
+        // if order.volume is still +ve, the can be either there is no cross-spread walk done
+        // or the cross-spread walk only filled part of the volume. In that case we continue to
+        // add the left-over volume in a new order.
+        if (order.volume > 0)
+            book.addOrder(order);
+    }
+    
     template <typename B, typename Comp>
     uint32_t crossSpreadWalk( Order &order, B &book, Comp &f )
     {
@@ -184,11 +177,8 @@ private:
 
         std::deque<Order> orders_to_remove;
 
-        while (volume > 0) // && order_i != priceBucketIter->end() // this is always true on first entry
+        while (volume > 0 && f( order.price, orderIter->price)) // && order_i != priceBucketIter->end() // this is always true on first entry
         {
-            if ( !f( order.price, orderIter->price) )
-                break;
-
             if ( volume >= orderIter->volume )
             {
                 volume -= orderIter->volume;

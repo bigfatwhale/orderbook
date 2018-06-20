@@ -13,15 +13,16 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
-#include "../lobster/AddOrderMsg.hpp"
-#include "../lobster/CancelOrderMsg.hpp"
-#include "../lobster/MsgParser.h"
-#include "../lobster/DeleteOrderMsg.hpp"
-#include "../lobster/OrderExecutedMsg.hpp"
-#include "../lobster/AuctionTradeMsg.hpp"
-#include "../lobster/TradeHaltMsg.hpp"
+#include "AddOrderMsg.hpp"
+#include "CancelOrderMsg.hpp"
+#include "MsgParser.h"
+#include "DeleteOrderMsg.hpp"
+#include "OrderExecutedMsg.hpp"
+#include "AuctionTradeMsg.hpp"
+#include "TradeHaltMsg.hpp"
 #include "PriceBucketManager.hpp"
 #include "PriceBucket.h"
+#include "vebBucketSet.hpp"
 #include "OrderBook.hpp"
 #include "Order.h"
 
@@ -64,6 +65,143 @@ class LOBSim : public LimitOrderBook<
         PriceBucketManager< default_bucket_set<TestPriceBucket>, TestPriceBucket> >
 {};
 
+class LOBSimVeb : public LimitOrderBook<
+        PriceBucketManager< vebBucketSet<TestPriceBucket, 25                                                    >, TestPriceBucket> >
+{};
+
+template<typename T>
+void do_sample_load( T &orderbook )
+{
+    auto parser = lobster::MsgParser();
+    
+    string msgline, cur_order_line, prev_order_line;
+
+    mapped_file_source msgfile("AAPL_2012-06-21_message_50.csv");
+    mapped_file_source orderfile("AAPL_2012-06-21_orderbook_50.csv");
+
+    stream<mapped_file_source> msg_ifs(msgfile, std::ios::binary);
+    stream<mapped_file_source> order_ifs(orderfile, std::ios::binary);
+
+    BOOST_TEST(msgfile.is_open());
+    BOOST_TEST(orderfile.is_open());
+
+    getline(order_ifs, prev_order_line);
+    getline(msg_ifs, msgline); // skip first line of the message file.
+
+    // take the first line from the order file, and initialize the orderbook with it.
+    boost::char_separator<char> sep(",");
+    tokenizer tokens(prev_order_line, sep);
+
+    int c = 0;
+
+    auto it = tokens.begin();
+    while (it != tokens.end())
+    {
+        auto price  = boost::lexical_cast<uint64_t>(*it++);
+        auto volume = boost::lexical_cast<uint64_t>(*it++);
+        auto o = Order(0, price, volume, ( c % 2 == 0 ) ? BookType::SELL : BookType::BUY, "");
+        orderbook.addOrder(o);
+        c++;
+    }
+
+    set<uint32_t> added_price_levels;
+    set<uint32_t> added_order_ids;
+
+    while (getline(msg_ifs, msgline))
+    {
+        // process one line of message file, apply the actions onto the orderbook
+        auto msg = parser.parse_msg(msgline);
+
+        getline(order_ifs, cur_order_line);
+
+        if ( msg->m_msgtype == '1' )
+        {
+            //uint64_t id, uint64_t price, uint32_t volume, BookType side, std::string const &partId
+            auto dmsg = dynamic_pointer_cast<AddOrderMsg>(msg);
+            Order o(dmsg->m_orderId, dmsg->m_price, dmsg->m_shares,
+                    ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
+            orderbook.addOrder(o);
+            added_price_levels.insert(o.price);
+            added_order_ids.insert(o.orderId);
+        }
+        else if (msg->m_msgtype == '2')
+        {
+            auto dmsg = dynamic_pointer_cast<CancelOrderMsg>(msg);
+            Order o(dmsg->m_orderId, dmsg->m_price, dmsg->m_shares,
+                    ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
+            orderbook.removeOrder(o);
+        }
+        else if (msg->m_msgtype == '3')
+        {
+            auto dmsg = dynamic_pointer_cast<DeleteOrderMsg>(msg);
+
+            uint32_t oid;
+            if ( added_order_ids.find(dmsg->m_orderId) != added_order_ids.end())
+                oid = dmsg->m_orderId;
+            else
+                oid = 0;
+            Order o(oid, dmsg->m_price, dmsg->m_shares,
+                    ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
+            orderbook.removeOrder(o);
+        }
+        else if (msg->m_msgtype == '4')
+        {
+            // execution msg. this is a msg transmitted out because some order filled the exchange's
+            // LOB and the exchange generated a msg to send to us. to process this in our local instance
+            // of the LOB, we need to artificially create an appropriate buy/sell order on the opposite side
+            // of the book. This order should immediately get filled by our orderbook and our orderbook state
+            // will then match what's specified in the cur_order_line.
+            auto dmsg = dynamic_pointer_cast<OrderExecutedMsg>(msg);
+            if ( dmsg->m_side == 1 )
+            {
+                // if it's a execution in the buy book, then we need to generate a sell order, and vice versa.
+                Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::SELL, "NCM");
+                orderbook.addOrder(o);
+            }
+            else
+            {
+                Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::BUY, "NCM");
+                orderbook.addOrder(o);
+            }
+
+        }
+        // msgtype = '5' is to be ignored.
+
+        // now take the corresponding line in the order book file. check that our order book
+        // state is the same as what is given by the order book file line.
+
+        tokens = tokenizer (cur_order_line, sep);
+
+        c = 0;
+        auto it = tokens.begin();
+        while (it != tokens.end())
+        {
+            auto price = boost::lexical_cast<uint64_t>(*it++);
+            auto volume = boost::lexical_cast<uint64_t>(*it++);
+
+            if (c==0)
+                BOOST_TEST( orderbook.bestAsk() == price);
+            if (c==1)
+                BOOST_TEST( orderbook.bestBid() == price);
+
+            if (added_price_levels.find(price) != added_price_levels.end() )
+            {
+                auto type = (c % 2 == 0) ? BookType::SELL : BookType::BUY;
+
+                auto orderbook_volume = orderbook.volumeForPricePoint(price, type);
+
+                BOOST_TEST(orderbook_volume == volume);
+
+                if (orderbook_volume != volume)
+                    throw runtime_error("volume mismatch");
+
+            }
+            c++;
+        }
+    }
+    msg_ifs.close();
+    msgfile.close();
+}
 
 BOOST_AUTO_TEST_SUITE( test_lobster_suite )
 
@@ -174,8 +312,21 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
         BOOST_TEST( msg->m_price == -1);
     }
 
-    BOOST_AUTO_TEST_CASE( test_lobster_sample_load )
+    BOOST_AUTO_TEST_CASE( test_lobster_sample_load_default )
     {
+        auto orderbook = LOBSim();
+        do_sample_load(orderbook);
+    }
+
+    BOOST_AUTO_TEST_CASE( test_lobster_sample_load_veb )
+    {
+        auto orderbook = LOBSimVeb();
+        do_sample_load(orderbook);
+    }
+
+    BOOST_AUTO_TEST_CASE( test_lobster_sample_load_time )
+    {   
+        // same as test_lobster_sample_load, but no test assertions. just want the timing.
         auto parser = lobster::MsgParser();
         auto orderbook = LOBSim();
         string msgline, cur_order_line, prev_order_line;
@@ -185,9 +336,6 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
 
         stream<mapped_file_source> msg_ifs(msgfile, std::ios::binary);
         stream<mapped_file_source> order_ifs(orderfile, std::ios::binary);
-
-        BOOST_TEST(msgfile.is_open());
-        BOOST_TEST(orderfile.is_open());
 
         getline(order_ifs, prev_order_line);
         getline(msg_ifs, msgline); // skip first line of the message file.
@@ -207,8 +355,6 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
             orderbook.addOrder(o);
             c++;
         }
-
-        int msgcnt = 2;
 
         set<uint32_t> added_price_levels;
         set<uint32_t> added_order_ids;
@@ -271,44 +417,10 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
                 }
 
             }
-            // msgtype = '5' is to be ignored.
-
-            // now take the corresponding line in the order book file. check that our order book
-            // state is the same as what is given by the order book file line.
-
-            tokens = tokenizer (cur_order_line, sep);
-
-            int c = 0;
-            auto it = tokens.begin();
-            while (it != tokens.end())
-            {
-                auto price = boost::lexical_cast<uint64_t>(*it++);
-                auto volume = boost::lexical_cast<uint64_t>(*it++);
-
-                if (c==0)
-                    BOOST_TEST( orderbook.bestAsk() == price);
-                if (c==1)
-                    BOOST_TEST( orderbook.bestBid() == price);
-
-                if (added_price_levels.find(price) != added_price_levels.end() )
-                {
-                    auto type = (c % 2 == 0) ? BookType::SELL : BookType::BUY;
-
-                    auto orderbook_volume = orderbook.volumeForPricePoint(price, type);
-
-                    BOOST_TEST(orderbook_volume == volume);
-
-                    if (orderbook_volume != volume)
-                        throw runtime_error("volume mismatch");
-
-                }
-                c++;
-            }
-            msgcnt++;
-
         }
         msg_ifs.close();
         msgfile.close();
     }
+
 
 BOOST_AUTO_TEST_SUITE_END()

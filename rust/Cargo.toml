@@ -1,0 +1,8 @@
+[package]
+name = "rust_orderbook"
+version = "0.1.0"
+authors = ["bigfatwhale <bigfatwhale@gmail.com>"]
+
+[dependencies]
+nom = "^4.0"
+crossbeam = "0.3.2"
