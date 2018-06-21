@@ -13,8 +13,14 @@
 #include <utility>
 #include <memory>
 #include <iostream>
+#include <limits>
 #include <type_traits>
+#include <thread>
+#include <list>
 #include <boost/function.hpp>
+#include <boost/next_prior.hpp> 
+#include <boost/lockfree/spsc_queue.hpp>
+#include <boost/lockfree/queue.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include "Order.h"
 #include "PriceBucket.h"
@@ -101,7 +107,11 @@ class LimitOrderBook {
     // see https://arxiv.org/abs/1012.0349 for general survey of limit order books.
 public:
 
-    LimitOrderBook() : m_buyBook{BookType::BUY}, m_sellBook{BookType::SELL} {}
+    LimitOrderBook() : m_shutdown{false}, m_buyBook{BookType::BUY}, m_sellBook{BookType::SELL}
+    {
+        //m_queue = new boost::lockfree::queue<Order>;
+        assert(m_queue.is_lock_free());
+    }
 
     void addOrder(Order &order)
     {
@@ -134,6 +144,64 @@ public:
         else
             return m_sellBook.volumeForPricePoint(price);
     }
+
+    void dispatch_worker()
+    {
+        while (!m_shutdown)
+        {
+            // no need to lock because the design ensures no concurrent access
+            uint64_t bestAsk = m_sellBook.bestPrice() == 0 ? m_sellBook.bestPrice() : 
+                                                             std::numeric_limits<uint64_t>::max();
+            uint64_t bestBid = m_buyBook.bestPrice();
+            
+            std::unordered_map<uint64_t, std::list<Order>> parallel_changes;
+
+            auto populate = [&](Order &x) 
+                            {
+                                if (parallel_changes.find(x.price) == parallel_changes.end())
+                                    parallel_changes.emplace(x.price, std::list<Order>(1, x));
+                                else
+                                    parallel_changes[x.price].push_back(x);
+                            };
+
+            bool done = false;
+            uint32_t cnt = 0;
+
+            while (!done)
+            {
+                do{
+                    if(m_queue.read_available())
+                    {
+                        Order& x = m_queue.front();
+                        if ( ( x.side == BookType::BUY && x.price < bestAsk ) ||
+                             ( x.side == BookType::SELL &&x.price > bestBid ) )
+                            populate(x);
+                        else 
+                        { 
+                            done = true;
+                            break;
+                        }                        
+                    }
+                        
+
+                } while (true);
+
+
+
+            }
+
+        }
+    }
+
+    void startWorkers()
+    {
+        m_dispatch_thread = std::thread(&LimitOrderBook::dispatch_worker);
+        
+    }
+
+    bool m_shutdown;
+    std::thread m_dispatch_thread;
+    boost::lockfree::spsc_queue<Order, boost::lockfree::capacity<1048576>> m_queue;
 
     uint64_t bestBid() { return m_buyBook.bestPrice();  }
     uint64_t bestAsk() { return m_sellBook.bestPrice(); }
@@ -209,6 +277,7 @@ private:
 
     Book<PriceBucketManagerT, Bid> m_buyBook;
     Book<PriceBucketManagerT, Ask> m_sellBook;
+    static constexpr int max_orders{100};
 };
 
 

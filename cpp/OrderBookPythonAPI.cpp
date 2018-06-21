@@ -12,7 +12,7 @@ using namespace boost::python;
 void export_orderbook()
 {
 
-	class_< LimitOrderBook<> >("LimitOrderBook")
+	class_< LimitOrderBook<>, boost::noncopyable >("LimitOrderBook")
 		.def(init<>())
 		.def("addOrder",            &LimitOrderBook<>::addOrder )
 		.def("removeOrder",         &LimitOrderBook<>::removeOrder )
@@ -48,7 +48,7 @@ void export_order()
 {
 	class_<Order>("Order")
 		.def(init<>())
-		.def(init<uint64_t, uint64_t, uint32_t, BookType, std::string>())
+		.def(init<uint64_t, uint64_t, uint32_t, BookType, uint32_t>())
 		.def_readwrite("orderId", &Order::orderId)
         .def_readwrite("price",   &Order::price)
         .def_readwrite("volume",  &Order::volume)

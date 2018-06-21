@@ -99,7 +99,7 @@ void do_sample_load( T &orderbook )
     {
         auto price  = boost::lexical_cast<uint64_t>(*it++);
         auto volume = boost::lexical_cast<uint64_t>(*it++);
-        auto o = Order(0, price, volume, ( c % 2 == 0 ) ? BookType::SELL : BookType::BUY, "");
+        auto o = Order(0, price, volume, ( c % 2 == 0 ) ? BookType::SELL : BookType::BUY, 50001);
         orderbook.addOrder(o);
         c++;
     }
@@ -119,7 +119,7 @@ void do_sample_load( T &orderbook )
             //uint64_t id, uint64_t price, uint32_t volume, BookType side, std::string const &partId
             auto dmsg = dynamic_pointer_cast<AddOrderMsg>(msg);
             Order o(dmsg->m_orderId, dmsg->m_price, dmsg->m_shares,
-                    ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
+                    ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, 300001);
             orderbook.addOrder(o);
             added_price_levels.insert(o.price);
             added_order_ids.insert(o.orderId);
@@ -128,7 +128,7 @@ void do_sample_load( T &orderbook )
         {
             auto dmsg = dynamic_pointer_cast<CancelOrderMsg>(msg);
             Order o(dmsg->m_orderId, dmsg->m_price, dmsg->m_shares,
-                    ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
+                    ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, 300001);
             orderbook.removeOrder(o);
         }
         else if (msg->m_msgtype == '3')
@@ -141,7 +141,7 @@ void do_sample_load( T &orderbook )
             else
                 oid = 0;
             Order o(oid, dmsg->m_price, dmsg->m_shares,
-                    ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
+                    ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, 300001);
             orderbook.removeOrder(o);
         }
         else if (msg->m_msgtype == '4')
@@ -155,12 +155,12 @@ void do_sample_load( T &orderbook )
             if ( dmsg->m_side == 1 )
             {
                 // if it's a execution in the buy book, then we need to generate a sell order, and vice versa.
-                Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::SELL, "NCM");
+                Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::SELL, 300001);
                 orderbook.addOrder(o);
             }
             else
             {
-                Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::BUY, "NCM");
+                Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::BUY, 300001);
                 orderbook.addOrder(o);
             }
 
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
         {
             auto price = boost::lexical_cast<uint64_t>(*it++);
             auto volume = boost::lexical_cast<uint64_t>(*it++);
-            auto o = Order(0, price, volume, ( c % 2 == 0 ) ? BookType::SELL : BookType::BUY, "");
+            auto o = Order(0, price, volume, ( c % 2 == 0 ) ? BookType::SELL : BookType::BUY, 300001);
             orderbook.addOrder(o);
             c++;
         }
@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
                 //uint64_t id, uint64_t price, uint32_t volume, BookType side, std::string const &partId
                 auto dmsg = dynamic_pointer_cast<AddOrderMsg>(msg);
                 Order o(dmsg->m_orderId, dmsg->m_price, dmsg->m_shares,
-                        ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
+                        ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, 300001);
                 orderbook.addOrder(o);
                 added_price_levels.insert(o.price);
                 added_order_ids.insert(o.orderId);
@@ -380,7 +380,7 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
             {
                 auto dmsg = dynamic_pointer_cast<CancelOrderMsg>(msg);
                 Order o(dmsg->m_orderId, dmsg->m_price, dmsg->m_shares,
-                        ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
+                        ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, 300001);
                 orderbook.removeOrder(o);
             }
             else if (msg->m_msgtype == '3')
@@ -393,7 +393,7 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
                 else
                     oid = 0;
                 Order o(oid, dmsg->m_price, dmsg->m_shares,
-                        ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
+                        ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, 300001);
                 orderbook.removeOrder(o);
             }
             else if (msg->m_msgtype == '4')
@@ -407,12 +407,12 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
                 if ( dmsg->m_side == 1 )
                 {
                     // if it's a execution in the buy book, then we need to generate a sell order, and vice versa.
-                    Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::SELL, "NCM");
+                    Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::SELL, 300001);
                     orderbook.addOrder(o);
                 }
                 else
                 {
-                    Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::BUY, "NCM");
+                    Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::BUY, 300001);
                     orderbook.addOrder(o);
                 }
 
