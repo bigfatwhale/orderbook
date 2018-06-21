@@ -43,6 +43,11 @@ public:
 
     Book(BookType t) : m_bookType{t} {}
 
+    void addBucket(uint64_t price)
+    {
+        m_priceBucketManager.addBucket(price);
+    }
+
     void addOrder( Order &order )
     {
         auto bucket = m_priceBucketManager.findBucket(order.price);
@@ -154,14 +159,21 @@ public:
                                                              std::numeric_limits<uint64_t>::max();
             uint64_t bestBid = m_buyBook.bestPrice();
             
-            std::unordered_map<uint64_t, std::list<Order>> parallel_changes;
+            std::unordered_map<uint64_t, std::list<Order>> bid_changes;
+            std::unordered_map<uint64_t, std::list<Order>> ask_changes;
 
-            auto populate = [&](Order &x) 
+            auto populate = [&](Order &x, BookType t) 
                             {
-                                if (parallel_changes.find(x.price) == parallel_changes.end())
-                                    parallel_changes.emplace(x.price, std::list<Order>(1, x));
+                                std::unordered_map<uint64_t, std::list<Order>> *map_to_change;
+                                if (t == BookType::BUY)
+                                    map_to_change = &bid_changes;
                                 else
-                                    parallel_changes[x.price].push_back(x);
+                                    map_to_change = &ask_changes;
+                                
+                                if (map_to_change->find(x.price) == map_to_change->end())
+                                    map_to_change->emplace(x.price, std::list<Order>(1, x));
+                                else
+                                    (*map_to_change)[x.price].push_back(x);
                             };
 
             bool done = false;
@@ -175,19 +187,30 @@ public:
                         Order& x = m_queue.front();
                         if ( ( x.side == BookType::BUY && x.price < bestAsk ) ||
                              ( x.side == BookType::SELL &&x.price > bestBid ) )
-                            populate(x);
+                        {
+                            populate(m_queue.pop());
+                            cnt++;
+                        }
                         else 
                         { 
                             done = true;
                             break;
                         }                        
                     }
-                        
+                } while (cnt < max_orders );
+            }
 
-                } while (true);
+            // create price buckets for the first time, if needed.
+            for (auto &item : bid_changes)
+            {
+                if ( m_buyBook.find(item.first) == m_buyBook.end() )
+                    m_buyBook.addBucket(item.first);
+            }
 
-
-
+            for (auto &item : ask_changes)
+            {
+                if ( m_sellBook.find(item.first) == m_sellBook.end() )
+                    m_sellBook.addBucket(item.first);
             }
 
         }
