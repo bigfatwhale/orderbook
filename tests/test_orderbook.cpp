@@ -426,4 +426,10 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
         BOOST_TEST( b.volumeForPricePoint(10100, BookType::BUY) == 150 );
     }
 
+    BOOST_AUTO_TEST_CASE( test_lob_threading )
+    {
+        auto b = LimitOrderBook<PriceBucketManager<>>();
+        b.startWorkers();
+    }
+
 BOOST_AUTO_TEST_SUITE_END()
