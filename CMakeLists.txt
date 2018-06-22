@@ -80,7 +80,7 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     set_target_properties(orderbook_api PROPERTIES PREFIX "")
 endif()
 
-target_link_libraries(orderbook_api orderbook boost_system ${Boost_PYTHON27_LIBRARIES} ${PYTHON_LIBRARY} )
+target_link_libraries(orderbook_api orderbook boost_system  ${Boost_LIBRARIES} ${Boost_PYTHON27_LIBRARIES} ${PYTHON_LIBRARY} )
 
 add_library(lobster SHARED ${LOBSTER_SOURCE_FILES})
 add_library(orderbook SHARED ${SOURCE_FILES})

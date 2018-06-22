@@ -15,7 +15,7 @@
 #include <iostream>
 #include <limits>
 #include <type_traits>
-#include <thread>
+#include <boost/thread.hpp>
 #include <list>
 #include <boost/asio/thread_pool.hpp>
 #include <boost/function.hpp>
@@ -114,10 +114,8 @@ class LimitOrderBook {
     // see https://arxiv.org/abs/1012.0349 for general survey of limit order books.
 public:
 
-    LimitOrderBook() : m_shutdown{false}, m_buyBook{BookType::BUY}, m_sellBook{BookType::SELL}
-                        //m_pool{4}
+    LimitOrderBook() : m_shutdown{false}, m_pool{4}, m_buyBook{BookType::BUY}, m_sellBook{BookType::SELL}                  
     {
-        //m_queue = new boost::lockfree::queue<Order>;
         assert(m_queue.is_lock_free());
     }
 
@@ -167,16 +165,12 @@ public:
 
             auto populate = [&](Order &x) 
                             {
-                                std::unordered_map<uint64_t, std::list<Order>> *map_to_change;
-                                if (x.side == BookType::BUY)
-                                    map_to_change = &bid_changes;
-                                else
-                                    map_to_change = &ask_changes;
+                                auto &map_to_change = x.side == BookType::BUY? bid_changes : ask_changes;
                                 
-                                if (map_to_change->find(x.price) == map_to_change->end())
-                                    map_to_change->emplace(x.price, std::list<Order>(1, x));
+                                if (map_to_change.find(x.price) == map_to_change.end())
+                                    map_to_change.emplace(x.price, std::list<Order>(1, x));
                                 else
-                                    (*map_to_change)[x.price].push_back(x);
+                                    map_to_change[x.price].push_back(x);
                             };
 
             bool done = false;
@@ -188,8 +182,8 @@ public:
                     if(m_queue.read_available())
                     {
                         Order& x = m_queue.front();
-                        if ( ( x.side == BookType::BUY && x.price < bestAsk ) ||
-                             ( x.side == BookType::SELL &&x.price > bestBid ) )
+                        if ( ( x.side == BookType::BUY  && x.price < bestAsk ) ||
+                             ( x.side == BookType::SELL && x.price > bestBid ) )
                         {
                             m_queue.pop(x);
                             populate(x);
@@ -206,28 +200,22 @@ public:
 
             // create price buckets for the first time, if needed.
             for (auto &item : bid_changes)
-            {
-                //if ( m_buyBook.price_buckets.find(item.first) == m_buyBook.end() )
-                    m_buyBook.addBucket(item.first);
-            }
-
+                m_buyBook.addBucket(item.first);
+            
             for (auto &item : ask_changes)
-            {
-                //if ( m_sellBook.price_buckets.find(item.first) == m_sellBook.end() )
-                    m_sellBook.addBucket(item.first);
-            }
+                m_sellBook.addBucket(item.first);
+            
 
         }
     }
 
     void startWorkers()
     {
-        m_dispatch_thread = std::thread(&LimitOrderBook::dispatch_worker);
-        //m_pool = boost::asio::thread_pool(4);
+        m_dispatch_thread = boost::thread(&LimitOrderBook::dispatch_worker, this);
     }
 
     bool m_shutdown;
-    std::thread m_dispatch_thread;
+    boost::thread m_dispatch_thread;
     boost::lockfree::spsc_queue<Order, boost::lockfree::capacity<1048576>> m_queue;
     boost::asio::thread_pool m_pool;
 
