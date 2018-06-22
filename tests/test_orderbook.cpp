@@ -13,6 +13,8 @@
 #include <deque>
 #include <map>
 #include <utility>
+#include <chrono>
+#include <thread>
 #include <boost/test/unit_test.hpp>
 #include <boost/dynamic_bitset.hpp>
 #include "OrderBook.hpp"
@@ -430,6 +432,8 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
     {
         auto b = LimitOrderBook<PriceBucketManager<>>();
         b.startWorkers();
+
+        std::this_thread::sleep_for(std::chrono::seconds(5));
     }
 
 BOOST_AUTO_TEST_SUITE_END()

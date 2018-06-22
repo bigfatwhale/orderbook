@@ -3,6 +3,10 @@ use std::collections::btree_map;
 use std::iter::{Iterator, IntoIterator};
 use std::fmt;
 use std::iter::Rev;
+use std::thread::{spawn, JoinHandle};
+use std::{thread, time};
+use std::vec::Vec;
+use std::sync::Arc;
 use crossbeam::sync::MsQueue;
 
 
@@ -29,7 +33,9 @@ impl fmt::Debug for PriceBucket {
 pub struct LimitOrderBook {
     ask_book : AskBook, 
     bid_book : BidBook, 
-    requests : MsQueue<Order>
+    requests : Arc<MsQueue<Order>>, 
+    worker_threads : Vec<JoinHandle<()>>,
+    dispatch_thread : Option<JoinHandle<()>>, 
 }
 
 pub trait OrderManager {
@@ -172,16 +178,41 @@ impl LimitOrderBook {
     pub fn new() -> LimitOrderBook {
         LimitOrderBook{ ask_book : AskBook::new(), 
                         bid_book : BidBook::new(), 
-                        requests : MsQueue::new() }
+                        requests : Arc::new(MsQueue::new()), 
+                        worker_threads : vec![], 
+                        dispatch_thread : None
+                      }
     }
 
-    pub fn start_workers(&self) {
+    pub fn start_workers(&mut self) {
         // start all the worker threads
+        let queue = self.requests.clone();
+        // let bid_book = Arc::new(self.bid_book);
+        // let ask_book = Arc::new(self.ask_book);
         
+
+        
+        self.dispatch_thread = Some(spawn(move||{
+
+            loop{
+
+                //let best_bid = a.best_price();
+                // let x = self.ask_book.best_price();
+                match queue.try_pop() {
+                    Some(o) => println!("Order = {:?}", o),
+                    _ => {}
+                }
+                thread::sleep(time::Duration::from_secs(1));
+            }
+        }));
+
+        //thread::sleep(time::Duration::from_secs(5));
+        //self.dispatch_thread.take().unwrap().join();
     }
 
     pub fn add_request(&self, order : Order ) {
         // entry point for multiple threads to post requests to add/cancel
+        println!("add request {:?}", order );
         self.requests.push(order);
     }
 

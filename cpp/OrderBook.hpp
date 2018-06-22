@@ -18,6 +18,8 @@
 #include <boost/thread.hpp>
 #include <list>
 #include <boost/asio/thread_pool.hpp>
+#include <boost/bind.hpp>
+#include <boost/core/ref.hpp>
 #include <boost/function.hpp>
 #include <boost/next_prior.hpp> 
 #include <boost/lockfree/spsc_queue.hpp>
@@ -58,7 +60,7 @@ public:
         bucket->addOrder(order);
     }
 
-    auto& getBucket(uint64_t price)
+    auto getBucket(uint64_t price)
     {   
         // assumption : bucket exists
         return m_priceBucketManager.findBucket(price);
@@ -223,24 +225,30 @@ public:
             Order o;
             while(m_work_queue.pop(o))
             {
-                auto& bucket = o.side == BookType::BUY ? 
+                auto bucket = o.side == BookType::BUY ? 
                                 m_buyBook.getBucket(o.price) : 
                                 m_sellBook.getBucket(o.price);
 
-                bucket.addOrder(o);
+                bucket->addOrder(o);
             }
         }
     }
 
     void startWorkers()
     {
+        const int num_threads = 4;
+
         m_dispatch_thread = boost::thread(&LimitOrderBook::dispatch_worker, this);
+
+        for (int i = 0; i < num_threads; i++)
+            shelving_workers.create_thread(boost::bind(&LimitOrderBook::shelving_worker, this));
     }
 
     bool m_shutdown;
     boost::thread m_dispatch_thread;
     boost::lockfree::spsc_queue<Order, boost::lockfree::capacity<1048576>> m_queue;
     boost::lockfree::queue<Order> m_work_queue;
+    boost::thread_group shelving_workers;
     //boost::asio::thread_pool m_pool;
 
     uint64_t bestBid() { return m_buyBook.bestPrice();  }
