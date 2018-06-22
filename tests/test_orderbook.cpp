@@ -433,7 +433,12 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
         auto b = LimitOrderBook<PriceBucketManager<>>();
         b.startWorkers();
 
-        std::this_thread::sleep_for(std::chrono::seconds(5));
+        for (int i = 0; i < 1000; i++)
+        {
+            auto o = Order(2000+i, 10000+i, 300, BookType::BUY, 20001);
+            b.queueOrder(o);
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        }
     }
 
 BOOST_AUTO_TEST_SUITE_END()

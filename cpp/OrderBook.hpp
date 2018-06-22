@@ -159,22 +159,27 @@ public:
             return m_sellBook.volumeForPricePoint(price);
     }
 
+    void queueOrder(Order& order)
+    {
+        m_queue.push(order);
+    }
+
     void dispatch_worker()
     {
         while (!m_shutdown)
         {
             // no need to lock because the design ensures no concurrent access
-            uint64_t bestAsk = m_sellBook.bestPrice() == 0 ? m_sellBook.bestPrice() : 
+            uint64_t bestAsk = m_sellBook.bestPrice() == 0 ? m_sellBook.bestPrice() :
                                                              std::numeric_limits<uint64_t>::max();
             uint64_t bestBid = m_buyBook.bestPrice();
-            
+
             std::unordered_map<uint64_t, std::list<Order>> bid_changes;
             std::unordered_map<uint64_t, std::list<Order>> ask_changes;
 
-            auto populate = [&](Order &x) 
+            auto populate = [&](Order &x)
                             {
                                 auto &map_to_change = x.side == BookType::BUY? bid_changes : ask_changes;
-                                
+
                                 if (map_to_change.find(x.price) == map_to_change.end())
                                     map_to_change.emplace(x.price, std::list<Order>(1, x));
                                 else
@@ -197,11 +202,16 @@ public:
                             populate(x);
                             cnt++;
                         }
-                        else 
-                        { 
+                        else
+                        {
                             done = true;
+                            if (cnt == 0)
+                            {
+                                m_queue.pop(x);
+                                populate(x);
+                            }
                             break;
-                        }                        
+                        }
                     }
                 } while (cnt < max_orders );
             }
@@ -209,10 +219,10 @@ public:
             // create price buckets for the first time, if needed.
             for (auto &item : bid_changes)
                 m_buyBook.addBucket(item.first);
-            
+
             for (auto &item : ask_changes)
                 m_sellBook.addBucket(item.first);
-            
+
             // send the collected work to thread pool
         }
     }
@@ -225,8 +235,8 @@ public:
             Order o;
             while(m_work_queue.pop(o))
             {
-                auto bucket = o.side == BookType::BUY ? 
-                                m_buyBook.getBucket(o.price) : 
+                auto bucket = o.side == BookType::BUY ?
+                                m_buyBook.getBucket(o.price) :
                                 m_sellBook.getBucket(o.price);
 
                 bucket->addOrder(o);
@@ -246,8 +256,8 @@ public:
 
     bool m_shutdown;
     boost::thread m_dispatch_thread;
-    boost::lockfree::spsc_queue<Order, boost::lockfree::capacity<1048576>> m_queue;
-    boost::lockfree::queue<Order> m_work_queue;
+    boost::lockfree::spsc_queue<Order, boost::lockfree::capacity<2048>> m_queue;
+    boost::lockfree::queue<Order, boost::lockfree::capacity<2048>> m_work_queue;
     boost::thread_group shelving_workers;
     //boost::asio::thread_pool m_pool;
 
