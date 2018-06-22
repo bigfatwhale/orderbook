@@ -58,6 +58,12 @@ public:
         bucket->addOrder(order);
     }
 
+    auto& getBucket(uint64_t price)
+    {   
+        // assumption : bucket exists
+        return m_priceBucketManager.findBucket(price);
+    }
+
     void removeOrder( Order &order )
     {
         auto bucket = m_priceBucketManager.findBucket(order.price);
@@ -114,7 +120,7 @@ class LimitOrderBook {
     // see https://arxiv.org/abs/1012.0349 for general survey of limit order books.
 public:
 
-    LimitOrderBook() : m_shutdown{false}, m_pool{4}, m_buyBook{BookType::BUY}, m_sellBook{BookType::SELL}                  
+    LimitOrderBook() : m_shutdown{false}, /*m_pool{4},*/ m_buyBook{BookType::BUY}, m_sellBook{BookType::SELL}                  
     {
         assert(m_queue.is_lock_free());
     }
@@ -205,7 +211,24 @@ public:
             for (auto &item : ask_changes)
                 m_sellBook.addBucket(item.first);
             
+            // send the collected work to thread pool
+        }
+    }
 
+    void shelving_worker()
+    {
+        // takes an item off the work queue and put it in the correct place.
+        while(!m_shutdown)
+        {
+            Order o;
+            while(m_work_queue.pop(o))
+            {
+                auto& bucket = o.side == BookType::BUY ? 
+                                m_buyBook.getBucket(o.price) : 
+                                m_sellBook.getBucket(o.price);
+
+                bucket.addOrder(o);
+            }
         }
     }
 
@@ -217,7 +240,8 @@ public:
     bool m_shutdown;
     boost::thread m_dispatch_thread;
     boost::lockfree::spsc_queue<Order, boost::lockfree::capacity<1048576>> m_queue;
-    boost::asio::thread_pool m_pool;
+    boost::lockfree::queue<Order> m_work_queue;
+    //boost::asio::thread_pool m_pool;
 
     uint64_t bestBid() { return m_buyBook.bestPrice();  }
     uint64_t bestAsk() { return m_sellBook.bestPrice(); }
