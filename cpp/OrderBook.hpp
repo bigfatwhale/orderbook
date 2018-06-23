@@ -171,11 +171,11 @@ public:
 
         std::unordered_map<uint64_t, std::list<Order>> bid_changes;
         std::unordered_map<uint64_t, std::list<Order>> ask_changes;
-
+        uint64_t max_int = std::numeric_limits<uint64_t>::max();
         while (!m_shutdown)
         {
             // no need to lock because the design ensures no concurrent access
-            uint64_t bestAsk = m_sellBook.bestPrice();
+            uint64_t bestAsk = m_sellBook.bestPrice() == 0 ? max_int : m_sellBook.bestPrice();
             uint64_t bestBid = m_buyBook.bestPrice();
 
             bid_changes.clear();
@@ -194,14 +194,14 @@ public:
             bool done = false;
             uint32_t cnt = 0;
 
-            while (!(done || m_shutdown))
-            {
+//            while (!(done || m_shutdown))
+//            {
                 do{
                     if(m_queue.read_available())
                     {
                         Order& x = m_queue.front();
-                        if ( ( x.side == BookType::BUY  && x.price < bestAsk && bestAsk != 0) ||
-                             ( x.side == BookType::SELL && x.price > bestBid && bestBid != 0) )
+                        if ( ( x.side == BookType::BUY  && x.price < bestAsk ) ||
+                             ( x.side == BookType::SELL && x.price > bestBid ) )
                         {
                             m_queue.pop(x);
                             populate(x);
@@ -218,8 +218,8 @@ public:
                             break;
                         }
                     }
-                } while ( cnt < max_orders && !m_shutdown );
-            }
+                } while ( cnt < 100 && !m_shutdown );
+//            }
 
             // create price buckets for the first time, if needed.
             for (auto &item : bid_changes)

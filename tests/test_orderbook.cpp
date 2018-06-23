@@ -433,19 +433,20 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
         auto b = LimitOrderBook<PriceBucketManager<>>();
         b.startWorkers();
 
-        for (int i = 0; i < 1000; i++)
-        {
-            auto o = Order(2000+i, 10000+i, 30000+i, BookType::SELL, 20001);
-            b.queueOrder(o);
-            //std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        int rep = 1;
+        for (int k = 0; k < rep; k++) {
+            for (int i = 0; i < 1000; i++) {
+                auto o = Order(2000000 + i, 1000000 + i, 3000000 + i, BookType::SELL, 20001);
+                b.queueOrder(o);
+                //std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            }
         }
-
-        std::this_thread::sleep_for(std::chrono::seconds(10));
+        std::this_thread::sleep_for(std::chrono::seconds(20));
         b.shutDown();
 
         for (int i = 0; i < 1000; i++)
         {
-            BOOST_TEST(b.volumeForPricePoint(10000+i, BookType::SELL), 30000+i);
+            BOOST_TEST(b.volumeForPricePoint(1000000+i, BookType::SELL) == (3000000+i)*rep);
         }
 
 
