@@ -9,7 +9,7 @@ class ParserTest( unittest.TestCase ):
 
 		lob = LimitOrderBook()
 
-		o = Order(1000, 3222, 4444, BookType.BUY, '1341')
+		o = Order(1000, 3222, 4444, BookType.BUY, 3001)
 
 		lob.addOrder(o)
 
