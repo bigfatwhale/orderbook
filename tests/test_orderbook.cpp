@@ -441,7 +441,9 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
                 //std::this_thread::sleep_for(std::chrono::milliseconds(200));
             }
         }
-        std::this_thread::sleep_for(std::chrono::seconds(20));
+
+        while( !b.m_queue.empty() ){}
+        //std::this_thread::sleep_for(std::chrono::seconds(20));
         b.shutDown();
 
         for (int i = 0; i < 1000; i++)

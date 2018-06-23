@@ -8,23 +8,19 @@
 #include <algorithm>
 #include <deque>
 #include <functional>
-#include <string>
-#include <unordered_map>
-#include <utility>
-#include <memory>
 #include <iostream>
 #include <limits>
-#include <type_traits>
 #include <list>
-#include <boost/atomic.hpp>
-#include <boost/asio/thread_pool.hpp>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
 #include <boost/bind.hpp>
-#include <boost/core/ref.hpp>
-#include <boost/function.hpp>
-#include <boost/next_prior.hpp> 
-#include <boost/lockfree/spsc_queue.hpp>
-#include <boost/lockfree/queue.hpp>
 #include <boost/iterator/iterator_facade.hpp>
+#include <boost/next_prior.hpp> 
+#include <boost/lockfree/queue.hpp>
+#include <boost/lockfree/spsc_queue.hpp>
 #include <boost/thread.hpp>
 #include <boost/thread/latch.hpp>
 #include "Order.h"
@@ -194,32 +190,29 @@ public:
             bool done = false;
             uint32_t cnt = 0;
 
-//            while (!(done || m_shutdown))
-//            {
-                do{
-                    if(m_queue.read_available())
+            do{
+                if(m_queue.read_available())
+                {
+                    Order& x = m_queue.front();
+                    if ( ( x.side == BookType::BUY  && x.price < bestAsk ) ||
+                            ( x.side == BookType::SELL && x.price > bestBid ) )
                     {
-                        Order& x = m_queue.front();
-                        if ( ( x.side == BookType::BUY  && x.price < bestAsk ) ||
-                             ( x.side == BookType::SELL && x.price > bestBid ) )
+                        m_queue.pop(x);
+                        populate(x);
+                        cnt++;
+                    }
+                    else
+                    {
+                        done = true;
+                        if (cnt == 0)
                         {
                             m_queue.pop(x);
                             populate(x);
-                            cnt++;
                         }
-                        else
-                        {
-                            done = true;
-                            if (cnt == 0)
-                            {
-                                m_queue.pop(x);
-                                populate(x);
-                            }
-                            break;
-                        }
+                        break;
                     }
-                } while ( cnt < 100 && !m_shutdown );
-//            }
+                }
+            } while ( cnt < 100 && !m_shutdown );
 
             // create price buckets for the first time, if needed.
             for (auto &item : bid_changes)
@@ -274,10 +267,6 @@ public:
     {
         m_shutdown = true;
 
-//        for (int i = 0; i < max_orders; i++)
-//            m_latch.count_down();
-//        m_latch.wait(); // need to work on clean shutdown.
-
         if (m_dispatch_thread.joinable())
             m_dispatch_thread.join();
 
@@ -295,13 +284,12 @@ public:
     }
 
     bool m_shutdown;
-    //boost::atomic<int> m_item_count;
+    
     boost::thread m_dispatch_thread;
     boost::lockfree::spsc_queue<Order, boost::lockfree::capacity<2048>> m_queue;
     boost::lockfree::queue<std::list<Order>*, boost::lockfree::capacity<2048>> m_work_queue;
     boost::thread_group shelving_workers;
     boost::mutex m_mutex;
-    boost::condition_variable m_shelving_done;
     boost::latch m_latch;
 
     uint64_t bestBid() { return m_buyBook.bestPrice();  }
