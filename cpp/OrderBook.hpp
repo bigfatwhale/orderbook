@@ -15,8 +15,8 @@
 #include <iostream>
 #include <limits>
 #include <type_traits>
-#include <boost/thread.hpp>
 #include <list>
+#include <boost/atomic.hpp>
 #include <boost/asio/thread_pool.hpp>
 #include <boost/bind.hpp>
 #include <boost/core/ref.hpp>
@@ -25,6 +25,8 @@
 #include <boost/lockfree/spsc_queue.hpp>
 #include <boost/lockfree/queue.hpp>
 #include <boost/iterator/iterator_facade.hpp>
+#include <boost/thread.hpp>
+#include <boost/thread/latch.hpp>
 #include "Order.h"
 #include "PriceBucket.h"
 #include "PriceBucketManager.hpp"
@@ -122,7 +124,7 @@ class LimitOrderBook {
     // see https://arxiv.org/abs/1012.0349 for general survey of limit order books.
 public:
 
-    LimitOrderBook() : m_shutdown{false}, /*m_pool{4},*/ m_buyBook{BookType::BUY}, m_sellBook{BookType::SELL}                  
+    LimitOrderBook() : m_shutdown{false}, m_latch{10}, m_buyBook{BookType::BUY}, m_sellBook{BookType::SELL}
     {
         assert(m_queue.is_lock_free());
     }
@@ -166,6 +168,10 @@ public:
 
     void dispatch_worker()
     {
+
+        std::unordered_map<uint64_t, std::list<Order>> bid_changes;
+        std::unordered_map<uint64_t, std::list<Order>> ask_changes;
+
         while (!m_shutdown)
         {
             // no need to lock because the design ensures no concurrent access
@@ -173,8 +179,8 @@ public:
                                                              std::numeric_limits<uint64_t>::max();
             uint64_t bestBid = m_buyBook.bestPrice();
 
-            std::unordered_map<uint64_t, std::list<Order>> bid_changes;
-            std::unordered_map<uint64_t, std::list<Order>> ask_changes;
+            bid_changes.clear();
+            ask_changes.clear();
 
             auto populate = [&](Order &x)
                             {
@@ -224,6 +230,16 @@ public:
                 m_sellBook.addBucket(item.first);
 
             // send the collected work to thread pool
+            //m_item_count = bid_changes.size() + ask_changes.size();
+            m_latch.reset(bid_changes.size() + ask_changes.size());
+
+            for (auto &item : bid_changes)
+                m_work_queue.push(&item.second);
+
+            for (auto &item : ask_changes)
+                m_work_queue.push(&item.second);
+
+            m_latch.wait();
         }
     }
 
@@ -232,16 +248,41 @@ public:
         // takes an item off the work queue and put it in the correct place.
         while(!m_shutdown)
         {
-            Order o;
-            while(m_work_queue.pop(o))
+            std::list<Order> *order_list;
+            while(m_work_queue.pop(order_list))
             {
+                Order &o = order_list->front();
                 auto bucket = o.side == BookType::BUY ?
                                 m_buyBook.getBucket(o.price) :
                                 m_sellBook.getBucket(o.price);
 
-                bucket->addOrder(o);
+                for ( auto& item : *order_list )
+                    bucket->addOrder(item);
+
+                m_latch.count_down();
             }
         }
+
+        // clean up the latch count
+        std::list<Order> *order_list;
+        while(m_work_queue.pop(order_list))
+        {
+            m_latch.count_down();
+        }
+    }
+
+    void shutDown()
+    {
+        m_shutdown = true;
+
+//        for (int i = 0; i < max_orders; i++)
+//            m_latch.count_down();
+//        m_latch.wait(); // need to work on clean shutdown.
+
+        if (m_dispatch_thread.joinable())
+            m_dispatch_thread.join();
+
+        shelving_workers.join_all();
     }
 
     void startWorkers()
@@ -255,11 +296,14 @@ public:
     }
 
     bool m_shutdown;
+    //boost::atomic<int> m_item_count;
     boost::thread m_dispatch_thread;
     boost::lockfree::spsc_queue<Order, boost::lockfree::capacity<2048>> m_queue;
-    boost::lockfree::queue<Order, boost::lockfree::capacity<2048>> m_work_queue;
+    boost::lockfree::queue<std::list<Order>*, boost::lockfree::capacity<2048>> m_work_queue;
     boost::thread_group shelving_workers;
-    //boost::asio::thread_pool m_pool;
+    boost::mutex m_mutex;
+    boost::condition_variable m_shelving_done;
+    boost::latch m_latch;
 
     uint64_t bestBid() { return m_buyBook.bestPrice();  }
     uint64_t bestAsk() { return m_sellBook.bestPrice(); }
