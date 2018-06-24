@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
         auto start = std::chrono::high_resolution_clock::now();
 
         int rep = 4;
-        int n_orders = 3000;
+        int n_orders = 30000;
         for (int k = 0; k < rep; k++) {
             for (int i = 0; i < n_orders; i++) {
                 auto o = Order(200000 + i, 100000 + i,  100+i, BookType::SELL, 20001);

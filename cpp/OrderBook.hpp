@@ -238,10 +238,10 @@ public:
             m_latch.reset(bid_changes.size() + ask_changes.size());
 
             for (auto &item : bid_changes)
-                m_work_queue.push(&item.second);
+                while(!m_work_queue.push(&item.second));
 
             for (auto &item : ask_changes)
-                m_work_queue.push(&item.second);
+                while(!m_work_queue.push(&item.second));
 
             m_latch.wait();
         }
@@ -302,8 +302,8 @@ public:
     bool m_shutdown;
     //boost::atomic<int> m_item_count;
     boost::thread m_dispatch_thread;
-    boost::lockfree::spsc_queue<Order, boost::lockfree::capacity< 10000 >> m_queue;
-    boost::lockfree::queue<std::list<Order>*, boost::lockfree::capacity< 10000 >> m_work_queue;
+    boost::lockfree::spsc_queue<Order, boost::lockfree::capacity< 50000 >> m_queue;
+    boost::lockfree::queue<std::list<Order>*, boost::lockfree::capacity< 50000 >> m_work_queue;
     boost::thread_group shelving_workers;
     boost::mutex m_mutex;
     boost::condition_variable m_shelving_done;
