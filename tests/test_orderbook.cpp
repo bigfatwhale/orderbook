@@ -433,20 +433,33 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
         auto b = LimitOrderBook<PriceBucketManager<>>();
         b.startWorkers();
 
-        int rep = 1;
+        auto start = std::chrono::high_resolution_clock::now();
+
+        int rep = 4;
+        int n_orders = 3000;
         for (int k = 0; k < rep; k++) {
-            for (int i = 0; i < 1000; i++) {
-                auto o = Order(2000000 + i, 1000000 + i, 3000000 + i, BookType::SELL, 20001);
+            for (int i = 0; i < n_orders; i++) {
+                auto o = Order(200000 + i, 100000 + i,  100+i, BookType::SELL, 20001);
                 b.queueOrder(o);
                 //std::this_thread::sleep_for(std::chrono::milliseconds(200));
             }
         }
-        std::this_thread::sleep_for(std::chrono::seconds(20));
+
+        while(!b.emptyRequestQueue()) {} //heuristic wait for things to finish.
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::micro> fp_ms = end - start;
+
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+
         b.shutDown();
 
-        for (int i = 0; i < 1000; i++)
+        BOOST_TEST_MESSAGE( "Time taken : " << fp_ms.count() << " us.");
+        BOOST_TEST_MESSAGE( "Time per msg : " << fp_ms.count() / (rep * n_orders) << " us.");
+
+        for (int i = 0; i < n_orders; i++)
         {
-            BOOST_TEST(b.volumeForPricePoint(1000000+i, BookType::SELL) == (3000000+i)*rep);
+            BOOST_TEST(b.volumeForPricePoint(100000+i, BookType::SELL) == (100+i)*rep);
         }
 
 
