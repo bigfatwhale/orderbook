@@ -1,21 +1,27 @@
 //
 // Created by Uncle Chu on 15/4/18.
 //
-
 #ifndef ORDERBOOK_ORDERBOOK_HPP
 #define ORDERBOOK_ORDERBOOK_HPP
 
 #include <algorithm>
 #include <deque>
 #include <functional>
+#include <iostream>
+#include <limits>
+#include <list>
+#include <memory>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
-#include <memory>
-#include <iostream>
-#include <type_traits>
-#include <boost/function.hpp>
+#include <boost/bind.hpp>
 #include <boost/iterator/iterator_facade.hpp>
+#include <boost/next_prior.hpp>
+#include <boost/lockfree/queue.hpp>
+#include <boost/lockfree/spsc_queue.hpp>
+#include <boost/thread.hpp>
+#include <boost/thread/latch.hpp>
 #include "Order.h"
 #include "PriceBucket.h"
 #include "PriceBucketManager.hpp"
@@ -37,12 +43,24 @@ public:
 
     Book(BookType t) : m_bookType{t} {}
 
+    void addBucket(uint64_t price)
+    {
+        if (m_priceBucketManager.findBucket(price) == nullptr )
+            m_priceBucketManager.addBucket(price);
+    }
+
     void addOrder( Order &order )
     {
         auto bucket = m_priceBucketManager.findBucket(order.price);
         if (bucket==nullptr)
             bucket = m_priceBucketManager.addBucket(order.price);
         bucket->addOrder(order);
+    }
+
+    auto getBucket(uint64_t price)
+    {
+        // assumption : bucket exists
+        return m_priceBucketManager.findBucket(price);
     }
 
     void removeOrder( Order &order )
@@ -101,7 +119,10 @@ class LimitOrderBook {
     // see https://arxiv.org/abs/1012.0349 for general survey of limit order books.
 public:
 
-    LimitOrderBook() : m_buyBook{BookType::BUY}, m_sellBook{BookType::SELL} {}
+    LimitOrderBook() : m_shutdown{false}, m_latch{10}, m_buyBook{BookType::BUY}, m_sellBook{BookType::SELL}
+    {
+        assert(m_queue.is_lock_free());
+    }
 
     void addOrder(Order &order)
     {
@@ -135,6 +156,155 @@ public:
             return m_sellBook.volumeForPricePoint(price);
     }
 
+    void queueOrder(Order& order)
+    {
+        while(!m_queue.push(order));
+    }
+
+    bool emptyRequestQueue()
+    {
+        return m_queue.empty() && m_work_queue.empty();
+    }
+
+    void dispatch_worker()
+    {
+
+        std::unordered_map<uint64_t, std::list<Order>> bid_changes;
+        std::unordered_map<uint64_t, std::list<Order>> ask_changes;
+        uint64_t max_int = std::numeric_limits<uint64_t>::max();
+        while (!m_shutdown)
+        {
+            // no need to lock because the design ensures no concurrent access
+            uint64_t bestAsk = m_sellBook.bestPrice() == 0 ? max_int : m_sellBook.bestPrice();
+            uint64_t bestBid = m_buyBook.bestPrice();
+
+            bid_changes.clear();
+            ask_changes.clear();
+
+            auto populate = [&](Order &x)
+            {
+                auto &map_to_change = x.side == BookType::BUY? bid_changes : ask_changes;
+
+                if (map_to_change.find(x.price) == map_to_change.end())
+                    map_to_change.emplace(x.price, std::list<Order>(1, x));
+                else
+                    map_to_change[x.price].push_back(x);
+            };
+
+            bool done = false;
+            uint32_t cnt = 0;
+
+            do{
+                if(m_queue.read_available())
+                {
+                    // m_queue is spsc, we are the only one reading it.
+                    Order& x = m_queue.front();
+                    if ( ( x.side == BookType::BUY  && x.price < bestAsk ) ||
+                         ( x.side == BookType::SELL && x.price > bestBid ) )
+                    {
+                        m_queue.pop(x);
+                        populate(x);
+                        cnt++;
+                    }
+                    else
+                    {
+                        done = true;
+                        if (cnt == 0)
+                        {
+                            // this logic will do the cross spread walk. it's like a pipeline stall
+                            // we take this hit since empirically, only 10% of orders result in execution.
+                            m_queue.pop(x);
+                            addOrder(x);
+                            continue;
+                        }
+                        else
+                        {
+                            // cnt is not zero, meaning we collected a bunch of things which can
+                            // be done in parallel, and then we encountered the current order which
+                            // is going to result in an execution. we'll finish of the bunch and process
+                            // it in the next loop.
+                            break;
+                        }
+                    }
+                }
+            } while ( cnt < 100 && !m_shutdown );
+
+            // create price buckets for the first time, if needed.
+            for (auto &item : bid_changes)
+                m_buyBook.addBucket(item.first);
+
+            for (auto &item : ask_changes)
+                m_sellBook.addBucket(item.first);
+
+            // send the collected work to thread pool
+            //m_item_count = bid_changes.size() + ask_changes.size();
+            m_latch.reset(bid_changes.size() + ask_changes.size());
+
+            for (auto &item : bid_changes)
+                while(!m_work_queue.push(&item.second));
+
+            for (auto &item : ask_changes)
+                while(!m_work_queue.push(&item.second));
+
+            m_latch.wait();
+        }
+    }
+
+    void shelving_worker()
+    {
+        // takes an item off the work queue and put it in the correct place.
+        while(!m_shutdown)
+        {
+            std::list<Order> *order_list;
+            while(m_work_queue.pop(order_list))
+            {
+                Order &o = order_list->front();
+                auto bucket = o.side == BookType::BUY ?
+                              m_buyBook.getBucket(o.price) :
+                              m_sellBook.getBucket(o.price);
+
+                for ( auto& item : *order_list )
+                    bucket->addOrder(item);
+
+                m_latch.count_down();
+            }
+        }
+
+        // clean up the latch count
+        std::list<Order> *order_list;
+        while(m_work_queue.pop(order_list))
+        {
+            m_latch.count_down();
+        }
+    }
+
+    void shutDown()
+    {
+        m_shutdown = true;
+
+        if (m_dispatch_thread.joinable())
+            m_dispatch_thread.join();
+
+        shelving_workers.join_all();
+    }
+
+    void startWorkers()
+    {
+        const int num_threads = 4;
+
+        m_dispatch_thread = boost::thread(&LimitOrderBook::dispatch_worker, this);
+
+        for (int i = 0; i < num_threads; i++)
+            shelving_workers.create_thread(boost::bind(&LimitOrderBook::shelving_worker, this));
+    }
+
+    bool m_shutdown;
+    boost::thread m_dispatch_thread;
+    boost::lockfree::spsc_queue<Order, boost::lockfree::capacity< 50000 >> m_queue;
+    boost::lockfree::queue<std::list<Order>*, boost::lockfree::capacity< 50000 >> m_work_queue;
+    boost::thread_group shelving_workers;
+    boost::latch m_latch;
+
     uint64_t bestBid() { return m_buyBook.bestPrice();  }
     uint64_t bestAsk() { return m_sellBook.bestPrice(); }
 
@@ -165,7 +335,7 @@ private:
         if (order.volume > 0)
             book.addOrder(order);
     }
-    
+
     template <typename B, typename Comp>
     uint32_t crossSpreadWalk( Order &order, B &book, Comp &f )
     {
@@ -209,6 +379,7 @@ private:
 
     Book<PriceBucketManagerT, Bid> m_buyBook;
     Book<PriceBucketManagerT, Ask> m_sellBook;
+    static constexpr int max_orders{100};
 };
 
 

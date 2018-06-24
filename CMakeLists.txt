@@ -43,7 +43,7 @@ message( STATUS "Generating global includes")
 
 find_package(PythonLibs REQUIRED)
 find_package(PythonInterp REQUIRED)
-find_package(Boost COMPONENTS python27 iostreams unit_test_framework REQUIRED)
+find_package(Boost COMPONENTS python27 iostreams unit_test_framework system thread REQUIRED)
 include_directories (${PYTHON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/cpp ${CMAKE_SOURCE_DIR}/cpp/bats 
 					 ${CMAKE_SOURCE_DIR}/cpp/lobster)
 
@@ -80,7 +80,7 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     set_target_properties(orderbook_api PROPERTIES PREFIX "")
 endif()
 
-target_link_libraries(orderbook_api orderbook ${Boost_PYTHON27_LIBRARIES} ${PYTHON_LIBRARY})
+target_link_libraries(orderbook_api orderbook boost_system  ${Boost_LIBRARIES} ${Boost_PYTHON27_LIBRARIES} ${PYTHON_LIBRARY} )
 
 add_library(lobster SHARED ${LOBSTER_SOURCE_FILES})
 add_library(orderbook SHARED ${SOURCE_FILES})

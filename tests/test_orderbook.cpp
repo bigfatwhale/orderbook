@@ -13,6 +13,8 @@
 #include <deque>
 #include <map>
 #include <utility>
+#include <chrono>
+#include <thread>
 #include <boost/test/unit_test.hpp>
 #include <boost/dynamic_bitset.hpp>
 #include "OrderBook.hpp"
@@ -29,12 +31,12 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
     {
         auto b = LimitOrderBook<PriceBucketManager<>>();
 
-        auto o1 = Order(2001, 10000, 100, BookType::BUY, "Acme Corp.");
-        auto o2 = Order(2002, 10050, 200, BookType::BUY, "Acme Corp.");
-        auto o3 = Order(2003, 10100, 300, BookType::BUY, "Acme Corp.");
-        auto o4 = Order(2004, 10200, 400, BookType::SELL, "Acme Corp.");
-        auto o5 = Order(2005, 10250, 500, BookType::SELL, "Acme Corp.");
-        auto o6 = Order(2006, 10300, 600, BookType::SELL, "Acme Corp.");
+        auto o1 = Order(2001, 10000, 100, BookType::BUY, 20001);
+        auto o2 = Order(2002, 10050, 200, BookType::BUY, 20001);
+        auto o3 = Order(2003, 10100, 300, BookType::BUY, 20001);
+        auto o4 = Order(2004, 10200, 400, BookType::SELL, 20001);
+        auto o5 = Order(2005, 10250, 500, BookType::SELL, 20001);
+        auto o6 = Order(2006, 10300, 600, BookType::SELL, 20001);
 
         b.addOrder(o1);
         b.addOrder(o2);
@@ -113,7 +115,7 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
 
     }
 
-        BOOST_AUTO_TEST_CASE( test_veb_exhaustive )
+    BOOST_AUTO_TEST_CASE( test_veb_exhaustive )
     {
         auto runall = [](int numItems, int universe_size)
         {
@@ -205,7 +207,7 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
         BOOST_TEST( s.maxPrice() == 25 );
 
         s.remove(20);
-        BOOST_TEST( s.find(20) == nullptr );        
+        BOOST_TEST( s.find(20) == nullptr );
     }
 
     BOOST_AUTO_TEST_CASE( test_veb_fail1 )
@@ -308,12 +310,12 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
         auto buybook  = Book<PriceBucketManager<>, Bid>(BookType::BUY);
         auto sellbook = Book<PriceBucketManager<>, Ask>(BookType::SELL);
 
-        auto o1 = Order(2001, 10000, 100, BookType::BUY, "Acme Corp.");
-        auto o2 = Order(2002, 10050, 200, BookType::BUY, "Acme Corp.");
-        auto o3 = Order(2003, 10100, 300, BookType::BUY, "Acme Corp.");
-        auto o4 = Order(2004, 10200, 400, BookType::SELL, "Acme Corp.");
-        auto o5 = Order(2005, 10250, 500, BookType::SELL, "Acme Corp.");
-        auto o6 = Order(2006, 10300, 600, BookType::SELL, "Acme Corp.");
+        auto o1 = Order(2001, 10000, 100, BookType::BUY, 20001);
+        auto o2 = Order(2002, 10050, 200, BookType::BUY, 20001);
+        auto o3 = Order(2003, 10100, 300, BookType::BUY, 20001);
+        auto o4 = Order(2004, 10200, 400, BookType::SELL, 20001);
+        auto o5 = Order(2005, 10250, 500, BookType::SELL, 20001);
+        auto o6 = Order(2006, 10300, 600, BookType::SELL, 20001);
 
         buybook.addOrder(o1);
         buybook.addOrder(o2);
@@ -354,12 +356,12 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
     {
         auto b = LimitOrderBook<PriceBucketManager<>>();
 
-        auto o1 = Order(2001, 10000, 100, BookType::BUY, "Acme Corp.");
-        auto o2 = Order(2002, 10050, 200, BookType::BUY, "Acme Corp.");
-        auto o3 = Order(2003, 10100, 300, BookType::BUY, "Acme Corp.");
-        auto o4 = Order(2004, 10200, 400, BookType::SELL, "Acme Corp.");
-        auto o5 = Order(2005, 10250, 500, BookType::SELL, "Acme Corp.");
-        auto o6 = Order(2006, 10300, 600, BookType::SELL, "Acme Corp.");
+        auto o1 = Order(2001, 10000, 100, BookType::BUY, 20001);
+        auto o2 = Order(2002, 10050, 200, BookType::BUY, 20001);
+        auto o3 = Order(2003, 10100, 300, BookType::BUY, 20001);
+        auto o4 = Order(2004, 10200, 400, BookType::SELL, 20001);
+        auto o5 = Order(2005, 10250, 500, BookType::SELL, 20001);
+        auto o6 = Order(2006, 10300, 600, BookType::SELL, 20001);
 
         b.addOrder(o1);
         b.addOrder(o2);
@@ -399,31 +401,74 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
     {
         auto b = LimitOrderBook<PriceBucketManager<>>();
 
-        auto o1 = Order(2001, 10200, 400, BookType::SELL, "Acme Corp.");
-        auto o2 = Order(2002, 10250, 500, BookType::SELL, "Acme Corp.");
-        auto o3 = Order(2003, 10300, 600, BookType::SELL, "Acme Corp.");
+        auto o1 = Order(2001, 10200, 400, BookType::SELL, 20001);
+        auto o2 = Order(2002, 10250, 500, BookType::SELL, 20001);
+        auto o3 = Order(2003, 10300, 600, BookType::SELL, 20001);
 
         b.addOrder(o1);
         b.addOrder(o2);
         b.addOrder(o3);
 
-        auto o4 = Order(2004, 10225, 300, BookType::BUY, "Acme Corp.");
+        auto o4 = Order(2004, 10225, 300, BookType::BUY, 20001);
         b.addOrder(o4);
 
         BOOST_TEST( b.volumeForPricePoint(10200, BookType::SELL) == 100 );
 
-        auto o5 = Order(2005, 10000, 100, BookType::BUY, "Acme Corp.");
-        auto o6 = Order(2006, 10050, 200, BookType::BUY, "Acme Corp.");
-        auto o7 = Order(2007, 10100, 300, BookType::BUY, "Acme Corp.");
+        auto o5 = Order(2005, 10000, 100, BookType::BUY, 20001);
+        auto o6 = Order(2006, 10050, 200, BookType::BUY, 20001);
+        auto o7 = Order(2007, 10100, 300, BookType::BUY, 20001);
 
         b.addOrder(o5);
         b.addOrder(o6);
         b.addOrder(o7);
 
-        auto o8 = Order(2008, 10075, 150, BookType::SELL, "Acme Corp.");
+        auto o8 = Order(2008, 10075, 150, BookType::SELL, 20001);
         b.addOrder(o8);
 
         BOOST_TEST( b.volumeForPricePoint(10100, BookType::BUY) == 150 );
+    }
+
+    BOOST_AUTO_TEST_CASE( test_lob_threading )
+    {
+        auto b = LimitOrderBook<PriceBucketManager<>>();
+        b.startWorkers();
+
+        auto start = std::chrono::high_resolution_clock::now();
+
+        int rep = 4;
+        int n_orders = 30000;
+        for (int k = 0; k < rep; k++) {
+            for (int i = 0; i < n_orders; i++) {
+                auto o = Order(200000 + i, 100000 + i,  100+i, BookType::SELL, 20001);
+                b.queueOrder(o);
+                //std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            }
+            auto o = Order(900000+k, 100000+k,  10, BookType::BUY, 20001);
+            b.queueOrder(o);
+        }
+
+
+
+        while(!b.emptyRequestQueue()) {} //heuristic wait for things to finish.
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::micro> fp_ms = end - start;
+
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+
+        b.shutDown();
+
+        BOOST_TEST_MESSAGE( "Time taken : " << fp_ms.count() << " us.");
+        BOOST_TEST_MESSAGE( "Time per msg : " << fp_ms.count() / (rep * n_orders) << " us.");
+
+        BOOST_TEST(b.volumeForPricePoint(100000, BookType::SELL) == (100)*rep - rep * 10);
+
+        for (int i = 1; i < n_orders; i++)
+        {
+            BOOST_TEST(b.volumeForPricePoint(100000+i, BookType::SELL) == (100+i)*rep);
+        }
+
+
     }
 
 BOOST_AUTO_TEST_SUITE_END()

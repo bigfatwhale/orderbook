@@ -99,7 +99,7 @@ void do_sample_load( T &orderbook )
     {
         auto price  = boost::lexical_cast<uint64_t>(*it++);
         auto volume = boost::lexical_cast<uint64_t>(*it++);
-        auto o = Order(0, price, volume, ( c % 2 == 0 ) ? BookType::SELL : BookType::BUY, "");
+        auto o = Order(0, price, volume, ( c % 2 == 0 ) ? BookType::SELL : BookType::BUY, 50001);
         orderbook.addOrder(o);
         c++;
     }
@@ -119,7 +119,7 @@ void do_sample_load( T &orderbook )
             //uint64_t id, uint64_t price, uint32_t volume, BookType side, std::string const &partId
             auto dmsg = dynamic_pointer_cast<AddOrderMsg>(msg);
             Order o(dmsg->m_orderId, dmsg->m_price, dmsg->m_shares,
-                    ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
+                    ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, 300001);
             orderbook.addOrder(o);
             added_price_levels.insert(o.price);
             added_order_ids.insert(o.orderId);
@@ -128,7 +128,7 @@ void do_sample_load( T &orderbook )
         {
             auto dmsg = dynamic_pointer_cast<CancelOrderMsg>(msg);
             Order o(dmsg->m_orderId, dmsg->m_price, dmsg->m_shares,
-                    ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
+                    ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, 300001);
             orderbook.removeOrder(o);
         }
         else if (msg->m_msgtype == '3')
@@ -141,7 +141,7 @@ void do_sample_load( T &orderbook )
             else
                 oid = 0;
             Order o(oid, dmsg->m_price, dmsg->m_shares,
-                    ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
+                    ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, 300001);
             orderbook.removeOrder(o);
         }
         else if (msg->m_msgtype == '4')
@@ -155,12 +155,12 @@ void do_sample_load( T &orderbook )
             if ( dmsg->m_side == 1 )
             {
                 // if it's a execution in the buy book, then we need to generate a sell order, and vice versa.
-                Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::SELL, "NCM");
+                Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::SELL, 300001);
                 orderbook.addOrder(o);
             }
             else
             {
-                Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::BUY, "NCM");
+                Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::BUY, 300001);
                 orderbook.addOrder(o);
             }
 
@@ -312,115 +312,115 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
         BOOST_TEST( msg->m_price == -1);
     }
 
-    BOOST_AUTO_TEST_CASE( test_lobster_sample_load_default )
-    {
-        auto orderbook = LOBSim();
-        do_sample_load(orderbook);
-    }
+    // BOOST_AUTO_TEST_CASE( test_lobster_sample_load_default )
+    // {
+    //     auto orderbook = LOBSim();
+    //     do_sample_load(orderbook);
+    // }
 
-    BOOST_AUTO_TEST_CASE( test_lobster_sample_load_veb )
-    {
-        auto orderbook = LOBSimVeb();
-        do_sample_load(orderbook);
-    }
+    // BOOST_AUTO_TEST_CASE( test_lobster_sample_load_veb )
+    // {
+    //     auto orderbook = LOBSimVeb();
+    //     do_sample_load(orderbook);
+    // }
 
-    BOOST_AUTO_TEST_CASE( test_lobster_sample_load_time )
-    {   
-        // same as test_lobster_sample_load, but no test assertions. just want the timing.
-        auto parser = lobster::MsgParser();
-        auto orderbook = LOBSim();
-        string msgline, cur_order_line, prev_order_line;
+    // BOOST_AUTO_TEST_CASE( test_lobster_sample_load_time )
+    // {   
+    //     // same as test_lobster_sample_load, but no test assertions. just want the timing.
+    //     auto parser = lobster::MsgParser();
+    //     auto orderbook = LOBSim();
+    //     string msgline, cur_order_line, prev_order_line;
 
-        mapped_file_source msgfile("AAPL_2012-06-21_message_50.csv");
-        mapped_file_source orderfile("AAPL_2012-06-21_orderbook_50.csv");
+    //     mapped_file_source msgfile("AAPL_2012-06-21_message_50.csv");
+    //     mapped_file_source orderfile("AAPL_2012-06-21_orderbook_50.csv");
 
-        stream<mapped_file_source> msg_ifs(msgfile, std::ios::binary);
-        stream<mapped_file_source> order_ifs(orderfile, std::ios::binary);
+    //     stream<mapped_file_source> msg_ifs(msgfile, std::ios::binary);
+    //     stream<mapped_file_source> order_ifs(orderfile, std::ios::binary);
 
-        getline(order_ifs, prev_order_line);
-        getline(msg_ifs, msgline); // skip first line of the message file.
+    //     getline(order_ifs, prev_order_line);
+    //     getline(msg_ifs, msgline); // skip first line of the message file.
 
-        // take the first line from the order file, and initialize the orderbook with it.
-        boost::char_separator<char> sep(",");
-        tokenizer tokens(prev_order_line, sep);
+    //     // take the first line from the order file, and initialize the orderbook with it.
+    //     boost::char_separator<char> sep(",");
+    //     tokenizer tokens(prev_order_line, sep);
 
-        int c = 0;
+    //     int c = 0;
 
-        auto it = tokens.begin();
-        while (it != tokens.end())
-        {
-            auto price = boost::lexical_cast<uint64_t>(*it++);
-            auto volume = boost::lexical_cast<uint64_t>(*it++);
-            auto o = Order(0, price, volume, ( c % 2 == 0 ) ? BookType::SELL : BookType::BUY, "");
-            orderbook.addOrder(o);
-            c++;
-        }
+    //     auto it = tokens.begin();
+    //     while (it != tokens.end())
+    //     {
+    //         auto price = boost::lexical_cast<uint64_t>(*it++);
+    //         auto volume = boost::lexical_cast<uint64_t>(*it++);
+    //         auto o = Order(0, price, volume, ( c % 2 == 0 ) ? BookType::SELL : BookType::BUY, 300001);
+    //         orderbook.addOrder(o);
+    //         c++;
+    //     }
 
-        set<uint32_t> added_price_levels;
-        set<uint32_t> added_order_ids;
+    //     set<uint32_t> added_price_levels;
+    //     set<uint32_t> added_order_ids;
 
-        while (getline(msg_ifs, msgline))
-        {
-            // process one line of message file, apply the actions onto the orderbook
-            auto msg = parser.parse_msg(msgline);
+    //     while (getline(msg_ifs, msgline))
+    //     {
+    //         // process one line of message file, apply the actions onto the orderbook
+    //         auto msg = parser.parse_msg(msgline);
 
-            getline(order_ifs, cur_order_line);
+    //         getline(order_ifs, cur_order_line);
 
-            if ( msg->m_msgtype == '1' )
-            {
-                //uint64_t id, uint64_t price, uint32_t volume, BookType side, std::string const &partId
-                auto dmsg = dynamic_pointer_cast<AddOrderMsg>(msg);
-                Order o(dmsg->m_orderId, dmsg->m_price, dmsg->m_shares,
-                        ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
-                orderbook.addOrder(o);
-                added_price_levels.insert(o.price);
-                added_order_ids.insert(o.orderId);
-            }
-            else if (msg->m_msgtype == '2')
-            {
-                auto dmsg = dynamic_pointer_cast<CancelOrderMsg>(msg);
-                Order o(dmsg->m_orderId, dmsg->m_price, dmsg->m_shares,
-                        ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
-                orderbook.removeOrder(o);
-            }
-            else if (msg->m_msgtype == '3')
-            {
-                auto dmsg = dynamic_pointer_cast<DeleteOrderMsg>(msg);
+    //         if ( msg->m_msgtype == '1' )
+    //         {
+    //             //uint64_t id, uint64_t price, uint32_t volume, BookType side, std::string const &partId
+    //             auto dmsg = dynamic_pointer_cast<AddOrderMsg>(msg);
+    //             Order o(dmsg->m_orderId, dmsg->m_price, dmsg->m_shares,
+    //                     ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, 300001);
+    //             orderbook.addOrder(o);
+    //             added_price_levels.insert(o.price);
+    //             added_order_ids.insert(o.orderId);
+    //         }
+    //         else if (msg->m_msgtype == '2')
+    //         {
+    //             auto dmsg = dynamic_pointer_cast<CancelOrderMsg>(msg);
+    //             Order o(dmsg->m_orderId, dmsg->m_price, dmsg->m_shares,
+    //                     ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, 300001);
+    //             orderbook.removeOrder(o);
+    //         }
+    //         else if (msg->m_msgtype == '3')
+    //         {
+    //             auto dmsg = dynamic_pointer_cast<DeleteOrderMsg>(msg);
 
-                uint32_t oid;
-                if ( added_order_ids.find(dmsg->m_orderId) != added_order_ids.end())
-                    oid = dmsg->m_orderId;
-                else
-                    oid = 0;
-                Order o(oid, dmsg->m_price, dmsg->m_shares,
-                        ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, "NCM");
-                orderbook.removeOrder(o);
-            }
-            else if (msg->m_msgtype == '4')
-            {
-                // execution msg. this is a msg transmitted out because some order filled the exchange's
-                // LOB and the exchange generated a msg to send to us. to process this in our local instance
-                // of the LOB, we need to artificially create an appropriate buy/sell order on the opposite side
-                // of the book. This order should immediately get filled by our orderbook and our orderbook state
-                // will then match what's specified in the cur_order_line.
-                auto dmsg = dynamic_pointer_cast<OrderExecutedMsg>(msg);
-                if ( dmsg->m_side == 1 )
-                {
-                    // if it's a execution in the buy book, then we need to generate a sell order, and vice versa.
-                    Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::SELL, "NCM");
-                    orderbook.addOrder(o);
-                }
-                else
-                {
-                    Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::BUY, "NCM");
-                    orderbook.addOrder(o);
-                }
+    //             uint32_t oid;
+    //             if ( added_order_ids.find(dmsg->m_orderId) != added_order_ids.end())
+    //                 oid = dmsg->m_orderId;
+    //             else
+    //                 oid = 0;
+    //             Order o(oid, dmsg->m_price, dmsg->m_shares,
+    //                     ( dmsg->m_side == 1 ) ? BookType::BUY : BookType::SELL, 300001);
+    //             orderbook.removeOrder(o);
+    //         }
+    //         else if (msg->m_msgtype == '4')
+    //         {
+    //             // execution msg. this is a msg transmitted out because some order filled the exchange's
+    //             // LOB and the exchange generated a msg to send to us. to process this in our local instance
+    //             // of the LOB, we need to artificially create an appropriate buy/sell order on the opposite side
+    //             // of the book. This order should immediately get filled by our orderbook and our orderbook state
+    //             // will then match what's specified in the cur_order_line.
+    //             auto dmsg = dynamic_pointer_cast<OrderExecutedMsg>(msg);
+    //             if ( dmsg->m_side == 1 )
+    //             {
+    //                 // if it's a execution in the buy book, then we need to generate a sell order, and vice versa.
+    //                 Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::SELL, 300001);
+    //                 orderbook.addOrder(o);
+    //             }
+    //             else
+    //             {
+    //                 Order o(999999999, dmsg->m_price, dmsg->m_shares, BookType::BUY, 300001);
+    //                 orderbook.addOrder(o);
+    //             }
 
-            }
-        }
-        msg_ifs.close();
-        msgfile.close();
-    }
+    //         }
+    //     }
+    //     msg_ifs.close();
+    //     msgfile.close();
+    // }
 
 
 BOOST_AUTO_TEST_SUITE_END()

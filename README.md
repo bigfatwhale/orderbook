@@ -38,7 +38,7 @@ Build and Install
 TODO :
  - Concurrency
    - Needs close examination to ensure throughput. 
-   - Start with single request queue and optimize as we go along.
+   - Since from empirical evidence, 90% of orders are canceled, with 10% resulting in executions, one possibility might be that we cater our parallelism strategy such that most of the time multiple threads would be updating different price-level buckets. Occasionally, something comes in that might result in executions, then we process that individually. 
  - Optimizations 
    - Virtual deletes? Just mark orders as 'deleted' when they are filled/canceled. Might have complications too - need cost/benefit analysis. Have to dynamically track volume for each price-level across add/cancel/fill operations.
    - Navigate the VEB structure in tick-size steps instead of unit (.i.e +/- 1) steps. This means less memory use and faster traversal.
