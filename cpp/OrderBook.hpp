@@ -199,32 +199,29 @@ public:
             bool done = false;
             uint32_t cnt = 0;
 
-//            while (!(done || m_shutdown))
-//            {
-                do{
-                    if(m_queue.read_available())
+            do{
+                if(m_queue.read_available())
+                {
+                    Order& x = m_queue.front();
+                    if ( ( x.side == BookType::BUY  && x.price < bestAsk ) ||
+                         ( x.side == BookType::SELL && x.price > bestBid ) )
                     {
-                        Order& x = m_queue.front();
-                        if ( ( x.side == BookType::BUY  && x.price < bestAsk ) ||
-                             ( x.side == BookType::SELL && x.price > bestBid ) )
+                        m_queue.pop(x);
+                        populate(x);
+                        cnt++;
+                    }
+                    else
+                    {
+                        done = true;
+                        if (cnt == 0)
                         {
                             m_queue.pop(x);
                             populate(x);
-                            cnt++;
                         }
-                        else
-                        {
-                            done = true;
-                            if (cnt == 0)
-                            {
-                                m_queue.pop(x);
-                                populate(x);
-                            }
-                            break;
-                        }
+                        break;
                     }
-                } while ( cnt < 100 && !m_shutdown );
-//            }
+                }
+            } while ( cnt < 100 && !m_shutdown );
 
             // create price buckets for the first time, if needed.
             for (auto &item : bid_changes)
