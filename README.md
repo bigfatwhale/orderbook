@@ -18,7 +18,7 @@ The main C++ implementation features,
    - Cross spread walk due to market orders proceed in the right direction.
 
  - Lockfree Concurrency
-   - Since from empirical evidence, 90% of orders are canceled, with 10% resulting in executions, we use a work stealing approach using lockfree queues with a single boost latch for coordination.  
+   - Since from empirical evidence, 90% of orders are canceled, with 10% resulting in executions, we use a work stealing approach using lockfree queues with a single boost latch for coordination. Initial tests gives about 4us per message. 
 
 The Python C++ bindings features, 
 
