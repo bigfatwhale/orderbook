@@ -8,23 +8,19 @@
 #include <algorithm>
 #include <deque>
 #include <functional>
-#include <string>
-#include <unordered_map>
-#include <utility>
-#include <memory>
 #include <iostream>
 #include <limits>
-#include <type_traits>
 #include <list>
-#include <boost/atomic.hpp>
-#include <boost/asio/thread_pool.hpp>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
 #include <boost/bind.hpp>
-#include <boost/core/ref.hpp>
-#include <boost/function.hpp>
-#include <boost/next_prior.hpp> 
-#include <boost/lockfree/spsc_queue.hpp>
-#include <boost/lockfree/queue.hpp>
 #include <boost/iterator/iterator_facade.hpp>
+#include <boost/next_prior.hpp>
+#include <boost/lockfree/queue.hpp>
+#include <boost/lockfree/spsc_queue.hpp>
 #include <boost/thread.hpp>
 #include <boost/thread/latch.hpp>
 #include "Order.h"
@@ -63,7 +59,7 @@ public:
     }
 
     auto getBucket(uint64_t price)
-    {   
+    {
         // assumption : bucket exists
         return m_priceBucketManager.findBucket(price);
     }
@@ -187,14 +183,14 @@ public:
             ask_changes.clear();
 
             auto populate = [&](Order &x)
-                            {
-                                auto &map_to_change = x.side == BookType::BUY? bid_changes : ask_changes;
+            {
+                auto &map_to_change = x.side == BookType::BUY? bid_changes : ask_changes;
 
-                                if (map_to_change.find(x.price) == map_to_change.end())
-                                    map_to_change.emplace(x.price, std::list<Order>(1, x));
-                                else
-                                    map_to_change[x.price].push_back(x);
-                            };
+                if (map_to_change.find(x.price) == map_to_change.end())
+                    map_to_change.emplace(x.price, std::list<Order>(1, x));
+                else
+                    map_to_change[x.price].push_back(x);
+            };
 
             bool done = false;
             uint32_t cnt = 0;
@@ -202,6 +198,7 @@ public:
             do{
                 if(m_queue.read_available())
                 {
+                    // m_queue is spsc, we are the only one reading it.
                     Order& x = m_queue.front();
                     if ( ( x.side == BookType::BUY  && x.price < bestAsk ) ||
                          ( x.side == BookType::SELL && x.price > bestBid ) )
@@ -215,10 +212,20 @@ public:
                         done = true;
                         if (cnt == 0)
                         {
+                            // this logic will do the cross spread walk. it's like a pipeline stall
+                            // we take this hit since empirically, only 10% of orders result in execution.
                             m_queue.pop(x);
-                            populate(x);
+                            addOrder(x);
+                            continue;
                         }
-                        break;
+                        else
+                        {
+                            // cnt is not zero, meaning we collected a bunch of things which can
+                            // be done in parallel, and then we encountered the current order which
+                            // is going to result in an execution. we'll finish of the bunch and process
+                            // it in the next loop.
+                            break;
+                        }
                     }
                 }
             } while ( cnt < 100 && !m_shutdown );
@@ -254,8 +261,8 @@ public:
             {
                 Order &o = order_list->front();
                 auto bucket = o.side == BookType::BUY ?
-                                m_buyBook.getBucket(o.price) :
-                                m_sellBook.getBucket(o.price);
+                              m_buyBook.getBucket(o.price) :
+                              m_sellBook.getBucket(o.price);
 
                 for ( auto& item : *order_list )
                     bucket->addOrder(item);
@@ -329,7 +336,7 @@ private:
         if (order.volume > 0)
             book.addOrder(order);
     }
-    
+
     template <typename B, typename Comp>
     uint32_t crossSpreadWalk( Order &order, B &book, Comp &f )
     {
