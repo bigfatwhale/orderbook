@@ -159,7 +159,12 @@ public:
 
     void queueOrder(Order& order)
     {
-        m_queue.push(order);
+        while(!m_queue.push(order));
+    }
+
+    bool emptyRequestQueue()
+    {
+        return m_queue.empty() && m_work_queue.empty();
     }
 
     void dispatch_worker()
@@ -195,7 +200,7 @@ public:
                 {
                     Order& x = m_queue.front();
                     if ( ( x.side == BookType::BUY  && x.price < bestAsk ) ||
-                            ( x.side == BookType::SELL && x.price > bestBid ) )
+                         ( x.side == BookType::SELL && x.price > bestBid ) )
                     {
                         m_queue.pop(x);
                         populate(x);
@@ -226,10 +231,10 @@ public:
             m_latch.reset(bid_changes.size() + ask_changes.size());
 
             for (auto &item : bid_changes)
-                m_work_queue.push(&item.second);
+                while(!m_work_queue.push(&item.second));
 
             for (auto &item : ask_changes)
-                m_work_queue.push(&item.second);
+                while(!m_work_queue.push(&item.second));
 
             m_latch.wait();
         }
@@ -284,12 +289,10 @@ public:
     }
 
     bool m_shutdown;
-    
     boost::thread m_dispatch_thread;
-    boost::lockfree::spsc_queue<Order, boost::lockfree::capacity<2048>> m_queue;
-    boost::lockfree::queue<std::list<Order>*, boost::lockfree::capacity<2048>> m_work_queue;
+    boost::lockfree::spsc_queue<Order, boost::lockfree::capacity< 50000 >> m_queue;
+    boost::lockfree::queue<std::list<Order>*, boost::lockfree::capacity< 50000 >> m_work_queue;
     boost::thread_group shelving_workers;
-    boost::mutex m_mutex;
     boost::latch m_latch;
 
     uint64_t bestBid() { return m_buyBook.bestPrice();  }
