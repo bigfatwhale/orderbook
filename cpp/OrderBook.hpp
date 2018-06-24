@@ -293,13 +293,10 @@ public:
     }
 
     bool m_shutdown;
-    //boost::atomic<int> m_item_count;
     boost::thread m_dispatch_thread;
     boost::lockfree::spsc_queue<Order, boost::lockfree::capacity< 50000 >> m_queue;
     boost::lockfree::queue<std::list<Order>*, boost::lockfree::capacity< 50000 >> m_work_queue;
     boost::thread_group shelving_workers;
-    boost::mutex m_mutex;
-    boost::condition_variable m_shelving_done;
     boost::latch m_latch;
 
     uint64_t bestBid() { return m_buyBook.bestPrice();  }
