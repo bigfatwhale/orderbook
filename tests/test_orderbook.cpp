@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
 
     }
 
-        BOOST_AUTO_TEST_CASE( test_veb_exhaustive )
+    BOOST_AUTO_TEST_CASE( test_veb_exhaustive )
     {
         auto runall = [](int numItems, int universe_size)
         {
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
         BOOST_TEST( s.maxPrice() == 25 );
 
         s.remove(20);
-        BOOST_TEST( s.find(20) == nullptr );        
+        BOOST_TEST( s.find(20) == nullptr );
     }
 
     BOOST_AUTO_TEST_CASE( test_veb_fail1 )
@@ -443,7 +443,11 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
                 b.queueOrder(o);
                 //std::this_thread::sleep_for(std::chrono::milliseconds(200));
             }
+            auto o = Order(900000+k, 100000+k,  10, BookType::BUY, 20001);
+            b.queueOrder(o);
         }
+
+
 
         while(!b.emptyRequestQueue()) {} //heuristic wait for things to finish.
 
@@ -457,7 +461,9 @@ BOOST_AUTO_TEST_SUITE( test_orderbook_suite )
         BOOST_TEST_MESSAGE( "Time taken : " << fp_ms.count() << " us.");
         BOOST_TEST_MESSAGE( "Time per msg : " << fp_ms.count() / (rep * n_orders) << " us.");
 
-        for (int i = 0; i < n_orders; i++)
+        BOOST_TEST(b.volumeForPricePoint(100000, BookType::SELL) == (100)*rep - rep * 10);
+
+        for (int i = 1; i < n_orders; i++)
         {
             BOOST_TEST(b.volumeForPricePoint(100000+i, BookType::SELL) == (100+i)*rep);
         }
