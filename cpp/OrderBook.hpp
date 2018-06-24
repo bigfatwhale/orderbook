@@ -276,10 +276,6 @@ public:
     {
         m_shutdown = true;
 
-//        for (int i = 0; i < max_orders; i++)
-//            m_latch.count_down();
-//        m_latch.wait(); // need to work on clean shutdown.
-
         if (m_dispatch_thread.joinable())
             m_dispatch_thread.join();
 
