@@ -17,6 +17,9 @@ The main C++ implementation features,
    - Walking the bid book in price-time order goes from highest priced orders to lowest, and the opposite for the ask book.
    - Cross spread walk due to market orders proceed in the right direction.
 
+ - Lockfree Concurrency
+   - Since from empirical evidence, 90% of orders are canceled, with 10% resulting in executions, we use a work stealing approach using lockfree queues with a single boost latch for coordination.  
+
 The Python C++ bindings features, 
 
  - Use of Boost Python library to export the C++ logic into a Python API.
@@ -36,9 +39,6 @@ Build and Install
  - The Rust build has not been incorporated into the main cmake build system (yet). To build it we need to run cargo in the rust/ dir. 
 
 TODO :
- - Concurrency
-   - Needs close examination to ensure throughput. 
-   - Since from empirical evidence, 90% of orders are canceled, with 10% resulting in executions, one possibility might be that we cater our parallelism strategy such that most of the time multiple threads would be updating different price-level buckets. Occasionally, something comes in that might result in executions, then we process that individually. 
  - Optimizations 
    - Virtual deletes? Just mark orders as 'deleted' when they are filled/canceled. Might have complications too - need cost/benefit analysis. Have to dynamically track volume for each price-level across add/cancel/fill operations.
    - Navigate the VEB structure in tick-size steps instead of unit (.i.e +/- 1) steps. This means less memory use and faster traversal.
