@@ -39,8 +39,10 @@ Build and Install
  - The Rust build has not been incorporated into the main cmake build system (yet). To build it we need to run cargo in the rust/ dir. 
 
 TODO :
+ - Client/Server api. Zookeeper for service discovery.
+ - UI for simple visualization using Qt framework.
  - Optimizations 
    - Virtual deletes? Just mark orders as 'deleted' when they are filled/canceled. Might have complications too - need cost/benefit analysis. Have to dynamically track volume for each price-level across add/cancel/fill operations.
    - Navigate the VEB structure in tick-size steps instead of unit (.i.e +/- 1) steps. This means less memory use and faster traversal.
- - UI for simple visualization using Qt framework.
+ 
 
