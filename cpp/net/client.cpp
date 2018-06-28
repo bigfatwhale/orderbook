@@ -12,12 +12,6 @@ using namespace boost::system;
 namespace boost {
 namespace serialization {
 
-    uint64_t orderId;
-    uint64_t price; // 6.4 fixed point representation
-    uint32_t volume;
-    uint32_t partId;      // change to int from the above to use boost lock free queue.
-    BookType  side; // ask or bid?
-
 template<class Archive>
 void serialize(Archive &ar, Order o, const unsigned int version)
 {
