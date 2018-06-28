@@ -13,6 +13,7 @@ namespace protocol
     {
         static constexpr uint16_t CONNECT{1};
         static constexpr uint16_t CLIENT_ID{2};
+        static constexpr uint16_t ADD_ORDER{3};
     };
 
     struct message_length

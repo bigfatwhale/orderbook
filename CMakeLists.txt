@@ -22,7 +22,7 @@ set(BATS_SOURCE_FILES cpp/bats/BATSUtil.h cpp/bats/BATSTradeBreakMsg.hpp cpp/bat
 					  cpp/bats/BATSPitchMsgParser.h)
 
 SET(ORDERBOOK_NET_CLIENT_SOURCE_FILES
-    cpp/net/client.h cpp/net/client.cpp)
+    cpp/net/client.h cpp/net/client.cpp cpp/Order.h)
 
 set(PYAPI_BATS_SOURCES cpp/bats/BATSPythonAPI.cpp)
 
@@ -46,7 +46,8 @@ message( STATUS "Generating global includes")
 
 find_package(PythonLibs REQUIRED)
 find_package(PythonInterp REQUIRED)
-find_package(Boost COMPONENTS python27 iostreams unit_test_framework system thread REQUIRED)
+find_package(Boost COMPONENTS python27 iostreams unit_test_framework system 
+                serialization thread REQUIRED)
 include_directories (${PYTHON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/cpp ${CMAKE_SOURCE_DIR}/cpp/bats 
 					 ${CMAKE_SOURCE_DIR}/cpp/lobster)
 
