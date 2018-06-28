@@ -34,6 +34,8 @@ Build and Install
  - The C++ dependencies are, 
    - Python 2.7 dev headers/libs.
    - Boost libraries 1.66.0. 
+      - You need to compile with ```
+      ./bootstrap.sh --with-libraries=iostreams,python,test,thread,system,serialization```
  - The Rust implemention depends on, 
    - nom.
  - The Rust build has not been incorporated into the main cmake build system (yet). To build it we need to run cargo in the rust/ dir. 
