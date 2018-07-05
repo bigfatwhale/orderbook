@@ -21,6 +21,9 @@ set(BATS_SOURCE_FILES cpp/bats/BATSUtil.h cpp/bats/BATSTradeBreakMsg.hpp cpp/bat
 					  cpp/bats/BATSAuctionSummaryMsg.hpp cpp/bats/BATSAuctionUpdateMsg.hpp cpp/bats/BATSPitchMsgParser.cpp 
 					  cpp/bats/BATSPitchMsgParser.h)
 
+SET(ORDERBOOK_NET_CLIENT_SOURCE_FILES
+    cpp/net/client.h cpp/net/client.cpp cpp/Order.h)
+
 set(PYAPI_BATS_SOURCES cpp/bats/BATSPythonAPI.cpp)
 
 set(PYAPI_LOB_SOURCES cpp/OrderBookPythonAPI.cpp)
@@ -43,7 +46,8 @@ message( STATUS "Generating global includes")
 
 find_package(PythonLibs REQUIRED)
 find_package(PythonInterp REQUIRED)
-find_package(Boost COMPONENTS python27 iostreams unit_test_framework system thread REQUIRED)
+find_package(Boost COMPONENTS python27 iostreams unit_test_framework system 
+                serialization thread REQUIRED)
 include_directories (${PYTHON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/cpp ${CMAKE_SOURCE_DIR}/cpp/bats 
 					 ${CMAKE_SOURCE_DIR}/cpp/lobster)
 
@@ -52,7 +56,6 @@ message( STATUS "Boost Boost_PYTHON27_LIBRARIES=${Boost_PYTHON27_LIBRARIES}")
 message( STATUS "Generating bats_pitch_parser library")
 add_library(bats_pitch_parser SHARED ${BATS_SOURCE_FILES})
 target_link_libraries(bats_pitch_parser ${Boost_LIBRARIES})
-#target_link_libraries(bats_pitch_parser ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 
 message( STATUS "Generating Python bats api library")
 add_library(bats_api SHARED ${PYAPI_BATS_SOURCES})
@@ -84,6 +87,10 @@ target_link_libraries(orderbook_api orderbook boost_system  ${Boost_LIBRARIES} $
 
 add_library(lobster SHARED ${LOBSTER_SOURCE_FILES})
 add_library(orderbook SHARED ${SOURCE_FILES})
+
+add_library(orderbook_net_api SHARED ${ORDERBOOK_NET_CLIENT_SOURCE_FILES})
+target_link_libraries(orderbook_net_api orderbook boost_system  
+                        ${Boost_LIBRARIES} ${Boost_PYTHON27_LIBRARIES} ${PYTHON_LIBRARY} )
 
 enable_testing()
 
