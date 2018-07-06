@@ -21,6 +21,10 @@ set(BATS_SOURCE_FILES cpp/bats/BATSUtil.h cpp/bats/BATSTradeBreakMsg.hpp cpp/bat
 					  cpp/bats/BATSAuctionSummaryMsg.hpp cpp/bats/BATSAuctionUpdateMsg.hpp cpp/bats/BATSPitchMsgParser.cpp 
 					  cpp/bats/BATSPitchMsgParser.h)
 
+set(ALGOSEEK_SOURCE_FILES cpp/algoseek/MessageBase.h cpp/algoseek/AddOrderMsg.hpp 
+                          cpp/algoseek/MsgFactory.h cpp/algoseek/MsgFactory.cpp cpp/algoseek/MsgParser.h
+                          cpp/algoseek/MsgParser.cpp)
+
 SET(ORDERBOOK_NET_CLIENT_SOURCE_FILES
     cpp/net/client.h cpp/net/client.cpp cpp/Order.h)
 
@@ -86,6 +90,7 @@ endif()
 target_link_libraries(orderbook_api orderbook boost_system  ${Boost_LIBRARIES} ${Boost_PYTHON27_LIBRARIES} ${PYTHON_LIBRARY} )
 
 add_library(lobster SHARED ${LOBSTER_SOURCE_FILES})
+add_library(algoseek SHARED ${ALGOSEEK_SOURCE_FILES})
 add_library(orderbook SHARED ${SOURCE_FILES})
 
 add_library(orderbook_net_api SHARED ${ORDERBOOK_NET_CLIENT_SOURCE_FILES})
