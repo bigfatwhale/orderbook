@@ -2,6 +2,11 @@
 #include <iostream>
 #include <unordered_map>
 #include <boost/bind.hpp>
+#include <boost/date_time/date.hpp>
+#include "boost/date_time/gregorian/gregorian_types.hpp"
+#include "boost/date_time/date_parsing.hpp"
+#include <boost/date_time/posix_time/ptime.hpp>
+#include <boost/date_time/posix_time/conversion.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 #include "MessageBase.h"
@@ -9,6 +14,8 @@
 #include "MsgFactory.h"
 
 using namespace std;
+using namespace boost::gregorian;
+using namespace boost::posix_time;
 
 namespace qi = boost::spirit::qi;
 namespace phi = boost::phoenix;
@@ -29,7 +36,9 @@ namespace algoseek
     MsgParser::MsgParser(const string &base_date)
     {
         // convert date to seconds since epoch.
-        tm time_info;
+        auto d = boost::date_time::parse_undelimited_date<date>(base_date);
+        time_t tsecs = to_time_t(ptime(d)); 
+        
     };
 
     shared_ptr<MessageBase> MsgParser::parse_msg(const std::string &input)

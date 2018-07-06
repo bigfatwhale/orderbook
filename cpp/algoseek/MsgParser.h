@@ -2,6 +2,7 @@
 #define ALGOSEEK_MSGPARSER_H
 
 #include <memory>
+#include <string>
 #include "MessageBase.h"
 
 namespace algoseek {
@@ -9,7 +10,7 @@ namespace algoseek {
     class MsgParser {
 
     public:
-        MsgParser(int base_date);
+        MsgParser(const std::string &base_date);
         std::shared_ptr<MessageBase> parse_msg(const std::string &input);
     
     };
