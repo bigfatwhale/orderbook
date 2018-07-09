@@ -4,8 +4,8 @@
 
 #include "MsgFactory.h"
 #include "MessageBase.h"
-// #include "BATSOrderExecutedMsg.hpp"
 #include "AddOrderMsg.hpp"
+#include "OrderExecutedMsg.hpp"
 // #include "BATSOrderCancelMsg.hpp"
 // #include "BATSTradeMsg.hpp"
 // #include "BATSTradeBreakMsg.hpp"
@@ -24,9 +24,9 @@ using namespace algoseek;
 namespace algoseek { 
 
     using AddOrderMsgDecoder           = AddOrderMsg::add_order_decoder<string::iterator>;
-    // // using CancelOrderMsgDecoder        = CancelOrderMsg::cancel_order_decoder<string::iterator>;
+    //using CancelOrderMsgDecoder        = CancelOrderMsg::cancel_order_decoder<string::iterator>;
     // // using DeleteOrderMsgDecoder        = DeleteOrderMsg::delete_order_decoder<string::iterator>;
-    // // using OrderExecutedMsgDecoder      = OrderExecutedMsg::order_executed_decoder<string::iterator>;
+    using OrderExecutedMsgDecoder      = OrderExecutedMsg::order_executed_decoder<string::iterator>;
     // // using AuctionTradeMsgDecoder       = AuctionTradeMsg::auction_trade_decoder<string::iterator>;
     // // using TradeHaltMsgDecoder          = TradeHaltMsg::trade_halt_decoder<string::iterator>;
 
@@ -51,6 +51,11 @@ namespace algoseek {
             case 'B':
             case 'S': {
                 return decode<AddOrderMsgDecoder, AddOrderMsg>( timestamp, msgtype, side, order_id, msg );
+                break;
+            }
+
+            case 'E': {
+                return decode<OrderExecutedMsgDecoder, OrderExecutedMsg>( timestamp, msgtype, side, order_id, msg );
                 break;
             }
     //         // case '2': {

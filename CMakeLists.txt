@@ -23,7 +23,7 @@ set(BATS_SOURCE_FILES cpp/bats/BATSUtil.h cpp/bats/BATSTradeBreakMsg.hpp cpp/bat
 
 set(ALGOSEEK_SOURCE_FILES cpp/algoseek/MessageBase.h cpp/algoseek/MessageBase.cpp cpp/algoseek/AddOrderMsg.hpp 
                           cpp/algoseek/MsgFactory.h cpp/algoseek/MsgFactory.cpp cpp/algoseek/MsgParser.h
-                          cpp/algoseek/MsgParser.cpp)
+                          cpp/algoseek/MsgParser.cpp cpp/algoseek/OrderExecutedMsg.hpp)
 
 SET(ORDERBOOK_NET_CLIENT_SOURCE_FILES
     cpp/net/client.h cpp/net/client.cpp cpp/Order.h)
