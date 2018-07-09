@@ -43,17 +43,17 @@ namespace algoseek
                            "TRADE BID", 
                            "TRADE ASK" 
                          }, 
-        std::list<pair<char, int8_t>>{ make_pair('B', 1), 
+        std::list<pair<char, int8_t>>{ make_pair('B',  1), 
                                        make_pair('S', -1),
-                                       make_pair('E', 1),
+                                       make_pair('E',  1),
                                        make_pair('E', -1), 
-                                       make_pair('C', 1),
+                                       make_pair('C',  1),
                                        make_pair('C', -1), 
-                                       make_pair('F', 1),
+                                       make_pair('F',  1),
                                        make_pair('F', -1),     
-                                       make_pair('D', 1),
+                                       make_pair('D',  1),
                                        make_pair('D', -1),
-                                       make_pair('T', 1),
+                                       make_pair('T',  1),
                                        make_pair('T', -1) 
                                      }
     );
@@ -79,12 +79,11 @@ namespace algoseek
         auto fill_ts_nanos = [&t] (int h, int m, int s, int ms)
                              { t.tv_nsec = ( ( h * 3600 + m * 60 + s ) * 1000 + ms ) * 1000000L; };
         
-        // "04:00:00.512,2251812698588658,ADD BID,IBM,176.33,400,ARCA,ARCA"
         auto parse_ok = qi::parse(input.begin(), input.end(),
                             ( qi::uint_ >> ":" >> qi::uint_ >> ":" >> qi::uint_ >> "." >> qi::uint_ )
                             [ phi::bind(fill_ts_nanos, qi::_1, qi::_2, qi::_3, qi::_4) ]
                             >> "," >> qi::long_[phi::ref(order_id) = qi::_1] 
-                            >> "," >> s_msgcode[phi::ref(msgtype) = qi::_1] 
+                            >> "," >> s_msgcode[phi::ref(msgtype)  = qi::_1] 
                             >> "," >> qi::as_string[*qi::char_][fill_suffix]
                         );
         
@@ -96,8 +95,6 @@ namespace algoseek
         }
         return pMsg;
 
-        return nullptr;
     }
-
 
 }
