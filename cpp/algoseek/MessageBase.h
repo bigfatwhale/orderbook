@@ -13,32 +13,45 @@
 
 namespace algoseek {
 
-// struct decoder_base
-// {
-//     decoder_base(timespec timestamp, char msgtype) :
-//             m_ts(timestamp), m_mtype(msgtype) {}
+    struct decoder_base
+    {
+        decoder_base(timespec timestamp, char msgtype, uint8_t side, uint64_t order_id) :
+                m_ts(timestamp), m_mtype(msgtype), m_side{side}, m_orderId{order_id} {}
 
-//     timespec m_ts;
-//     char m_mtype;
-// };
+        timespec m_ts;
+        char m_mtype;
+        uint8_t m_side;
+        uint64_t m_orderId;
+    };
 
-class MessageBase {
+    class MessageBase
+    {
+    public:
+        MessageBase();
 
-// public:
-//     MessageBase();
-//     MessageBase(int timestamp, char msgtype);
-//     virtual ~MessageBase();
+        MessageBase(timespec timestamp, char msgtype);
 
-//     // uint32_t m_date  
-//     // uint32_t m_timestamp;
-//     // char m_msgtype;
+        virtual ~MessageBase();
 
-//     std::chrono::high_resolution_clock::time_point m_timestamp;
-//     int64_t m_orderId; // observed -ve values for order id.
-    timespec m_timestamp;
-    char m_msgtype;
-};
+        timespec m_timestamp;
+        char m_msgtype;
+    };
+    
+    class OrderMsgBase : public MessageBase
+    {
+    public:
+
+        OrderMsgBase();
+        OrderMsgBase(timespec timestamp, char msgtype,
+                     uint64_t orderId, uint32_t shares,
+                     uint64_t price, int8_t side);
+
+        uint64_t m_orderId;
+        uint32_t m_shares;
+        uint64_t m_price;
+        int8_t   m_side;
+    };
 
 }
 
-#endif //PITCH_SPIRIT_BATSMESSAGEBASE_H
+#endif //ALGOSEEK_BATSMESSAGEBASE_H

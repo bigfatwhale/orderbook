@@ -17,9 +17,10 @@ class MessageBase;
 
 class MsgFactory
 {
-// public:
+public:
 
-//     static std::shared_ptr<MessageBase> createMsg( timespec timestamp, char msgtype, std::string msg );
+    static std::shared_ptr<MessageBase> createMsg( timespec timestamp, char msgtype, int8_t side, 
+                                                   int64_t order_id, std::string msg );
 
 // private:
 //     // syntatic sugar...

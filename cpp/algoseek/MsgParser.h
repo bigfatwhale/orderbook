@@ -5,6 +5,7 @@
 #include <memory>
 #include <map>
 #include <string>
+#include <utility>
 #include <boost/spirit/include/qi.hpp>
 #include "MessageBase.h"
 
@@ -19,8 +20,8 @@ namespace algoseek {
     private:
         timespec m_start_of_day; 
 
-        //static boost::spirit::qi::rule<std::string::const_iterator, time_t> s_timespec_rule;
-        static std::map<std::string, char> s_msgcode; 
+        static boost::spirit::qi::symbols<char, std::pair<char, int8_t>> s_msgcode;
+        //static <std::string, char> s_msgcode; 
     };
 
 }

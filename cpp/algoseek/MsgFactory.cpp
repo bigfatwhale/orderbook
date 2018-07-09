@@ -23,35 +23,36 @@ using namespace algoseek;
 
 namespace algoseek { 
 
-    // using AddOrderMsgDecoder           = AddOrderMsg::add_order_decoder<string::iterator>;
+    using AddOrderMsgDecoder           = AddOrderMsg::add_order_decoder<string::iterator>;
     // // using CancelOrderMsgDecoder        = CancelOrderMsg::cancel_order_decoder<string::iterator>;
     // // using DeleteOrderMsgDecoder        = DeleteOrderMsg::delete_order_decoder<string::iterator>;
     // // using OrderExecutedMsgDecoder      = OrderExecutedMsg::order_executed_decoder<string::iterator>;
     // // using AuctionTradeMsgDecoder       = AuctionTradeMsg::auction_trade_decoder<string::iterator>;
     // // using TradeHaltMsgDecoder          = TradeHaltMsg::trade_halt_decoder<string::iterator>;
 
-    // template<typename DecodeT, typename MsgT>
-    // shared_ptr<MessageBase> decode(timespec timestamp, char msgtype, string msg)
-    // {
-    //     shared_ptr<DecodeT>  decoder = std::make_shared<DecodeT>(timestamp, msgtype);
-    //     auto data = make_shared<MsgT>();
+    template<typename DecodeT, typename MsgT>
+    shared_ptr<MessageBase> decode(timespec timestamp, char msgtype, int8_t side, int64_t order_id, string msg)
+    {
+        shared_ptr<DecodeT>  decoder = std::make_shared<DecodeT>(timestamp, msgtype, side, order_id);
+        auto data = make_shared<MsgT>();
 
-    //     bool ret = qi::parse(msg.begin(), msg.end(), *decoder, *data);
-    //     if (ret)
-    //         return data;
-    //     else
-    //         return nullptr;
-    // }
+        bool ret = qi::parse(msg.begin(), msg.end(), *decoder, *data);
+        if (ret)
+            return data;
+        else
+            return nullptr;
+    }
 
-    // shared_ptr<MessageBase>
-    // MsgFactory::createMsg(timespec timestamp, char msgtype, std::string msg)
-    // {
-    //     switch (msgtype)
-    //     {
-    //         case '1': {
-    //             return decode<AddOrderMsgDecoder, AddOrderMsg>( timestamp, msgtype, msg );
-    //             break;
-    //         }
+    shared_ptr<MessageBase>
+    MsgFactory::createMsg(timespec timestamp, char msgtype, int8_t side, int64_t order_id, std::string msg)
+    {
+        switch (msgtype)
+        {
+            case 'B':
+            case 'S': {
+                return decode<AddOrderMsgDecoder, AddOrderMsg>( timestamp, msgtype, side, order_id, msg );
+                break;
+            }
     //         // case '2': {
     //         //     return decode<CancelOrderMsgDecoder, CancelOrderMsg>( timestamp, msgtype, msg );
     //         //     break;
@@ -75,7 +76,8 @@ namespace algoseek {
     //         // }
     //         default:
     //             throw runtime_error("Error parsing message = " + msg);
-    //     }
+        }
+        return nullptr;
+    }
 
-    // }
-}
+} // namespace algoseek

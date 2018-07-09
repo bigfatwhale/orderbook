@@ -21,7 +21,7 @@ set(BATS_SOURCE_FILES cpp/bats/BATSUtil.h cpp/bats/BATSTradeBreakMsg.hpp cpp/bat
 					  cpp/bats/BATSAuctionSummaryMsg.hpp cpp/bats/BATSAuctionUpdateMsg.hpp cpp/bats/BATSPitchMsgParser.cpp 
 					  cpp/bats/BATSPitchMsgParser.h)
 
-set(ALGOSEEK_SOURCE_FILES cpp/algoseek/MessageBase.h cpp/algoseek/AddOrderMsg.hpp 
+set(ALGOSEEK_SOURCE_FILES cpp/algoseek/MessageBase.h cpp/algoseek/MessageBase.cpp cpp/algoseek/AddOrderMsg.hpp 
                           cpp/algoseek/MsgFactory.h cpp/algoseek/MsgFactory.cpp cpp/algoseek/MsgParser.h
                           cpp/algoseek/MsgParser.cpp)
 
