@@ -1,18 +1,11 @@
-//
-// Created by Uncle Chu on 10/4/18.
-//
-
 #include "MsgFactory.h"
 #include "MessageBase.h"
 #include "AddOrderMsg.hpp"
 #include "OrderExecutedMsg.hpp"
-// #include "BATSOrderCancelMsg.hpp"
-// #include "BATSTradeMsg.hpp"
-// #include "BATSTradeBreakMsg.hpp"
-// #include "BATSTradingStatusMsg.hpp"
-// #include "BATSAuctionUpdateMsg.hpp"
-// #include "BATSAuctionSummaryMsg.hpp"
-// #include "BATSRetailPriceImproveMsg.hpp"
+#include "CancelOrderMsg.hpp"
+#include "FillOrderMsg.hpp"
+#include "DeleteOrderMsg.hpp"
+#include "TradeMsg.hpp"
 #include <type_traits>
 #include <memory>
 #include <string>
@@ -24,11 +17,11 @@ using namespace algoseek;
 namespace algoseek { 
 
     using AddOrderMsgDecoder           = AddOrderMsg::add_order_decoder<string::iterator>;
-    //using CancelOrderMsgDecoder        = CancelOrderMsg::cancel_order_decoder<string::iterator>;
-    // // using DeleteOrderMsgDecoder        = DeleteOrderMsg::delete_order_decoder<string::iterator>;
+    using CancelOrderMsgDecoder        = CancelOrderMsg::cancel_order_decoder<string::iterator>;
+    using FillOrderMsgDecoder          = FillOrderMsg::fill_order_decoder<string::iterator>;
+    using DeleteOrderMsgDecoder        = DeleteOrderMsg::delete_order_decoder<string::iterator>;
     using OrderExecutedMsgDecoder      = OrderExecutedMsg::order_executed_decoder<string::iterator>;
-    // // using AuctionTradeMsgDecoder       = AuctionTradeMsg::auction_trade_decoder<string::iterator>;
-    // // using TradeHaltMsgDecoder          = TradeHaltMsg::trade_halt_decoder<string::iterator>;
+    using TradeMsgDecoder              = TradeMsg::trade_decoder<string::iterator>;
 
     template<typename DecodeT, typename MsgT>
     shared_ptr<MessageBase> decode(timespec timestamp, char msgtype, int8_t side, int64_t order_id, string msg)
@@ -58,29 +51,29 @@ namespace algoseek {
                 return decode<OrderExecutedMsgDecoder, OrderExecutedMsg>( timestamp, msgtype, side, order_id, msg );
                 break;
             }
-    //         // case '2': {
-    //         //     return decode<CancelOrderMsgDecoder, CancelOrderMsg>( timestamp, msgtype, msg );
-    //         //     break;
-    //         // }
-    //         // case '3': {
-    //         //     return decode<DeleteOrderMsgDecoder, DeleteOrderMsg>( timestamp, msgtype, msg );
-    //         //     break;
-    //         // }
-    //         // case '4':
-    //         // case '5': {
-    //         //     return decode<OrderExecutedMsgDecoder, OrderExecutedMsg>( timestamp, msgtype, msg );
-    //         //     break;
-    //         // }
-    //         // case '6': {
-    //         //     return decode<AuctionTradeMsgDecoder, AuctionTradeMsg>( timestamp, msgtype, msg );
-    //         //     break;
-    //         // }
-    //         // case '7': {
-    //         //     return decode<TradeHaltMsgDecoder, TradeHaltMsg>( timestamp, msgtype, msg );
-    //         //     break;
-    //         // }
-    //         default:
-    //             throw runtime_error("Error parsing message = " + msg);
+
+            case 'C': {
+                return decode<CancelOrderMsgDecoder, CancelOrderMsg>( timestamp, msgtype, side, order_id, msg );
+                break;
+            }
+
+            case 'F': {
+                return decode<FillOrderMsgDecoder, FillOrderMsg>( timestamp, msgtype, side, order_id, msg );
+                break;
+            }
+
+            case 'D': {
+                return decode<DeleteOrderMsgDecoder, DeleteOrderMsg>( timestamp, msgtype, side, order_id, msg );
+                break;
+            }
+
+            case 'T': {
+                return decode<TradeMsgDecoder, TradeMsg>( timestamp, msgtype, side, order_id, msg );
+                break;
+            }
+
+            default:
+                throw runtime_error("Error parsing message = " + msg);
         }
         return nullptr;
     }
