@@ -21,9 +21,9 @@ set(BATS_SOURCE_FILES cpp/bats/BATSUtil.h cpp/bats/BATSTradeBreakMsg.hpp cpp/bat
 					  cpp/bats/BATSAuctionSummaryMsg.hpp cpp/bats/BATSAuctionUpdateMsg.hpp cpp/bats/BATSPitchMsgParser.cpp 
 					  cpp/bats/BATSPitchMsgParser.h)
 
-set(ALGOSEEK_SOURCE_FILES cpp/algoseek/MessageBase.h cpp/algoseek/AddOrderMsg.hpp 
+set(ALGOSEEK_SOURCE_FILES cpp/algoseek/MessageBase.h cpp/algoseek/MessageBase.cpp cpp/algoseek/AddOrderMsg.hpp 
                           cpp/algoseek/MsgFactory.h cpp/algoseek/MsgFactory.cpp cpp/algoseek/MsgParser.h
-                          cpp/algoseek/MsgParser.cpp)
+                          cpp/algoseek/MsgParser.cpp cpp/algoseek/OrderExecutedMsg.hpp cpp/algoseek/CancelOrderMsg.hpp)
 
 SET(ORDERBOOK_NET_CLIENT_SOURCE_FILES
     cpp/net/client.h cpp/net/client.cpp cpp/Order.h)
@@ -53,7 +53,7 @@ find_package(PythonInterp REQUIRED)
 find_package(Boost COMPONENTS python27 iostreams unit_test_framework system 
                 serialization thread REQUIRED)
 include_directories (${PYTHON_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/cpp ${CMAKE_SOURCE_DIR}/cpp/bats 
-					 ${CMAKE_SOURCE_DIR}/cpp/lobster)
+					 ${CMAKE_SOURCE_DIR}/cpp/lobster )
 
 message( STATUS "Boost Boost_LIBRARIES=${Boost_LIBRARIES}")
 message( STATUS "Boost Boost_PYTHON27_LIBRARIES=${Boost_PYTHON27_LIBRARIES}")
@@ -103,7 +103,7 @@ file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tests/*.cpp)
 foreach(testSrc ${TEST_SRCS})
     get_filename_component(testName ${testSrc} NAME_WE)
     add_executable(${testName} ${testSrc})
-    target_link_libraries(${testName} ${Boost_LIBRARIES} ${PYTHON_LIBRARY} orderbook lobster bats_pitch_parser)
+    target_link_libraries(${testName} ${Boost_LIBRARIES} ${PYTHON_LIBRARY} algoseek orderbook lobster bats_pitch_parser)
     set_target_properties(${testName} PROPERTIES
                             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests)
 
