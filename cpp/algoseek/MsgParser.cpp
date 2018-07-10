@@ -41,7 +41,8 @@ namespace algoseek
                            "DELETE BID",
                            "DELETE ASK", 
                            "TRADE BID", 
-                           "TRADE ASK" 
+                           "TRADE ASK", 
+                           "CROSS"
                          }, 
         std::list<pair<char, int8_t>>{ make_pair('B',  1), 
                                        make_pair('S', -1),
@@ -54,7 +55,8 @@ namespace algoseek
                                        make_pair('D',  1),
                                        make_pair('D', -1),
                                        make_pair('T',  1),
-                                       make_pair('T', -1) 
+                                       make_pair('T', -1), 
+                                       make_pair('X',  0)
                                      }
     );
 

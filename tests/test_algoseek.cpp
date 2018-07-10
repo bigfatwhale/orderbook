@@ -8,6 +8,7 @@
 #include "algoseek/FillOrderMsg.hpp"
 #include "algoseek/DeleteOrderMsg.hpp"
 #include "algoseek/TradeMsg.hpp"
+#include "algoseek/CrossMsg.hpp"
 #include "algoseek/MsgParser.h"
 #include <boost/test/unit_test.hpp>
 #include <string>
@@ -190,6 +191,24 @@ BOOST_AUTO_TEST_SUITE( test_lobster_suite )
         BOOST_TEST( msg->m_price             == 1779400);
         BOOST_TEST( msg->m_shares            == 200);
         BOOST_TEST( msg->m_side              == -1);
+    }
+
+    BOOST_AUTO_TEST_CASE( test_cross_msg )
+    {
+        auto parser = algoseek::MsgParser("20140128");
+
+        string data = "16:00:00.581,7433153,CROSS,IBM,0.00,0,,NASDAQ";
+
+        auto msg = dynamic_pointer_cast<CrossMsg>(parser.parse_msg(data));
+
+        BOOST_TEST( msg->m_timestamp.tv_sec  == 1390867200);
+        BOOST_TEST( msg->m_timestamp.tv_nsec == 57600581000000);
+        BOOST_TEST( msg->m_msgtype           == 'X');
+        BOOST_TEST( msg->m_orderId           == 7433153);
+        BOOST_TEST( msg->m_price             == 0);
+        BOOST_TEST( msg->m_shares            == 0);
+        BOOST_TEST( msg->m_side              == 0);
+
     }
 
 BOOST_AUTO_TEST_SUITE_END()

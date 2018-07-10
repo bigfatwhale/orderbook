@@ -1,3 +1,4 @@
+
 #include "MsgFactory.h"
 #include "MessageBase.h"
 #include "AddOrderMsg.hpp"
@@ -6,10 +7,10 @@
 #include "FillOrderMsg.hpp"
 #include "DeleteOrderMsg.hpp"
 #include "TradeMsg.hpp"
+#include "CrossMsg.hpp"
 #include <type_traits>
 #include <memory>
 #include <string>
-#include "MsgFactory.h"
 
 using namespace std;
 using namespace algoseek;
@@ -22,6 +23,7 @@ namespace algoseek {
     using DeleteOrderMsgDecoder        = DeleteOrderMsg::delete_order_decoder<string::iterator>;
     using OrderExecutedMsgDecoder      = OrderExecutedMsg::order_executed_decoder<string::iterator>;
     using TradeMsgDecoder              = TradeMsg::trade_decoder<string::iterator>;
+    using CrossMsgDecoder              = CrossMsg::cross_msg_decoder<string::iterator>;
 
     template<typename DecodeT, typename MsgT>
     shared_ptr<MessageBase> decode(timespec timestamp, char msgtype, int8_t side, int64_t order_id, string msg)
@@ -72,10 +74,15 @@ namespace algoseek {
                 break;
             }
 
+            case 'X': {
+                return decode<CrossMsgDecoder, CrossMsg>( timestamp, msgtype, side, order_id, msg );
+                break;
+            }
+
             default:
                 throw runtime_error("Error parsing message = " + msg);
         }
-        return nullptr;
+    
     }
 
 } // namespace algoseek
