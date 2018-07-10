@@ -8,7 +8,6 @@
 #include "DeleteOrderMsg.hpp"
 #include "TradeMsg.hpp"
 #include "CrossMsg.hpp"
-#include <type_traits>
 #include <memory>
 #include <string>
 

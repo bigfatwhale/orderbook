@@ -17,6 +17,7 @@
 #include "MessageBase.h"
 #include "MsgParser.h"
 #include "MsgFactory.h"
+#include "AlgoseekUtils.h"
 
 using namespace std;
 using namespace boost::gregorian;
@@ -28,7 +29,6 @@ namespace phi = boost::phoenix;
 
 namespace algoseek
 {
-
     qi::symbols<char, pair<char, int8_t>> MsgParser::s_msgcode( 
         std::list<string>{ "ADD BID", 
                            "ADD ASK",
@@ -70,20 +70,18 @@ namespace algoseek
         
     };
 
-    shared_ptr<MessageBase> MsgParser::parse_msg(const std::string &input)
+    shared_ptr<MessageBase> MsgParser::parse_msg(const string &input)
     {
         timespec t{m_start_of_day.tv_sec, 0};
         pair<char, int8_t> msgtype;
         string suffix;
         uint64_t order_id{0};
 
-        auto fill_suffix   = [&suffix] (string &s) { suffix=s; };
-        auto fill_ts_nanos = [&t] (int h, int m, int s, int ms)
-                             { t.tv_nsec = ( ( h * 3600 + m * 60 + s ) * 1000 + ms ) * 1000000L; };
+        auto fill_suffix    = [&suffix] (string &s) { suffix=s; };
+        auto fill_ts_nanos = [&t]      (auto &x)   { t.tv_nsec = x; };
         
         auto parse_ok = qi::parse(input.begin(), input.end(),
-                            ( qi::uint_ >> ":" >> qi::uint_ >> ":" >> qi::uint_ >> "." >> qi::uint_ )
-                            [ phi::bind(fill_ts_nanos, qi::_1, qi::_2, qi::_3, qi::_4) ]
+                            timestr_to_nanos<string::const_iterator>[fill_ts_nanos]
                             >> "," >> qi::long_[phi::ref(order_id) = qi::_1] 
                             >> "," >> s_msgcode[phi::ref(msgtype)  = qi::_1] 
                             >> "," >> qi::as_string[*qi::char_][fill_suffix]
