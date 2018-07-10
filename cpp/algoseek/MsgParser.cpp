@@ -80,7 +80,7 @@ namespace algoseek
         auto fill_suffix    = [&suffix] (string &s) { suffix=s; };
         auto fill_ts_nanos = [&t]      (auto &x)   { t.tv_nsec = x; };
         
-        auto parse_ok = qi::parse(input.begin(), input.end(),
+        auto parse_ok = qi::parse(input.begin() + s_dateskip, input.end(),
                             timestr_to_nanos<string::const_iterator>[fill_ts_nanos]
                             >> "," >> qi::long_[phi::ref(order_id) = qi::_1] 
                             >> "," >> s_msgcode[phi::ref(msgtype)  = qi::_1] 

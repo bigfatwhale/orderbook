@@ -133,7 +133,8 @@ ADD_CUSTOM_COMMAND(
 endforeach(so_file)
 
 set(TEST_FILES tests/AAPL_2012-06-21_message_50.csv tests/AAPL_2012-06-21_orderbook_50.csv
-			   tests/pitch_data_100k tests/pitch_example_data ${PY_TEST_SRCS} )
+			   tests/pitch_data_100k tests/pitch_example_data tests/IBM.FullDepth.20140128.200k.csv
+               ${PY_TEST_SRCS} )
 
 foreach(testFile ${TEST_FILES})
     configure_file(${testFile} ${testFile} COPYONLY)

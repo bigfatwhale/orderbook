@@ -21,7 +21,7 @@ namespace algoseek {
         timespec m_start_of_day; 
 
         static boost::spirit::qi::symbols<char, std::pair<char, int8_t>> s_msgcode;
-        //static <std::string, char> s_msgcode; 
+        static constexpr int s_dateskip{9}; 
     };
 
 }
