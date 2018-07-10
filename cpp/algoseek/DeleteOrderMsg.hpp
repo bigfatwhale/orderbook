@@ -5,7 +5,6 @@
 #include <ctime>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
-#include "LobsterUtil.h"
 #include "MessageBase.h"
 
 namespace qi = boost::spirit::qi;
