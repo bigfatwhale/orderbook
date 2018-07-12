@@ -16,8 +16,9 @@ public:
     void do_connect(const boost::asio::ip::tcp::resolver::results_type& endpoints);
     void read_header();
     void read_body(uint16_t msg_type, uint16_t msg_len);
-    void write( const Order &order );
+    void sendOrder( const Order &order );
     void do_write();
+    void close();
     
 private:
     boost::asio::io_context &m_io_context;

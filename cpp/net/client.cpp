@@ -93,7 +93,7 @@ void OrderBookClient::read_body(uint16_t msg_type, uint16_t msg_len)
     );
 }
 
-void OrderBookClient::write( const Order& order )
+void OrderBookClient::sendOrder( const Order& order )
 {
     post(m_io_context, 
         [this, order]()
@@ -134,4 +134,11 @@ void OrderBookClient::do_write()
                 m_socket.close();
         }
     );   
+}
+
+void OrderBookClient::close()
+{
+
+    post(m_io_context, [this](){ m_socket.close(); } ) ;
+
 }

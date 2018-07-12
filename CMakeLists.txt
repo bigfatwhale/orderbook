@@ -26,8 +26,12 @@ set(ALGOSEEK_SOURCE_FILES cpp/algoseek/MessageBase.h cpp/algoseek/MessageBase.cp
                           cpp/algoseek/MsgParser.cpp cpp/algoseek/OrderExecutedMsg.hpp cpp/algoseek/CancelOrderMsg.hpp
                           cpp/algoseek/CrossMsg.hpp cpp/algoseek/AlgoseekUtils.h)
 
-SET(ORDERBOOK_NET_CLIENT_SOURCE_FILES
-    cpp/net/client.h cpp/net/client.cpp cpp/Order.h)
+SET(ORDERBOOK_NET_API_SOURCE_FILES
+    cpp/net/client.h cpp/net/client.cpp cpp/Order.h cpp/net/server.cpp cpp/net/server.h)
+
+SET(SIMPLE_CLIENT_SOURCE_FILES cpp/net/client.h cpp/net/client.cpp cpp/net/simple_client.cpp)
+
+SET(SIMPLE_SERVER_SOURCE_FILES cpp/net/server.h cpp/net/server.cpp cpp/net/simple_server.cpp)
 
 set(PYAPI_BATS_SOURCES cpp/bats/BATSPythonAPI.cpp)
 
@@ -94,9 +98,15 @@ add_library(lobster SHARED ${LOBSTER_SOURCE_FILES})
 add_library(algoseek SHARED ${ALGOSEEK_SOURCE_FILES})
 add_library(orderbook SHARED ${SOURCE_FILES})
 
-add_library(orderbook_net_api SHARED ${ORDERBOOK_NET_CLIENT_SOURCE_FILES})
+add_library(orderbook_net_api SHARED ${ORDERBOOK_NET_API_SOURCE_FILES})
 target_link_libraries(orderbook_net_api orderbook boost_system  
                         ${Boost_LIBRARIES} ${Boost_PYTHON27_LIBRARIES} ${PYTHON_LIBRARY} )
+
+add_executable(simple_client ${SIMPLE_CLIENT_SOURCE_FILES})
+target_link_libraries(simple_client ${Boost_LIBRARIES} orderbook )
+
+add_executable(simple_server ${SIMPLE_SERVER_SOURCE_FILES})
+target_link_libraries(simple_server ${Boost_LIBRARIES} orderbook )
 
 enable_testing()
 
