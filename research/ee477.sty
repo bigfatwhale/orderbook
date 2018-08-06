@@ -1,0 +1,181 @@
+%% Style file for EE 477
+%% Shamelessly copied from:
+%%   http://erdos.stanford.edu/ee374/lecture-notes/ee374.sty
+%% which in-turn was shamelessly copied from :)
+%%   http://theory.lcs.mit.edu/classes/6.895/fall03/scribe/
+%%
+%% Lei Zhao, Sep., 2009
+
+\def\fileversion{1.0}
+\def\filedate{2007/29/03}
+\NeedsTeXFormat{LaTeX2e}
+%\ProvidesPackage{mse339}[\filedate{} macros for the MS&E 339 class at Stanford]
+
+\usepackage{latexsym}
+\usepackage{bbm}
+\usepackage[small,bf]{caption2}
+\usepackage{graphics}
+\usepackage{epsfig}
+\usepackage{amsmath,amssymb,amsthm,amsfonts}
+\usepackage{url}
+%\usepackage{hyperref}
+
+
+%% Page size
+
+\setlength{\oddsidemargin}{0pt}
+\setlength{\evensidemargin}{0pt}
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{0in}
+\setlength{\textheight}{8.5in}
+
+%% Misc
+
+% Some hacks to make HTML happier.
+\newcommand{\vskipargs}[1]{\vskip #1}
+\newcommand{\newproc}{\hrule\vskipargs{1ex plus 0.1ex minus 0.1ex}}
+
+% Tilde for webstuff
+\newcommand{\webtilde}{\raisebox{-.8ex}\~}
+
+% Comment out chunks.
+\newcommand{\punt}[1]{}
+\newcommand{\remove}[1]{}
+
+% Footnote commands.
+\newcommand{\footnotenonumber}[1]{{\def\thempfn{}\footnotetext{#1}}}
+\newcommand{\footnotetight}[1]{\footnote{\renewcommand\baselinestretch{1}\footnotesize #1}}
+
+% Commands for handout headers
+\newcommand{\handout}[5]{
+%   \renewcommand{\thepage}{#1-\arabic{page}}
+   \noindent
+   \begin{center}
+   \framebox{ \vbox{ \hbox to 5.78in { {\bf Applications of Stochastic Control} \hfill #5 }
+       \vspace{4mm}
+       \hbox to 5.78in { {\Large \hfill #2  \hfill} }
+       \vspace{2mm}
+       \hbox to 5.78in { {\it #3 \hfill #4} }
+     }
+   }
+   \end{center}
+   \vspace*{4mm}
+   \newcommand{\lecturenum}{#1}
+   \addcontentsline{toc}{chapter}{Lecture #1 -- #2}
+}
+
+\newcommand{\lecturetitle}[4]{\handout{#1}{#2}{Author : Ng Chu Ming
+  }{#3}{}}
+\newcommand{\guestlecturetitle}[5]{\handout{#1}{#2}{Lecturer:
+    #4}{Scribe: #3}{Lecture #1 - #5}}
+
+% Assorted theorem/proof environments
+
+% \newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{observation}[theorem]{Observation}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{fact}[theorem]{Fact}
+\newtheorem{assumption}[theorem]{Assumption}
+
+\renewenvironment{proof}{\noindent{\bf Proof}\hspace*{1em}}{\qed\bigskip\\}
+\newenvironment{proof-sketch}{\noindent{\bf Sketch of Proof}\hspace*{1em}}{\qed\bigskip\\}
+\newenvironment{proof-idea}{\noindent{\bf Proof Idea}\hspace*{1em}}{\qed\bigskip\\}
+\newenvironment{proof-of-lemma}[1]{\noindent{\bf Proof of Lemma #1}\hspace*{1em}}{\qed\bigskip\\}
+\newenvironment{proof-attempt}{\noindent{\bf Proof Attempt}\hspace*{1em}}{\qed\bigskip\\}
+\newenvironment{proofof}[1]{\noindent{\bf Proof} of #1:\hspace*{1em}}{\qed\bigskip\\}
+\newenvironment{remark}{\noindent{\bf Remark}\hspace*{1em}}{\bigskip}
+
+\newcounter{example}
+\newenvironment{example}[1][]
+ {\refstepcounter{example}{\bf Example~\arabic{example}~#1}}{}
+ \renewcommand{\theexample}{\arabic{example}}
+
+% Figure/Tables Stuff
+
+\makeatletter
+\def\fnum@figure{{\bf Figure \thefigure}}
+\def\fnum@table{{\bf Table \thetable}}
+\long\def\@mycaption#1[#2]#3{\addcontentsline{\csname
+  ext@#1\endcsname}{#1}{\protect\numberline{\csname
+  the#1\endcsname}{\ignorespaces #2}}\par
+  \begingroup
+    \@parboxrestore
+    \small
+    \@makecaption{\csname fnum@#1\endcsname}{\ignorespaces #3}\par
+  \endgroup}
+\def\mycaption{\refstepcounter\@captype \@dblarg{\@mycaption\@captype}}
+\makeatother
+
+\newcommand{\figcaption}[1]{\mycaption[]{#1}}
+\newcommand{\tabcaption}[1]{\mycaption[]{#1}}
+\newcommand{\head}[1]{\chapter[Lecture \##1]{}}
+\newcommand{\mathify}[1]{\ifmmode{#1}\else\mbox{$#1$}\fi}
+\renewcommand{\Pr}[1]{\mathify{\mbox{Pr}\left[#1\right]}}
+\newcommand{\Exp}[1]{\mathify{\mbox{Exp}\left[#1\right]}}
+\newcommand{\bigO}O
+\newcommand{\set}[1]{\mathify{\left\{ #1 \right\}}}
+\def\half{\frac{1}{2}}
+
+\def\implies{\Rightarrow}
+\def\sizeof#1{\left| #1\right|}
+\def\setof#1{\left\{ #1\right\}  }
+
+%% Math Stuff, Symbols
+\newcommand{\field}[1]{\mathbb{#1}}
+\newcommand{\N}{\field{N}} % natural numbers
+\newcommand{\R}{\field{R}} % real numbers
+\newcommand{\Z}{\field{Z}} % integers
+\renewcommand{\Re}{\R} % reals
+\newcommand{\1}{{\bf 1}} % vector of all 1's
+\newcommand{\I}[1]{\mathbb{I}_{\left\{#1\right\}}} % indicator function
+\newcommand{\tends}{{\rightarrow}} % arrow for limits
+\newcommand{\ra}{{\rightarrow}} % abbreviation for right arrow
+\newcommand{\PR}{\mathsf{P}} % probability
+\newcommand{\E}{\mathsf{E}} % expectation
+\newcommand{\subjectto}{\mbox{\rm subject to}} % subject to
+\newcommand{\norm}[1]           {\left\| #1\right\|}
+\newcommand{\card}[1]           {\left| #1\right|}
+%% some caligraphic symbols
+\newcommand{\Ascr}{{\cal A}}
+\newcommand{\Bscr}{{\cal B}}
+\newcommand{\Cscr}{{\cal C}}
+\newcommand{\Dscr}{{\cal D}}
+\newcommand{\Escr}{{\cal E}}
+\newcommand{\Fscr}{{\cal F}}
+\newcommand{\Gscr}{{\cal G}}
+\newcommand{\Hscr}{{\cal H}}
+\newcommand{\Iscr}{{\cal I}}
+\newcommand{\Jscr}{{\cal J}}
+\newcommand{\Kscr}{{\cal K}}
+\newcommand{\Lscr}{{\cal L}}
+\newcommand{\Mscr}{{\cal M}}
+\newcommand{\Nscr}{{\cal N}}
+\newcommand{\Oscr}{{\cal O}}
+\newcommand{\Pscr}{{\cal P}}
+\newcommand{\Qscr}{{\cal Q}}
+\newcommand{\Rscr}{{\cal R}}
+\newcommand{\Sscr}{{\cal S}}
+\newcommand{\Tscr}{{\cal T}}
+\newcommand{\Uscr}{{\cal U}}
+\newcommand{\Vscr}{{\cal V}}
+\newcommand{\Wscr}{{\cal W}}
+\newcommand{\Xscr}{{\cal X}}
+\newcommand{\Yscr}{{\cal Y}}
+\newcommand{\Zscr}{{\cal Z}}
+%% math operators
+\newcommand\argmin{\mathop{\mbox{{\rm argmin}}}\limits}
+\newcommand\argmax{\mathop{\mbox{{\rm argmax}}}\limits}
+\newcommand\maximize{\mathop{\mbox{{\rm maximize}}}\limits}
+\newcommand\minimize{\mathop{\mbox{{\rm minimize}}}\limits}
+
+
+
+\newenvironment{lecture}[4]{\begin{document}
+    \lecturetitle{#1}{#2}{#3}{#4}}{}
+
+\newcommand{\theend}{\end{document}}
