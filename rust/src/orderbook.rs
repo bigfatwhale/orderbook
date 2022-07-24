@@ -349,5 +349,13 @@ impl LOBService {
         
     }
 
+    pub fn get_msg_channel(&self) -> Result<Sender<Option<Order>>, &'static str >{
+        match self.msg_send.as_ref() {
+            Some(s) => Ok(s.clone()),
+            None => Err("Channel not initialized"),
+        }
+        
+    }
+
 }
 

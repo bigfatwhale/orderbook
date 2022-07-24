@@ -229,6 +229,19 @@ fn test_limit_order_book() {
 fn test_lob_threading() {
     let mut b = LOBService::new();
     b.start_service();
+    
+    let send_channel = b.get_msg_channel();
+
+    match send_channel {
+        Ok(s) => {
+            let o1 = Order{order_id : 2001, price : 10000, volume : 100, side : 1, part_id : String::from("Acme Corp.")};
+            s.send(Some(o1));
+        },
+        Err(s) => {
+            assert!(false, "Channel not initialized!")            
+        }
+
+    }
     b.stop_service();
 }
 
