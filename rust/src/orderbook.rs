@@ -3,7 +3,7 @@ use std::collections::btree_map;
 use std::iter::{Iterator, IntoIterator};
 use std::fmt;
 use std::iter::Rev;
-use std::thread::{spawn, JoinHandle};
+use std::thread::{spawn, sleep, JoinHandle};
 use std::{thread, time};
 use std::vec::Vec;
 use crossbeam::channel::{Sender, bounded};
@@ -40,8 +40,7 @@ pub struct LimitOrderBook {
 pub struct  LOBService {
     lob : LimitOrderBook, 
     dispatch_thread : Option<JoinHandle<()>>, 
-    msg_send : Option<Sender<Order>>, 
-    kill_service : Option<Sender<PoisonMsg>>, 
+    msg_send : Option<Sender<Option<Order>>>, 
 }
 
 pub trait OrderManager {
@@ -304,26 +303,51 @@ impl LOBService {
             lob : LimitOrderBook::new(), 
             dispatch_thread : None, 
             msg_send : None, 
-            kill_service : None,
         }
     }
 
     pub fn start_service(&mut self) {
-        let (s, r) = bounded::<Order>(10000);
-        let (ks, kr) = bounded::<PoisonMsg>(1);
+        let (s, r) = bounded::<Option<Order>>(10000);
         
         self.msg_send = Some(s);
-        let thread_handle  = thread::spawn(move || 
-            { 
+        let thread_handle  = spawn(move || { 
                 loop {
-                    if kr.try_recv().is_ok() {
-                        break;
+
+                    match r.recv() {
+                        Ok(opt) => {
+                            match opt {
+                                None => {println!("Stopping service"); break;},
+                                Some(o) => {
+                                    println!("received order price={}, size={}", o.price, o.volume)
+
+                                }
+                                
+                            }
+                        }
+                        Err(e) => println!("Error: {}", e)
                     }
-                    
-                    let msg = r.recv().unwrap();
                 }
-            });
-            self.dispatch_thread = Some(thread_handle);
+            }
+        );
+        self.dispatch_thread = Some(thread_handle);
+
     }  
+
+    pub fn stop_service(&mut self) {
+        // let order = Order(10)
+        match self.msg_send.as_ref() {
+            Some(sender) => {
+                sender.send(None);
+            },
+            None => {}
+        }
+        
+        self.dispatch_thread.take().map(|jh| {
+            jh.join()
+                .expect("Couldn't join my_thread on the main thread")
+        });
+        
+    }
+
 }
 

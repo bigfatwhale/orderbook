@@ -24,6 +24,7 @@ use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::{thread, time};
+use std::thread::sleep;
 
 #[test]
 fn test_parse_auction_summary() {
@@ -227,25 +228,7 @@ fn test_limit_order_book() {
 #[test]
 fn test_lob_threading() {
     let mut b = LOBService::new();
-    // b.start_workers();
+    b.start_service();
+    b.stop_service();
 }
-// #[test]
-// fn test_lob_threading() {
 
-//     let mut b = LimitOrderBook::new();
-//     let o1 = Order{order_id : 2001, price : 10000, volume : 100, side : 1, part_id : String::from("Acme Corp.")};
-//     println!("----------> testing...", );
-//     b.start_workers();
-//     b.add_request(o1);
-//     //b.wait_till_done();
-
-//     thread::sleep(time::Duration::from_secs(5));
-// }
-
-
-
-// #[test]
-// fn test_example() {
-
-
-// }
