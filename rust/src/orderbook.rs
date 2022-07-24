@@ -6,9 +6,11 @@ use std::iter::Rev;
 use std::thread::{spawn, JoinHandle};
 use std::{thread, time};
 use std::vec::Vec;
-use std::sync::Arc;
-use crossbeam::sync::MsQueue;
+use crossbeam::channel::{Sender, bounded};
 
+enum PoisonMsg {
+    KILL
+}
 
 #[derive(Clone, Debug)]
 pub struct Order {
@@ -33,9 +35,13 @@ impl fmt::Debug for PriceBucket {
 pub struct LimitOrderBook {
     ask_book : AskBook, 
     bid_book : BidBook, 
-    requests : Arc<MsQueue<Order>>, 
-    worker_threads : Vec<JoinHandle<()>>,
+}
+
+pub struct  LOBService {
+    lob : LimitOrderBook, 
     dispatch_thread : Option<JoinHandle<()>>, 
+    msg_send : Option<Sender<Order>>, 
+    kill_service : Option<Sender<PoisonMsg>>, 
 }
 
 pub trait OrderManager {
@@ -178,42 +184,7 @@ impl LimitOrderBook {
     pub fn new() -> LimitOrderBook {
         LimitOrderBook{ ask_book : AskBook::new(), 
                         bid_book : BidBook::new(), 
-                        requests : Arc::new(MsQueue::new()), 
-                        worker_threads : vec![], 
-                        dispatch_thread : None
                       }
-    }
-
-    pub fn start_workers(&mut self) {
-        // start all the worker threads
-        let queue = self.requests.clone();
-        // let bid_book = Arc::new(self.bid_book);
-        // let ask_book = Arc::new(self.ask_book);
-        
-
-        
-        self.dispatch_thread = Some(spawn(move||{
-
-            loop{
-
-                //let best_bid = a.best_price();
-                // let x = self.ask_book.best_price();
-                match queue.try_pop() {
-                    Some(o) => println!("Order = {:?}", o),
-                    _ => {}
-                }
-                thread::sleep(time::Duration::from_secs(1));
-            }
-        }));
-
-        //thread::sleep(time::Duration::from_secs(5));
-        //self.dispatch_thread.take().unwrap().join();
-    }
-
-    pub fn add_request(&self, order : Order ) {
-        // entry point for multiple threads to post requests to add/cancel
-        println!("add request {:?}", order );
-        self.requests.push(order);
     }
 
     pub fn best_bid(&self) -> u64 { return self.bid_book.best_price() }
@@ -261,7 +232,7 @@ impl LimitOrderBook {
 
         let price_bucket_iter = book.iter_mut();
 
-        let it : Box<Iterator<Item=(&u64, &mut PriceBucket)>> = match price_bucket_iter {
+        let it : Box<dyn Iterator<Item=(&u64, &mut PriceBucket)>> = match price_bucket_iter {
             IterVariant::AskBookIter(x) => Box::new(x.into_iter()),
             IterVariant::BidBookIter(y) => Box::new(y.into_iter()),
             _ => unimplemented!()
@@ -327,5 +298,32 @@ impl OrderManager for LimitOrderBook {
 }
 
 
+impl LOBService {
+    pub fn new() -> LOBService {
+        LOBService{
+            lob : LimitOrderBook::new(), 
+            dispatch_thread : None, 
+            msg_send : None, 
+            kill_service : None,
+        }
+    }
 
+    pub fn start_service(&mut self) {
+        let (s, r) = bounded::<Order>(10000);
+        let (ks, kr) = bounded::<PoisonMsg>(1);
+        
+        self.msg_send = Some(s);
+        let thread_handle  = thread::spawn(move || 
+            { 
+                loop {
+                    if kr.try_recv().is_ok() {
+                        break;
+                    }
+                    
+                    let msg = r.recv().unwrap();
+                }
+            });
+            self.dispatch_thread = Some(thread_handle);
+    }  
+}
 

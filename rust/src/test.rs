@@ -17,6 +17,7 @@ use orderbook::OrderManager;
 use orderbook::AskBook;
 use orderbook::BestPrice;
 use orderbook::LimitOrderBook;
+use orderbook::LOBService;
 
 use std::env;
 use std::fs::File;
@@ -196,6 +197,7 @@ fn test_book() {
 fn test_limit_order_book() {
 
     let mut b = LimitOrderBook::new();
+
     let o1 = Order{order_id : 2001, price : 10000, volume : 100, side : 1, part_id : String::from("Acme Corp.")};
     let o2 = Order{order_id : 2002, price : 10050, volume : 200, side : 1, part_id : String::from("Acme Corp.")};
     let o3 = Order{order_id : 2003, price : 10100, volume : 300, side : 1, part_id : String::from("Acme Corp.")};
@@ -210,7 +212,7 @@ fn test_limit_order_book() {
     b.add_order(o5);
     b.add_order(o6);
 
-    println!("==========> HERE");
+//     println!("==========> HERE");
     assert_eq!(b.best_bid(), 10100 );
     assert_eq!(b.best_ask(), 10200 );
 
@@ -224,21 +226,26 @@ fn test_limit_order_book() {
 
 #[test]
 fn test_lob_threading() {
-
-    let mut b = LimitOrderBook::new();
-    let o1 = Order{order_id : 2001, price : 10000, volume : 100, side : 1, part_id : String::from("Acme Corp.")};
-    println!("----------> testing...", );
-    b.start_workers();
-    b.add_request(o1);
-    //b.wait_till_done();
-
-    thread::sleep(time::Duration::from_secs(5));
+    let mut b = LOBService::new();
+    // b.start_workers();
 }
+// #[test]
+// fn test_lob_threading() {
+
+//     let mut b = LimitOrderBook::new();
+//     let o1 = Order{order_id : 2001, price : 10000, volume : 100, side : 1, part_id : String::from("Acme Corp.")};
+//     println!("----------> testing...", );
+//     b.start_workers();
+//     b.add_request(o1);
+//     //b.wait_till_done();
+
+//     thread::sleep(time::Duration::from_secs(5));
+// }
 
 
 
-#[test]
-fn test_example() {
+// #[test]
+// fn test_example() {
 
 
-}
+// }
