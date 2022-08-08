@@ -107,7 +107,7 @@ pub struct AuctionSummaryMsg {
 pub struct AddOrderMsg {
     pub timestamp : u32, 
     pub msg_type  : char,
-    pub order_id  : u64, 
+    pub id  : u64, 
     pub side      : char, 
     pub shares    : u32, 
     pub symbol    : String,  
@@ -133,7 +133,7 @@ pub struct AuctionUpdateMsg {
 pub struct OrderCancelMsg {
     pub timestamp : u32, 
     pub msg_type  : char,
-    pub order_id  : u64, 
+    pub id  : u64, 
     pub shares    : u32
 }
 
@@ -141,7 +141,7 @@ pub struct OrderCancelMsg {
 pub struct OrderExecutedMsg {
     pub timestamp : u32, 
     pub msg_type  : char,
-    pub order_id  : u64, 
+    pub id  : u64, 
     pub shares    : u32, 
     pub exec_id   : u64
 }
@@ -165,7 +165,7 @@ pub struct TradeBreakMsg {
 pub struct TradeMsg {
     pub timestamp : u32, 
     pub msg_type  : char,
-    pub order_id  : u64,
+    pub id  : u64,
     pub side      : char,
     pub shares    : u32, 
     pub symbol    : String, 
@@ -229,7 +229,7 @@ named!(parse_add_order<&str, AddOrderMsg>,
         _9 : parse_opt_part_id                      >>
         (AddOrderMsg{ timestamp : _1, 
                       msg_type  : _2, 
-                      order_id  : _3, 
+                      id  : _3, 
                       side      : _4,
                       shares    : _5, 
                       symbol    : _6, 
@@ -272,7 +272,7 @@ named!(parse_order_cancel<&str, OrderCancelMsg>,
         _4 : map_res!(take!(6),  FromStr::from_str) >>
         (OrderCancelMsg{ timestamp : _1, 
                          msg_type  : _2, 
-                         order_id  : _3, 
+                         id  : _3, 
                          shares    : _4,
                     })  
     )
@@ -287,7 +287,7 @@ named!(parse_order_executed<&str, OrderExecutedMsg>,
         _5 : map_res!(take!(12), from_base36)       >>
         (OrderExecutedMsg{ timestamp : _1, 
                          msg_type    : _2, 
-                         order_id    : _3, 
+                         id    : _3, 
                          shares      : _4,
                          exec_id     : _5
                     })  
@@ -335,7 +335,7 @@ named!(parse_trade<&str, TradeMsg>,
         _8 : map_res!(take!(12), from_base36)       >>  
         (TradeMsg{ timestamp : _1, 
                    msg_type  : _2, 
-                   order_id  : _3, 
+                   id  : _3, 
                    side      : _4, 
                    shares    : _5, 
                    symbol    : _6, 
