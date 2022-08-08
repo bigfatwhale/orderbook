@@ -3,16 +3,18 @@ use std::collections::btree_map;
 use std::iter::{Iterator, IntoIterator};
 use std::fmt;
 use std::iter::Rev;
-use std::thread::{spawn, JoinHandle};
+use std::thread::{spawn, sleep, JoinHandle};
 use std::{thread, time};
 use std::vec::Vec;
-use std::sync::Arc;
-use crossbeam::sync::MsQueue;
+use crossbeam::channel::{Sender, bounded};
 
+enum PoisonMsg {
+    KILL
+}
 
 #[derive(Clone, Debug)]
 pub struct Order {
-    pub order_id : u64, 
+    pub id : u64, 
     pub price    : u64, 
     pub volume   : u32, 
     pub side     : i8, 
@@ -24,6 +26,12 @@ pub struct PriceBucket {
     orders      : Vec<Order>, 
 }
 
+pub struct Execution {
+    pub volume: u32, 
+    pub buy_order_id: u64, 
+    pub sell_order_id: u64
+}
+
 impl fmt::Debug for PriceBucket {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "PriceBucket {{ price_level: {} }}", self.price_level)
@@ -31,15 +39,19 @@ impl fmt::Debug for PriceBucket {
 }
 
 pub struct LimitOrderBook {
+    id_wheel : u64,
     ask_book : AskBook, 
     bid_book : BidBook, 
-    requests : Arc<MsQueue<Order>>, 
-    worker_threads : Vec<JoinHandle<()>>,
+}
+
+pub struct  LOBService {
+    // lob : LimitOrderBook, 
     dispatch_thread : Option<JoinHandle<()>>, 
+    msg_send : Option<Sender<Option<Order>>>, 
 }
 
 pub trait OrderManager {
-    fn add_order( &mut self, order : Order );
+    fn add_order( &mut self, order : Order ) -> Vec<Execution>;
     fn remove_order( &mut self, order : Order );
 }
 
@@ -54,13 +66,14 @@ impl OrderBook for BidBook {} // for AskBook/BidBook. Separate impls appear late
 
 impl OrderManager for PriceBucket {
 
-    fn add_order( &mut self, order : Order ) {
+    fn add_order( &mut self, order : Order ) -> Vec<Execution>{
         self.orders.push(order);
+        Vec::new()
     }
 
     fn remove_order( &mut self, order : Order ) {
         // just do linear scan for now, worry about performance later.
-        let idx  = self.orders.iter().position(|x| x.order_id == order.order_id );
+        let idx  = self.orders.iter().position(|x| x.id == order.id );
         if idx.is_some() {
             self.orders.remove(idx.unwrap());
         }
@@ -106,17 +119,15 @@ macro_rules! expand_book_struct {
 
         impl OrderManager for $book_struct_name  {
 
-            fn add_order( &mut self, order : Order ) {
-                {   // scope here needed for the else clause to not complain about second borrow.
-                    if let Some(bucket) = self.price_buckets.get_mut(&order.price) {
-                        bucket.add_order(order);
-                        return; 
-                    }
+            fn add_order( &mut self, order : Order ) -> Vec<Execution> {
+                if let Some(bucket) = self.price_buckets.get_mut(&order.price) {
+                    bucket.add_order(order);
+                } else {
+                    let price = order.price;
+                    let price_bucket = PriceBucket::from_order(order);
+                    self.price_buckets.insert( price, price_bucket );
                 }
-                // else - this is the else clause...
-                let price = order.price;
-                let price_bucket = PriceBucket::from_order(order);
-                self.price_buckets.insert( price, price_bucket );
+                return Vec::new();
             }
 
             fn remove_order( &mut self, order : Order ) {
@@ -176,44 +187,11 @@ impl BestPrice for BidBook {
 
 impl LimitOrderBook {
     pub fn new() -> LimitOrderBook {
-        LimitOrderBook{ ask_book : AskBook::new(), 
+        LimitOrderBook{ 
+                        id_wheel : 0,
+                        ask_book : AskBook::new(), 
                         bid_book : BidBook::new(), 
-                        requests : Arc::new(MsQueue::new()), 
-                        worker_threads : vec![], 
-                        dispatch_thread : None
                       }
-    }
-
-    pub fn start_workers(&mut self) {
-        // start all the worker threads
-        let queue = self.requests.clone();
-        // let bid_book = Arc::new(self.bid_book);
-        // let ask_book = Arc::new(self.ask_book);
-        
-
-        
-        self.dispatch_thread = Some(spawn(move||{
-
-            loop{
-
-                //let best_bid = a.best_price();
-                // let x = self.ask_book.best_price();
-                match queue.try_pop() {
-                    Some(o) => println!("Order = {:?}", o),
-                    _ => {}
-                }
-                thread::sleep(time::Duration::from_secs(1));
-            }
-        }));
-
-        //thread::sleep(time::Duration::from_secs(5));
-        //self.dispatch_thread.take().unwrap().join();
-    }
-
-    pub fn add_request(&self, order : Order ) {
-        // entry point for multiple threads to post requests to add/cancel
-        println!("add request {:?}", order );
-        self.requests.push(order);
     }
 
     pub fn best_bid(&self) -> u64 { return self.bid_book.best_price() }
@@ -231,37 +209,46 @@ impl LimitOrderBook {
         } else {0}
     }
 
+    fn next_id(&mut self) -> u64 {
+        self.id_wheel += 1;
+        self.id_wheel
+    }
+
     fn check_and_do_cross_spread_walk<B1 : OrderBook, B2: OrderBook>
         ( mut order : Order, 
                book : &mut B1, 
            opp_book : &mut B2, 
-               func : fn(u64, u64) -> bool ) {
+               func : fn(u64, u64) -> bool ) -> Vec<Execution>{
         if opp_book.best_price() > 0 && func( order.price, opp_book.best_price() ) {
-            let ( residual_volume, orders_to_remove ) = 
+            let ( residual_volume, orders_to_remove, executions ) = 
                 LimitOrderBook::cross_spread_walk(&mut order, opp_book, func);
             order.volume = residual_volume;
             for o in orders_to_remove {
                 opp_book.remove_order(o);
             }
+            return executions;
         }
 
         // if order.volume is still +ve, the can be either there is no cross-spread walk done
         // or the cross-spread walk only filled part of the volume. In that case we continue to
         // add the left-over volume in a new order.
         if order.volume > 0 {
-            book.add_order(order)
+            let _ = book.add_order(order);
         }
+        return Vec::new();
     }
 
     fn cross_spread_walk<B: OrderBook>
         ( order : &mut Order, book : &mut B, func : fn(u64, u64) -> bool ) 
-        -> ( u32, Vec<Order> ) {
+        -> ( u32, Vec<Order>, Vec<Execution> ) {
+
         let mut volume = order.volume;
         let mut orders_to_remove : Vec<Order> = Vec::new();
+        let mut executions : Vec<Execution> = Vec::new();
 
         let price_bucket_iter = book.iter_mut();
 
-        let it : Box<Iterator<Item=(&u64, &mut PriceBucket)>> = match price_bucket_iter {
+        let it : Box<dyn Iterator<Item=(&u64, &mut PriceBucket)>> = match price_bucket_iter {
             IterVariant::AskBookIter(x) => Box::new(x.into_iter()),
             IterVariant::BidBookIter(y) => Box::new(y.into_iter()),
             _ => unimplemented!()
@@ -273,23 +260,38 @@ impl LimitOrderBook {
                 break;
             }
 
+            let mut buy_order_id =  0;
+            let mut sell_order_id = 0;
+            let mut executed_volume = 0;
+
+            if bucket_order.side == 1 { 
+                buy_order_id = bucket_order.id;
+                sell_order_id = order.id;
+            } else if bucket_order.side == -1 {
+                buy_order_id = order.id;
+                sell_order_id = bucket_order.id
+            }
+
             if volume >= bucket_order.volume {
                 println!("Taking {} from order id {}, left {}", 
-                         bucket_order.volume, bucket_order.order_id, volume - bucket_order.volume);
+                         bucket_order.volume, bucket_order.id, volume - bucket_order.volume);
                 volume -= bucket_order.volume;
+                executed_volume = bucket_order.volume;
                 bucket_order.volume = 0;
 
                 // take a clone for now, until we come up with a better plan.
                 orders_to_remove.push(bucket_order.clone());
             } else {
                 bucket_order.volume -= volume;
+                executed_volume = volume;
                 volume = 0;
             }
+            executions.push(Execution { volume: executed_volume, buy_order_id: buy_order_id, sell_order_id: sell_order_id });
         }
 
         // return orders_to_remove to make borrow checker happy.
         // we can do book.remove_order(o) here without compiler complaining.
-        ( volume, orders_to_remove ) 
+        ( volume, orders_to_remove, executions ) 
     }
 
     pub fn ask_iter(&mut self) -> btree_map::IterMut<u64, PriceBucket> {
@@ -303,17 +305,26 @@ impl LimitOrderBook {
 
 impl OrderManager for LimitOrderBook {
 
-    fn add_order( &mut self, order : Order ) {
+    fn add_order( &mut self, mut order : Order ) -> Vec<Execution>{
+
+        order.id = self.next_id();
+
+        let mut executions;
         if order.side == -1 {
-            //self.ask_book.add_order(order)
-            LimitOrderBook::check_and_do_cross_spread_walk(
-                order, &mut self.ask_book, &mut self.bid_book, |x, y| x <= y)
+            executions = LimitOrderBook::check_and_do_cross_spread_walk(
+                order, 
+                &mut self.ask_book, 
+                &mut self.bid_book, 
+                |x, y| x <= y);
         }
         else {
-            //self.bid_book.add_order(order)
-            LimitOrderBook::check_and_do_cross_spread_walk(
-                order, &mut self.bid_book, &mut self.ask_book, |x, y| x >= y)
+            executions = LimitOrderBook::check_and_do_cross_spread_walk(
+                order, 
+                &mut self.bid_book, 
+                &mut self.ask_book,
+                |x, y| x >= y);
         }
+        executions
     }
 
     fn remove_order( &mut self, order : Order ) {
@@ -327,5 +338,66 @@ impl OrderManager for LimitOrderBook {
 }
 
 
+impl LOBService {
+    pub fn new() -> LOBService {
+        LOBService{
+            // lob : LimitOrderBook::new(), 
+            dispatch_thread : None, 
+            msg_send : None, 
+        }
+    }
 
+    pub fn start_service(&mut self) {
+        let (s, r) = bounded::<Option<Order>>(10000);
+        
+        self.msg_send = Some(s);
+        let thread_handle  = spawn(move || { 
+                let mut lob = LimitOrderBook::new();
+                loop {
+
+                    match r.recv() {
+                        Ok(opt) => {
+                            match opt {
+                                None => {println!("Stopping service"); break;},
+                                Some(o) => {
+                                    println!("received order price={}, size={}", o.price, o.volume);
+                                    lob.add_order(o);
+                                }
+                                
+                            }
+                        }
+                        Err(e) => println!("Error: {}", e)
+                    }
+                }
+            }
+        );
+        self.dispatch_thread = Some(thread_handle);
+
+    }  
+
+    pub fn stop_service(&mut self) {
+        // let order = Order(10)
+        match self.msg_send.as_ref() {
+            Some(sender) => {
+                sender.send(None);
+            },
+            None => {}
+        }
+        
+        self.dispatch_thread.take().map(|jh| {
+            jh.join()
+                .expect("Couldn't join my_thread on the main thread")
+        });
+        
+    }
+
+    pub fn get_msg_channel(&self) -> Result<Sender<Option<Order>>, &'static str >{
+        match self.msg_send.as_ref() {
+            Some(s) => Ok(s.clone()),
+            None => Err("Channel not initialized"),
+        }
+        
+    }
+
+}
 
