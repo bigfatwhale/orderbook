@@ -27,9 +27,9 @@ pub struct PriceBucket {
 }
 
 pub struct Execution {
-    volume: u32, 
-    buy_order_id: u64, 
-    sell_order_id: u64
+    pub volume: u32, 
+    pub buy_order_id: u64, 
+    pub sell_order_id: u64
 }
 
 impl fmt::Debug for PriceBucket {

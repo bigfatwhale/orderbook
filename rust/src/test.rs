@@ -221,7 +221,12 @@ fn test_limit_order_book() {
     assert_eq!(b.ask_iter().next_back().unwrap().0, &10300 );
 
     let o7 = Order{id : 2007, price : 10225, volume : 300, side : 1, part_id : String::from("Acme Corp.")};
+
     let executions = b.add_order(o7);
+    assert_eq!(executions.len(), 1);
+    let exec = &executions[0]; 
+    assert_eq!(exec.volume, 300);
+
     assert_eq!(b.ask_volume_at_price_level(10200), 100);
 }
 
