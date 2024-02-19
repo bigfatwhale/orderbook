@@ -4,7 +4,7 @@ use messages::AuctionUpdateMsg;
 use messages::OrderCancelMsg;
 use messages::OrderExecutedMsg;
 use messages::RetailPriceImproveMsg;
-// use messages::TradeBreakMsg;
+use messages::TradeBreakMsg;
 // use messages::TradeMsg;
 // use messages::TradingStatusMsg;
 // use messages::BATSMsgFactory;
@@ -134,13 +134,18 @@ fn test_parse_retail_price_improve() {
 
 }
 
-// #[test]
-// fn test_parse_trade_break() {
-//     let msg = "28800168B1K27GA00000Y";
-//     let res = TradeBreakMsg::parse_msg(msg);
-//     println!("{:?}", res);
-//     assert!(res.is_ok());
-// }
+#[test]
+fn test_parse_trade_break() {
+    let msg = "28800168B1K27GA00000Y";
+    let res = TradeBreakMsg::parse_msg(msg);
+    println!("{:?}", res);
+    assert!(res.is_ok());
+
+    let o = res.unwrap().1;
+    assert_eq!(o.timestamp, 28800168);
+    assert_eq!(o.msg_type, 'B');
+    assert_eq!(o.exec_id, 204969015920664610);
+}
 
 // #[test]
 // fn test_parse_trade() {

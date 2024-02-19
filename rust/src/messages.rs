@@ -60,7 +60,7 @@ create_into_function!(AuctionUpdateMsg);
 create_into_function!(OrderCancelMsg);
 create_into_function!(OrderExecutedMsg);
 create_into_function!(RetailPriceImproveMsg);
-// create_into_function!(TradeBreakMsg);
+create_into_function!(TradeBreakMsg);
 // create_into_function!(TradeMsg);
 // create_into_function!(TradingStatusMsg);
 
@@ -71,7 +71,7 @@ create_parse_impl!(AuctionUpdateMsg, parse_auction_update);
 create_parse_impl!(OrderCancelMsg, parse_order_cancel);
 create_parse_impl!(OrderExecutedMsg, parse_order_executed);
 create_parse_impl!(RetailPriceImproveMsg, parse_retail_price_improve);
-// create_parse_impl!(TradeBreakMsg, parse_trade_break);
+create_parse_impl!(TradeBreakMsg, parse_trade_break);
 // create_parse_impl!(TradeMsg, parse_trade);
 // create_parse_impl!(TradingStatusMsg, parse_trading_status);
 
@@ -371,6 +371,26 @@ pub fn parse_retail_price_improve(input: &str) -> IResult<&str, RetailPriceImpro
             msg_type,
             symbol,
             retail_price_improve,
+        },
+    ))
+}
+
+pub fn parse_trade_break(input: &str) -> IResult<&str, TradeBreakMsg> {
+    let Ok((_1, (timestamp, msg_type, exec_id))) = tuple((
+        parse_chunk::<U8, u32>,
+        char('B'),
+        map_res(take(12usize), from_base36),
+    ))(input) else {
+        // the below too a long while to figure out. why this craziness??
+        return Err(nom::Err::Error(Error::new("parse error", ErrorKind::Fail)));
+    };
+
+    Ok((
+        _1,
+        TradeBreakMsg {
+            timestamp,
+            msg_type,
+            exec_id,
         },
     ))
 }
