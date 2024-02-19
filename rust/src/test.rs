@@ -6,7 +6,7 @@ use messages::OrderExecutedMsg;
 use messages::RetailPriceImproveMsg;
 use messages::TradeBreakMsg;
 use messages::TradeMsg;
-// use messages::TradingStatusMsg;
+use messages::TradingStatusMsg;
 // use messages::BATSMsgFactory;
 
 use orderbook::AskBook;
@@ -116,7 +116,7 @@ fn test_parse_order_executed() {
     assert_eq!(o.msg_type, 'E');
     assert_eq!(o.id, 204969015920664610);
     assert_eq!(o.shares, 100);
-    assert_eq!(o.exec_id,  204969015920664596)
+    assert_eq!(o.exec_id, 204969015920664596)
 }
 
 #[test]
@@ -130,8 +130,7 @@ fn test_parse_retail_price_improve() {
     assert_eq!(o.timestamp, 28800168);
     assert_eq!(o.msg_type, 'R');
     assert_eq!(o.symbol, "AAPLSPOT");
-    assert_eq!(o.retail_price_improve,  'S')
-
+    assert_eq!(o.retail_price_improve, 'S')
 }
 
 #[test]
@@ -179,17 +178,24 @@ fn test_parse_trade() {
     assert_eq!(o.symbol, "AAPLSPOT");
     assert_eq!(o.price, 1831900);
     assert_eq!(o.exec_id, 204969015920664611);
-
-
 }
 
-// #[test]
-// fn test_parse_trade_status() {
-//     let msg = "28800168HAAPLSPOTT0XY";
-//     let res = TradingStatusMsg::parse_msg(msg);
-//     println!("{:?}", res);
-//     assert!(res.is_ok());
-// }
+#[test]
+fn test_parse_trade_status() {
+    let msg = "28800168HAAPLSPOTT0XY";
+    let res = TradingStatusMsg::parse_msg(msg);
+    println!("{:?}", res);
+    assert!(res.is_ok());
+
+    let o = res.unwrap().1;
+    assert_eq!(o.timestamp, 28800168);
+    assert_eq!(o.msg_type, 'H');
+    assert_eq!(o.symbol, "AAPLSPOT");
+    assert_eq!(o.halt_status, 'T');
+    assert_eq!(o.reg_sho_action, 0);
+    assert_eq!(o.reserved1, 'X');
+    assert_eq!(o.reserved2, 'Y');
+}
 
 // #[test]
 // fn test_parse_file() {

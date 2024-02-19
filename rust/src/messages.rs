@@ -1,14 +1,14 @@
 use nom::{
     branch::alt,
     bytes::complete::take,
-    character::complete::char,
+    character::complete::{anychar, char},
     combinator::{map_res, opt},
     error::{Error, ErrorKind},
     sequence::tuple,
     Finish, IResult,
 };
 
-use typenum::{U10, U4, U6, U8};
+use typenum::{U1, U10, U4, U6, U8};
 
 use std;
 use std::convert::Into;
@@ -62,7 +62,7 @@ create_into_function!(OrderExecutedMsg);
 create_into_function!(RetailPriceImproveMsg);
 create_into_function!(TradeBreakMsg);
 create_into_function!(TradeMsg);
-// create_into_function!(TradingStatusMsg);
+create_into_function!(TradingStatusMsg);
 
 // use macros to generate impl parse_msg functions for all msgs
 create_parse_impl!(AddOrderMsg, parse_add_order);
@@ -73,7 +73,7 @@ create_parse_impl!(OrderExecutedMsg, parse_order_executed);
 create_parse_impl!(RetailPriceImproveMsg, parse_retail_price_improve);
 create_parse_impl!(TradeBreakMsg, parse_trade_break);
 create_parse_impl!(TradeMsg, parse_trade);
-// create_parse_impl!(TradingStatusMsg, parse_trading_status);
+create_parse_impl!(TradingStatusMsg, parse_trading_status);
 
 // pub struct BATSMsgFactory {} // this coupled with impl below makes it like a
 //                              // factory method exposed via a static class method.
@@ -432,23 +432,32 @@ pub fn parse_trade(input: &str) -> IResult<&str, TradeMsg> {
     ))
 }
 
+pub fn parse_trading_status(input: &str) -> IResult<&str, TradingStatusMsg> {
+    let Ok((_1, (timestamp, msg_type, symbol, halt_status, reg_sho_action, reserved1, reserved2))) =
+        tuple((
+            parse_chunk::<U8, u32>,
+            char('H'),
+            parse_chunk::<U8, String>,
+            alt((char('H'), char('Q'), char('T'))),
+            parse_chunk::<U1, u8>,
+            anychar,
+            anychar,
+        ))(input)
+    else {
+        // the below too a long while to figure out. why this craziness??
+        return Err(nom::Err::Error(Error::new("parse error", ErrorKind::Fail)));
+    };
 
-// named!(parse_trading_status<&str, TradingStatusMsg>,
-//     do_parse!(
-//         _1 : map_res!(take!(8), FromStr::from_str)      >>
-//         _2 : char!('H')                                 >>
-//         _3 : map_res!(take!(8), FromStr::from_str)      >>
-//         _4 : alt!(char!('H') | char!('Q') | char!('T')) >>
-//         _5 : map_res!(take!(1), FromStr::from_str)      >>
-//         _6 : map_res!(take!(1), FromStr::from_str)      >>
-//         _7 : map_res!(take!(1), FromStr::from_str)      >>
-//         (TradingStatusMsg{ timestamp      : _1,
-//                            msg_type       : _2,
-//                            symbol         : _3,
-//                            halt_status    : _4,
-//                            reg_sho_action : _5,
-//                            reserved1      : _6,
-//                            reserved2      : _7
-//                     })
-//     )
-// );
+    Ok((
+        _1,
+        TradingStatusMsg {
+            timestamp,
+            msg_type,
+            symbol,
+            halt_status,
+            reg_sho_action,
+            reserved1,
+            reserved2,
+        },
+    ))
+}
