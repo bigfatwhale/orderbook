@@ -5,7 +5,7 @@ use messages::OrderCancelMsg;
 use messages::OrderExecutedMsg;
 use messages::RetailPriceImproveMsg;
 use messages::TradeBreakMsg;
-// use messages::TradeMsg;
+use messages::TradeMsg;
 // use messages::TradingStatusMsg;
 // use messages::BATSMsgFactory;
 
@@ -147,18 +147,41 @@ fn test_parse_trade_break() {
     assert_eq!(o.exec_id, 204969015920664610);
 }
 
-// #[test]
-// fn test_parse_trade() {
-//     let msg = "28800168P1K27GA00000YB000300AAPL  00018319001K27GA00000Z";
-//     let res = TradeMsg::parse_msg(msg);
-//     println!("{:?}", res);
-//     assert!(res.is_ok());
+#[test]
+fn test_parse_trade() {
+    let msg = "28800168P1K27GA00000YB000300AAPL  00018319001K27GA00000Z";
+    let res = TradeMsg::parse_msg(msg);
+    println!("{:?}", res);
+    assert!(res.is_ok());
 
-//     let msg = "28800168r1K27GA00000YB000300AAPLSPOT00018319001K27GA00000Z";
-//     let res = TradeMsg::parse_msg(msg);
-//     println!("{:?}", res);
-//     assert!(res.is_ok());
-// }
+    let o = res.unwrap().1;
+
+    assert_eq!(o.timestamp, 28800168);
+    assert_eq!(o.msg_type, 'P');
+    assert_eq!(o.id, 204969015920664610);
+    assert_eq!(o.side, 'B');
+    assert_eq!(o.shares, 300);
+    assert_eq!(o.symbol, "AAPL  ");
+    assert_eq!(o.price, 1831900);
+    assert_eq!(o.exec_id, 204969015920664611);
+
+    let msg = "28800168r1K27GA00000YB000300AAPLSPOT00018319001K27GA00000Z";
+    let res = TradeMsg::parse_msg(msg);
+    println!("{:?}", res);
+    assert!(res.is_ok());
+
+    let o = res.unwrap().1;
+    assert_eq!(o.timestamp, 28800168);
+    assert_eq!(o.msg_type, 'r');
+    assert_eq!(o.id, 204969015920664610);
+    assert_eq!(o.side, 'B');
+    assert_eq!(o.shares, 300);
+    assert_eq!(o.symbol, "AAPLSPOT");
+    assert_eq!(o.price, 1831900);
+    assert_eq!(o.exec_id, 204969015920664611);
+
+
+}
 
 // #[test]
 // fn test_parse_trade_status() {

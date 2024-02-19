@@ -61,7 +61,7 @@ create_into_function!(OrderCancelMsg);
 create_into_function!(OrderExecutedMsg);
 create_into_function!(RetailPriceImproveMsg);
 create_into_function!(TradeBreakMsg);
-// create_into_function!(TradeMsg);
+create_into_function!(TradeMsg);
 // create_into_function!(TradingStatusMsg);
 
 // use macros to generate impl parse_msg functions for all msgs
@@ -72,7 +72,7 @@ create_parse_impl!(OrderCancelMsg, parse_order_cancel);
 create_parse_impl!(OrderExecutedMsg, parse_order_executed);
 create_parse_impl!(RetailPriceImproveMsg, parse_retail_price_improve);
 create_parse_impl!(TradeBreakMsg, parse_trade_break);
-// create_parse_impl!(TradeMsg, parse_trade);
+create_parse_impl!(TradeMsg, parse_trade);
 // create_parse_impl!(TradingStatusMsg, parse_trading_status);
 
 // pub struct BATSMsgFactory {} // this coupled with impl below makes it like a
@@ -395,40 +395,43 @@ pub fn parse_trade_break(input: &str) -> IResult<&str, TradeBreakMsg> {
     ))
 }
 
-// named!(parse_trade_break<&str, TradeBreakMsg>,
-//     do_parse!(
-//         _1 : map_res!(take!(8), FromStr::from_str) >>
-//         _2 : char!('B')                            >>
-//         _3 : map_res!(take!(12), from_base36)      >>
-//         (TradeBreakMsg{ timestamp : _1,
-//                         msg_type  : _2,
-//                         exec_id   : _3,
-//                     })
-//     )
-// );
+pub fn parse_trade(input: &str) -> IResult<&str, TradeMsg> {
+    let Ok((rest, (timestamp, msg_type))) =
+        tuple((parse_chunk::<U8, u32>, alt((char('P'), char('r')))))(input)
+    else {
+        // the below too a long while to figure out. why this craziness??
+        return Err(nom::Err::Error(Error::new("parse error", ErrorKind::Fail)));
+    };
 
-// named!(parse_trade<&str, TradeMsg>,
-//     do_parse!(
-//         _1 : map_res!(take!(8),  FromStr::from_str) >>
-//         _2 : alt!(char!('P') | char!('r') )         >>
-//         _3 : map_res!(take!(12), from_base36)       >>
-//         _4 : alt!(char!('B') | char!('S') )         >>
-//         _5 : map_res!(take!(6),  FromStr::from_str) >>
-//         _6 : map_res!(take!( if _2 == 'P' {6} else {8} ),
-//                                  FromStr::from_str) >>
-//         _7 : map_res!(take!(10), FromStr::from_str) >>
-//         _8 : map_res!(take!(12), from_base36)       >>
-//         (TradeMsg{ timestamp : _1,
-//                    msg_type  : _2,
-//                    id  : _3,
-//                    side      : _4,
-//                    shares    : _5,
-//                    symbol    : _6,
-//                    price     : _7,
-//                    exec_id   : _8,
-//                     })
-//     )
-// );
+    let symbol_len = if msg_type == 'P' { 6usize } else { 8usize };
+
+    let Ok((_1, (id, side, shares, symbol, price, exec_id))) = tuple((
+        map_res(take(12usize), from_base36),
+        char('B'),
+        parse_chunk::<U6, u32>,
+        map_res(take(symbol_len), String::from_str),
+        parse_chunk::<U10, u64>,
+        map_res(take(12usize), from_base36),
+    ))(rest) else {
+        // the below too a long while to figure out. why this craziness??
+        return Err(nom::Err::Error(Error::new("parse error", ErrorKind::Fail)));
+    };
+
+    Ok((
+        _1,
+        TradeMsg {
+            timestamp,
+            msg_type,
+            id,
+            side,
+            shares,
+            symbol,
+            price,
+            exec_id,
+        },
+    ))
+}
+
 
 // named!(parse_trading_status<&str, TradingStatusMsg>,
 //     do_parse!(
