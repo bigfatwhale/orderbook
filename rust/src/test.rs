@@ -2,7 +2,7 @@ use messages::AddOrderMsg;
 use messages::AuctionSummaryMsg;
 use messages::AuctionUpdateMsg;
 use messages::OrderCancelMsg;
-// use messages::OrderExecutedMsg;
+use messages::OrderExecutedMsg;
 // use messages::RetailPriceImproveMsg;
 // use messages::TradeBreakMsg;
 // use messages::TradeMsg;
@@ -104,13 +104,20 @@ fn test_parse_order_cancel() {
     assert_eq!(o.shares, 500);
 }
 
-// #[test]
-// fn test_parse_order_executed() {
-//     let msg = "28800168E1K27GA00000Y0001001K27GA00000K";
-//     let res = OrderExecutedMsg::parse_msg(msg);
-//     println!("{:?}", res);
-//     assert!(res.is_ok());
-// }
+#[test]
+fn test_parse_order_executed() {
+    let msg = "28800168E1K27GA00000Y0001001K27GA00000K";
+    let res = OrderExecutedMsg::parse_msg(msg);
+    println!("{:?}", res);
+    assert!(res.is_ok());
+
+    let o = res.unwrap().1;
+    assert_eq!(o.timestamp, 28800168);
+    assert_eq!(o.msg_type, 'E');
+    assert_eq!(o.id, 204969015920664610);
+    assert_eq!(o.shares, 100);
+    assert_eq!(o.exec_id,  204969015920664596)
+}
 
 // #[test]
 // fn test_parse_retail_price_improve() {

@@ -58,7 +58,7 @@ create_into_function!(AddOrderMsg);
 create_into_function!(AuctionSummaryMsg);
 create_into_function!(AuctionUpdateMsg);
 create_into_function!(OrderCancelMsg);
-// create_into_function!(OrderExecutedMsg);
+create_into_function!(OrderExecutedMsg);
 // create_into_function!(RetailPriceImproveMsg);
 // create_into_function!(TradeBreakMsg);
 // create_into_function!(TradeMsg);
@@ -69,7 +69,7 @@ create_parse_impl!(AddOrderMsg, parse_add_order);
 create_parse_impl!(AuctionSummaryMsg, parse_auction_summary);
 create_parse_impl!(AuctionUpdateMsg, parse_auction_update);
 create_parse_impl!(OrderCancelMsg, parse_order_cancel);
-// create_parse_impl!(OrderExecutedMsg, parse_order_executed);
+create_parse_impl!(OrderExecutedMsg, parse_order_executed);
 // create_parse_impl!(RetailPriceImproveMsg, parse_retail_price_improve);
 // create_parse_impl!(TradeBreakMsg, parse_trade_break);
 // create_parse_impl!(TradeMsg, parse_trade);
@@ -329,19 +329,29 @@ pub fn parse_order_cancel(input: &str) -> IResult<&str, OrderCancelMsg> {
     ))
 }
 
-// named!(parse_order_cancel<&str, OrderCancelMsg>,
-//     do_parse!(
-//         _1 : map_res!(take!(8),  FromStr::from_str) >>
-//         _2 : char!('X')                             >>
-//         _3 : map_res!(take!(12), from_base36)       >>
-//         _4 : map_res!(take!(6),  FromStr::from_str) >>
-//         (OrderCancelMsg{ timestamp : _1,
-//                          msg_type  : _2,
-//                          id  : _3,
-//                          shares    : _4,
-//                     })
-//     )
-// );
+pub fn parse_order_executed(input: &str) -> IResult<&str, OrderExecutedMsg> {
+    let Ok((_1, (timestamp, msg_type, id, shares, exec_id))) = tuple((
+        parse_chunk::<U8, u32>,
+        char('E'),
+        map_res(take(12usize), from_base36),
+        parse_chunk::<U6, u32>,
+        map_res(take(12usize), from_base36),
+    ))(input) else {
+        // the below too a long while to figure out. why this craziness??
+        return Err(nom::Err::Error(Error::new("parse error", ErrorKind::Fail)));
+    };
+
+    Ok((
+        _1,
+        OrderExecutedMsg {
+            timestamp,
+            msg_type,
+            id,
+            shares,
+            exec_id,
+        },
+    ))
+}
 
 // named!(parse_order_executed<&str, OrderExecutedMsg>,
 //     do_parse!(
