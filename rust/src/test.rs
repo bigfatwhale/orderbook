@@ -197,26 +197,26 @@ fn test_parse_trade_status() {
     assert_eq!(o.reserved2, 'Y');
 }
 
-// #[test]
-// fn test_parse_file() {
-//     let path = env::current_dir().unwrap();
+#[test]
+fn test_parse_file() {
+    let path = env::current_dir().unwrap();
 
-//     println!("The current directory is {}", path.display());
-//     let filename = "src/pitch_example_data";
-//     let f = File::open(filename).expect("file not found");
-//     let f = BufReader::new(f);
+    println!("The current directory is {}", path.display());
+    let filename = "src/pitch_example_data";
+    let f = File::open(filename).expect("file not found");
+    let f = BufReader::new(f);
 
-//     for line in f.lines() {
-//         let msg = line.unwrap();
-//         let buf = msg.as_str();
-//         if buf.chars().nth(8) == Some('J') {
-//             let res = AuctionSummaryMsg::parse_msg(buf);
-//             println!("{:?}", res);
-//             assert!(res.is_ok());
-//             break;
-//         }
-//     }
-// }
+    for line in f.lines() {
+        let msg = line.unwrap();
+        let buf = msg.as_str();
+        if buf.chars().nth(8) == Some('J') {
+            let res = AuctionSummaryMsg::parse_msg(buf);
+            println!("{:?}", res);
+            assert!(res.is_ok());
+            break;
+        }
+    }
+}
 
 // #[test]
 // fn test_factory() {
