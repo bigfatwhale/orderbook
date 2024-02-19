@@ -3,7 +3,7 @@ use messages::AuctionSummaryMsg;
 use messages::AuctionUpdateMsg;
 use messages::OrderCancelMsg;
 use messages::OrderExecutedMsg;
-// use messages::RetailPriceImproveMsg;
+use messages::RetailPriceImproveMsg;
 // use messages::TradeBreakMsg;
 // use messages::TradeMsg;
 // use messages::TradingStatusMsg;
@@ -119,13 +119,20 @@ fn test_parse_order_executed() {
     assert_eq!(o.exec_id,  204969015920664596)
 }
 
-// #[test]
-// fn test_parse_retail_price_improve() {
-//     let msg = "28800168RAAPLSPOTS";
-//     let res = RetailPriceImproveMsg::parse_msg(msg);
-//     println!("{:?}", res);
-//     assert!(res.is_ok());
-// }
+#[test]
+fn test_parse_retail_price_improve() {
+    let msg = "28800168RAAPLSPOTS";
+    let res = RetailPriceImproveMsg::parse_msg(msg);
+    println!("{:?}", res);
+    assert!(res.is_ok());
+
+    let o = res.unwrap().1;
+    assert_eq!(o.timestamp, 28800168);
+    assert_eq!(o.msg_type, 'R');
+    assert_eq!(o.symbol, "AAPLSPOT");
+    assert_eq!(o.retail_price_improve,  'S')
+
+}
 
 // #[test]
 // fn test_parse_trade_break() {

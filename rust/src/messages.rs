@@ -59,7 +59,7 @@ create_into_function!(AuctionSummaryMsg);
 create_into_function!(AuctionUpdateMsg);
 create_into_function!(OrderCancelMsg);
 create_into_function!(OrderExecutedMsg);
-// create_into_function!(RetailPriceImproveMsg);
+create_into_function!(RetailPriceImproveMsg);
 // create_into_function!(TradeBreakMsg);
 // create_into_function!(TradeMsg);
 // create_into_function!(TradingStatusMsg);
@@ -70,7 +70,7 @@ create_parse_impl!(AuctionSummaryMsg, parse_auction_summary);
 create_parse_impl!(AuctionUpdateMsg, parse_auction_update);
 create_parse_impl!(OrderCancelMsg, parse_order_cancel);
 create_parse_impl!(OrderExecutedMsg, parse_order_executed);
-// create_parse_impl!(RetailPriceImproveMsg, parse_retail_price_improve);
+create_parse_impl!(RetailPriceImproveMsg, parse_retail_price_improve);
 // create_parse_impl!(TradeBreakMsg, parse_trade_break);
 // create_parse_impl!(TradeMsg, parse_trade);
 // create_parse_impl!(TradingStatusMsg, parse_trading_status);
@@ -353,37 +353,27 @@ pub fn parse_order_executed(input: &str) -> IResult<&str, OrderExecutedMsg> {
     ))
 }
 
-// named!(parse_order_executed<&str, OrderExecutedMsg>,
-//     do_parse!(
-//         _1 : map_res!(take!(8),  FromStr::from_str) >>
-//         _2 : char!('E')                             >>
-//         _3 : map_res!(take!(12), from_base36)       >>
-//         _4 : map_res!(take!(6),  FromStr::from_str) >>
-//         _5 : map_res!(take!(12), from_base36)       >>
-//         (OrderExecutedMsg{ timestamp : _1,
-//                          msg_type    : _2,
-//                          id    : _3,
-//                          shares      : _4,
-//                          exec_id     : _5
-//                     })
-//     )
-// );
+pub fn parse_retail_price_improve(input: &str) -> IResult<&str, RetailPriceImproveMsg> {
+    let Ok((_1, (timestamp, msg_type, symbol, retail_price_improve))) = tuple((
+        parse_chunk::<U8, u32>,
+        char('R'),
+        parse_chunk::<U8, String>,
+        alt((char('B'), char('A'), char('S'), char('N'))),
+    ))(input) else {
+        // the below too a long while to figure out. why this craziness??
+        return Err(nom::Err::Error(Error::new("parse error", ErrorKind::Fail)));
+    };
 
-// named!(parse_retail_price_improve<&str, RetailPriceImproveMsg>,
-//     do_parse!(
-//         _1 : map_res!(take!(8), FromStr::from_str)                   >>
-//         _2 : char!('R')                                              >>
-//         _3 : map_res!(take!(8), FromStr::from_str)                   >>
-//         _4 : alt!(char!('B') | char!('A') | char!('S') | char!('N')) >>
-
-//         (RetailPriceImproveMsg{ timestamp            : _1,
-//                                 msg_type             : _2,
-//                                 symbol               : _3,
-//                                 retail_price_improve : _4,
-
-//                     })
-//     )
-// );
+    Ok((
+        _1,
+        RetailPriceImproveMsg {
+            timestamp,
+            msg_type,
+            symbol,
+            retail_price_improve,
+        },
+    ))
+}
 
 // named!(parse_trade_break<&str, TradeBreakMsg>,
 //     do_parse!(
