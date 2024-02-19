@@ -4,5 +4,6 @@ version = "0.1.0"
 authors = ["bigfatwhale <bigfatwhale@gmail.com>"]
 
 [dependencies]
-nom = "^4.0"
+nom = "7.1.3"
 crossbeam = "0.8.2"
+typenum = "1.17.0"
