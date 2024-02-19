@@ -75,28 +75,28 @@ create_parse_impl!(TradeBreakMsg, parse_trade_break);
 create_parse_impl!(TradeMsg, parse_trade);
 create_parse_impl!(TradingStatusMsg, parse_trading_status);
 
-// pub struct BATSMsgFactory {} // this coupled with impl below makes it like a
-//                              // factory method exposed via a static class method.
-// impl BATSMsgFactory {
-//     pub fn parse( msg : &str ) -> BATSMessage {
-//         let code = &msg[8..9];
-//         let obj = match code {
-//             "A" => BATSMessage::AddOrderMsg( AddOrderMsg::parse_msg(msg).unwrap() ),
-//             "d" => BATSMessage::AddOrderMsg( AddOrderMsg::parse_msg(msg).unwrap() ),
-//             "J" => BATSMessage::AuctionSummaryMsg( AuctionSummaryMsg::parse_msg(msg).unwrap() ),
-//             "I" => BATSMessage::AuctionUpdateMsg( AuctionUpdateMsg::parse_msg(msg).unwrap() ),
-//             "X" => BATSMessage::OrderCancelMsg( OrderCancelMsg::parse_msg(msg).unwrap() ),
-//             "E" => BATSMessage::OrderExecutedMsg( OrderExecutedMsg::parse_msg(msg).unwrap() ),
-//             "R" => BATSMessage::RetailPriceImproveMsg( RetailPriceImproveMsg::parse_msg(msg).unwrap() ),
-//             "B" => BATSMessage::TradeBreakMsg( TradeBreakMsg::parse_msg(msg).unwrap() ),
-//             "P" => BATSMessage::TradeMsg( TradeMsg::parse_msg(msg).unwrap() ),
-//             "r" => BATSMessage::TradeMsg( TradeMsg::parse_msg(msg).unwrap() ),
-//             "H" => BATSMessage::TradingStatusMsg( TradingStatusMsg::parse_msg(msg).unwrap() ),
-//             &_ => unimplemented!(),
-//         };
-//         obj
-//     }
-// }
+pub struct BATSMsgFactory {} // this coupled with impl below makes it like a
+                             // factory method exposed via a static class method.
+impl BATSMsgFactory {
+    pub fn parse(msg: &str) -> BATSMessage {
+        let code = &msg[8..9];
+        let obj = match code {
+            "A" => BATSMessage::AddOrderMsg(AddOrderMsg::parse_msg(msg).unwrap().1),
+            "d" => BATSMessage::AddOrderMsg(AddOrderMsg::parse_msg(msg).unwrap().1),
+            "J" => BATSMessage::AuctionSummaryMsg(AuctionSummaryMsg::parse_msg(msg).unwrap().1),
+            "I" => BATSMessage::AuctionUpdateMsg(AuctionUpdateMsg::parse_msg(msg).unwrap().1),
+            "X" => BATSMessage::OrderCancelMsg(OrderCancelMsg::parse_msg(msg).unwrap().1),
+            "E" => BATSMessage::OrderExecutedMsg(OrderExecutedMsg::parse_msg(msg).unwrap().1),
+            "R" => BATSMessage::RetailPriceImproveMsg(RetailPriceImproveMsg::parse_msg(msg).unwrap().1),
+            "B" => BATSMessage::TradeBreakMsg(TradeBreakMsg::parse_msg(msg).unwrap().1),
+            "P" => BATSMessage::TradeMsg(TradeMsg::parse_msg(msg).unwrap().1),
+            "r" => BATSMessage::TradeMsg(TradeMsg::parse_msg(msg).unwrap().1),
+            "H" => BATSMessage::TradingStatusMsg(TradingStatusMsg::parse_msg(msg).unwrap().1),
+            &_ => unimplemented!(),
+        };
+        obj
+    }
+}
 
 #[derive(Debug)]
 pub struct AuctionSummaryMsg {

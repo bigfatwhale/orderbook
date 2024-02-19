@@ -1,13 +1,13 @@
 use messages::AddOrderMsg;
 use messages::AuctionSummaryMsg;
 use messages::AuctionUpdateMsg;
+use messages::BATSMsgFactory;
 use messages::OrderCancelMsg;
 use messages::OrderExecutedMsg;
 use messages::RetailPriceImproveMsg;
 use messages::TradeBreakMsg;
 use messages::TradeMsg;
 use messages::TradingStatusMsg;
-// use messages::BATSMsgFactory;
 
 use orderbook::AskBook;
 use orderbook::BestPrice;
@@ -218,20 +218,20 @@ fn test_parse_file() {
     }
 }
 
-// #[test]
-// fn test_factory() {
-//     let obj = BATSMsgFactory::parse("28800168A1K27GA00000YS000100AAPL  0001831900Y");
-//     println!("Return result from msg factory {:?}", obj);
-//     let msg_obj : Option<AddOrderMsg> = obj.into();
-//     assert!(msg_obj.is_some());
-//     println!("After into {:?}", msg_obj);
+#[test]
+fn test_factory() {
+    let obj = BATSMsgFactory::parse("28800168A1K27GA00000YS000100AAPL  0001831900Y");
+    println!("Return result from msg factory {:?}", obj);
+    let msg_obj: Option<AddOrderMsg> = obj.into();
+    assert!(msg_obj.is_some());
+    println!("After into {:?}", msg_obj);
 
-//     let obj = BATSMsgFactory::parse("28800168JAAPLSPOTC00010068000000020000");
-//     println!("Return result from msg factory {:?}", obj);
-//     let msg_obj : Option<AuctionSummaryMsg> = obj.into();
-//     println!("After into {:?}", msg_obj);
-//     assert!(msg_obj.is_some());
-// }
+    let obj = BATSMsgFactory::parse("28800168JAAPLSPOTC00010068000000020000");
+    println!("Return result from msg factory {:?}", obj);
+    let msg_obj: Option<AuctionSummaryMsg> = obj.into();
+    println!("After into {:?}", msg_obj);
+    assert!(msg_obj.is_some());
+}
 
 // #[test]
 // fn test_price_bucket() {
