@@ -17,16 +17,12 @@ use orderbook::OrderManager;
 use orderbook::PriceBucket;
 // use orderbook::LOBService;
 
-// use parser::parse_auction_summary;
-
 // use lobster::AddOrderMsg;
 
 use std::env;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
-use std::thread::sleep;
-use std::{thread, time};
 
 #[test]
 fn test_parse_auction_summary() {
@@ -233,97 +229,136 @@ fn test_factory() {
     assert!(msg_obj.is_some());
 }
 
-// #[test]
-// fn test_price_bucket() {
+#[test]
+fn test_price_bucket() {
+    let mut pb = PriceBucket::from_price(1200000);
+    let o = Order {
+        id: 2001,
+        price: 1200000,
+        volume: 100,
+        side: 1,
+        part_id: String::from("Acme Corp."),
+    };
+    let o2 = Order {
+        id: 2002,
+        price: 1200000,
+        volume: 220,
+        side: 1,
+        part_id: String::from("TH Inc."),
+    };
 
-//     let mut pb = PriceBucket::from_price(1200000);
-//     let o = Order{id : 2001, price : 1200000, volume : 100, side : 1,
-//                   part_id : String::from("Acme Corp.") };
-//     let o2 = Order{id : 2002, price : 1200000, volume : 220, side : 1,
-//                   part_id : String::from("TH Inc.") };
+    pb.add_order(o);
+    pb.add_order(o2.clone());
 
-//     pb.add_order( o );
-//     pb.add_order( o2.clone() );
+    assert_eq!(pb.price_level, 1200000);
+    assert_eq!(pb.volume(), 320);
 
-//     assert_eq!( pb.price_level, 1200000 );
-//     assert_eq!( pb.volume(), 320 );
+    pb.remove_order(o2);
 
-//     pb.remove_order( o2 );
+    assert_eq!(pb.volume(), 100);
+}
 
-//     assert_eq!( pb.volume(), 100 );
-// }
+#[test]
+fn test_book() {
+    let mut book = AskBook::new();
+    let o = Order {
+        id: 2001,
+        price: 1200000,
+        volume: 150,
+        side: -1,
+        part_id: String::from("Acme Corp."),
+    };
 
-// #[test]
-// fn test_book() {
+    let o2 = Order {
+        id: 2002,
+        price: 1300000,
+        volume: 220,
+        side: -1,
+        part_id: String::from("TH Inc."),
+    };
 
-//     let mut book = AskBook::new();
-//     let o = Order{id : 2001, price : 1200000, volume : 150, side : -1,
-//                   part_id : String::from("Acme Corp.") };
+    book.add_order(o.clone());
+    book.add_order(o2.clone());
+    assert_eq!(book.volume_at_price_level(1200000), 150);
+    assert_eq!(book.volume_at_price_level(1300000), 220);
+    book.remove_order(o);
+    assert_eq!(book.volume_at_price_level(1200000), 0);
+    assert_eq!(book.best_price(), 1200000);
+}
 
-//     let o2 = Order{id : 2002, price : 1300000, volume : 220, side : -1,
-//                   part_id : String::from("TH Inc.") };
+#[test]
+fn test_limit_order_book() {
+    let mut b = LimitOrderBook::new();
 
-//     book.add_order(o.clone());
-//     book.add_order(o2.clone());
-//     assert_eq!(book.volume_at_price_level(1200000), 150);
-//     assert_eq!(book.volume_at_price_level(1300000), 220);
-//     book.remove_order(o);
-//     assert_eq!(book.volume_at_price_level(1200000), 0);
-//     assert_eq!(book.best_price(), 1200000 );
-// }
+    let o1 = Order {
+        id: 2001,
+        price: 10000,
+        volume: 100,
+        side: 1,
+        part_id: String::from("Acme Corp."),
+    };
+    let o2 = Order {
+        id: 2002,
+        price: 10050,
+        volume: 200,
+        side: 1,
+        part_id: String::from("Acme Corp."),
+    };
+    let o3 = Order {
+        id: 2003,
+        price: 10100,
+        volume: 300,
+        side: 1,
+        part_id: String::from("Acme Corp."),
+    };
+    let o4 = Order {
+        id: 2004,
+        price: 10200,
+        volume: 400,
+        side: -1,
+        part_id: String::from("Acme Corp."),
+    };
+    let o5 = Order {
+        id: 2005,
+        price: 10250,
+        volume: 500,
+        side: -1,
+        part_id: String::from("Acme Corp."),
+    };
+    let o6 = Order {
+        id: 2006,
+        price: 10300,
+        volume: 600,
+        side: -1,
+        part_id: String::from("Acme Corp."),
+    };
 
-// #[test]
-// fn test_limit_order_book() {
+    b.add_order(o1);
+    b.add_order(o2);
+    b.add_order(o3);
+    b.add_order(o4);
+    b.add_order(o5);
+    b.add_order(o6);
 
-//     let mut b = LimitOrderBook::new();
+    //     println!("==========> HERE");
+    assert_eq!(b.best_bid(), 10100);
+    assert_eq!(b.best_ask(), 10200);
 
-//     let o1 = Order{id : 2001, price : 10000, volume : 100, side : 1, part_id : String::from("Acme Corp.")};
-//     let o2 = Order{id : 2002, price : 10050, volume : 200, side : 1, part_id : String::from("Acme Corp.")};
-//     let o3 = Order{id : 2003, price : 10100, volume : 300, side : 1, part_id : String::from("Acme Corp.")};
-//     let o4 = Order{id : 2004, price : 10200, volume : 400, side : -1, part_id : String::from("Acme Corp.")};
-//     let o5 = Order{id : 2005, price : 10250, volume : 500, side : -1, part_id : String::from("Acme Corp.")};
-//     let o6 = Order{id : 2006, price : 10300, volume : 600, side : -1, part_id : String::from("Acme Corp.")};
+    assert_eq!(b.ask_iter().next().unwrap().0, &10200);
+    assert_eq!(b.ask_iter().next_back().unwrap().0, &10300);
 
-//     b.add_order(o1);
-//     b.add_order(o2);
-//     b.add_order(o3);
-//     b.add_order(o4);
-//     b.add_order(o5);
-//     b.add_order(o6);
+    let o7 = Order {
+        id: 2007,
+        price: 10225,
+        volume: 300,
+        side: 1,
+        part_id: String::from("Acme Corp."),
+    };
 
-// //     println!("==========> HERE");
-//     assert_eq!(b.best_bid(), 10100 );
-//     assert_eq!(b.best_ask(), 10200 );
+    let executions = b.add_order(o7);
+    assert_eq!(executions.len(), 1);
+    let exec = &executions[0];
+    assert_eq!(exec.volume, 300);
 
-//     assert_eq!(b.ask_iter().next().unwrap().0, &10200 );
-//     assert_eq!(b.ask_iter().next_back().unwrap().0, &10300 );
-
-//     let o7 = Order{id : 2007, price : 10225, volume : 300, side : 1, part_id : String::from("Acme Corp.")};
-
-//     let executions = b.add_order(o7);
-//     assert_eq!(executions.len(), 1);
-//     let exec = &executions[0];
-//     assert_eq!(exec.volume, 300);
-
-//     assert_eq!(b.ask_volume_at_price_level(10200), 100);
-// }
-
-// #[test]
-// fn test_lob_threading() {
-//     let mut b = LOBService::new();
-//     b.start_service();
-
-//     let send_channel = b.get_msg_channel();
-
-//     match send_channel {
-//         Ok(s) => {
-//             let o1 = Order{id : 2001, price : 10000, volume : 100, side : 1, part_id : String::from("Acme Corp.")};
-//             s.send(Some(o1));
-//         },
-//         Err(s) => {
-//             assert!(false, "Channel not initialized!")
-//         }
-
-//     }
-//     b.stop_service();
-// }
+    assert_eq!(b.ask_volume_at_price_level(10200), 100);
+}
