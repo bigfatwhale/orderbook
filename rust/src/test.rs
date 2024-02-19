@@ -1,7 +1,7 @@
 
 
 use messages::AuctionSummaryMsg;
-// use messages::AuctionUpdateMsg;
+use messages::AuctionUpdateMsg;
 use messages::AddOrderMsg;
 // use messages::OrderCancelMsg;
 // use messages::OrderExecutedMsg;
@@ -74,13 +74,25 @@ fn test_parse_add_order() {
 
 }
 
-// #[test]
-// fn test_parse_auction_update() {
-//     let msg = "28800168IAAPLSPOTC00010068000000020000000001000000015034000001309800"; 
-//     let res = AuctionUpdateMsg::parse_msg(msg);
-//     println!("{:?}", res);
-//     assert!(res.is_ok());    
-// }
+#[test]
+fn test_parse_auction_update() {
+    let msg = "28800168IAAPLSPOTC00010068000000020000000001000000015034000001309800"; 
+    let res = AuctionUpdateMsg::parse_msg(msg);
+    println!("{:?}", res);
+    assert!(res.is_ok());    
+
+    let o = res.unwrap().1;      
+    assert_eq!(o.timestamp         , 28800168);
+    assert_eq!(o.msg_type          , 'I');
+    assert_eq!(o.symbol            , "AAPLSPOT");
+    assert_eq!(o.auction_type      , 'C');
+    assert_eq!(o.reference_price   , 1006800);
+    assert_eq!(o.buyshares         , 20000);
+    assert_eq!(o.sellshares        , 10000);
+    assert_eq!(o.indicative_price  , 1503400);
+    assert_eq!(o.auction_only_price, 1309800);
+
+}
 
 // #[test]
 // fn test_parse_order_cancel() {

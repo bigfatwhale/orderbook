@@ -56,7 +56,7 @@ pub enum BATSMessage {
 // use macros to generate into functions for all msgs
 create_into_function!(AddOrderMsg);
 create_into_function!(AuctionSummaryMsg);
-// create_into_function!(AuctionUpdateMsg);
+create_into_function!(AuctionUpdateMsg);
 // create_into_function!(OrderCancelMsg);
 // create_into_function!(OrderExecutedMsg);
 // create_into_function!(RetailPriceImproveMsg);
@@ -67,7 +67,7 @@ create_into_function!(AuctionSummaryMsg);
 // use macros to generate impl parse_msg functions for all msgs
 create_parse_impl!(AddOrderMsg, parse_add_order);
 create_parse_impl!(AuctionSummaryMsg, parse_auction_summary);
-// create_parse_impl!(AuctionUpdateMsg, parse_auction_update);
+create_parse_impl!(AuctionUpdateMsg, parse_auction_update);
 // create_parse_impl!(OrderCancelMsg, parse_order_cancel);
 // create_parse_impl!(OrderExecutedMsg, parse_order_executed);
 // create_parse_impl!(RetailPriceImproveMsg, parse_retail_price_improve);
@@ -261,30 +261,51 @@ pub fn parse_add_order(input: &str) -> IResult<&str, AddOrderMsg> {
     ))
 }
 
+pub fn parse_auction_update(input: &str) -> IResult<&str, AuctionUpdateMsg> {
+    let Ok((
+        _1,
+        (
+            timestamp,
+            msg_type,
+            symbol,
+            auction_type,
+            reference_price,
+            buyshares,
+            sellshares,
+            indicative_price,
+            auction_only_price,
+        ),
+    )) = tuple((
+        parse_chunk::<U8, u32>,
+        char('I'),
+        parse_chunk::<U8, String>,
+        alt((char('O'), char('C'), char('H'), char('I'))),
+        parse_chunk::<U10, u64>,
+        parse_chunk::<U10, u32>,
+        parse_chunk::<U10, u32>,
+        parse_chunk::<U10, u64>,
+        parse_chunk::<U10, u64>,
+    ))(input)
+    else {
+        // the below too a long while to figure out. why this craziness??
+        return Err(nom::Err::Error(Error::new("parse error", ErrorKind::Fail)));
+    };
 
-// named!(parse_auction_update<&str, AuctionUpdateMsg>,
-//     do_parse!(
-//         _1 : map_res!(take!(8),  FromStr::from_str)                  >>
-//         _2 : char!('I')                                              >>
-//         _3 : map_res!(take!(8), FromStr::from_str)                   >>
-//         _4 : alt!(char!('O') | char!('C') | char!('H') | char!('I')) >>
-//         _5 : map_res!(take!(10),  FromStr::from_str)                 >>
-//         _6 : map_res!(take!(10),  FromStr::from_str)                 >>
-//         _7 : map_res!(take!(10), FromStr::from_str)                  >>
-//         _8 : map_res!(take!(10),  FromStr::from_str)                 >>
-//         _9 : map_res!(take!(10), FromStr::from_str)                  >>
-//         (AuctionUpdateMsg{ timestamp          : _1,
-//                            msg_type           : _2,
-//                            symbol             : _3,
-//                            auction_type       : _4,
-//                            reference_price    : _5,
-//                            buyshares          : _6,
-//                            sellshares         : _7,
-//                            indicative_price   : _8,
-//                            auction_only_price : _9
-//                     })
-//     )
-// );
+    Ok((
+        _1,
+        AuctionUpdateMsg {
+            timestamp,
+            msg_type,
+            symbol,
+            auction_type,
+            reference_price,
+            buyshares,
+            sellshares,
+            indicative_price,
+            auction_only_price,
+        },
+    ))
+}
 
 // named!(parse_order_cancel<&str, OrderCancelMsg>,
 //     do_parse!(
