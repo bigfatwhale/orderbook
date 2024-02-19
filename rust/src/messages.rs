@@ -57,7 +57,7 @@ pub enum BATSMessage {
 create_into_function!(AddOrderMsg);
 create_into_function!(AuctionSummaryMsg);
 create_into_function!(AuctionUpdateMsg);
-// create_into_function!(OrderCancelMsg);
+create_into_function!(OrderCancelMsg);
 // create_into_function!(OrderExecutedMsg);
 // create_into_function!(RetailPriceImproveMsg);
 // create_into_function!(TradeBreakMsg);
@@ -68,7 +68,7 @@ create_into_function!(AuctionUpdateMsg);
 create_parse_impl!(AddOrderMsg, parse_add_order);
 create_parse_impl!(AuctionSummaryMsg, parse_auction_summary);
 create_parse_impl!(AuctionUpdateMsg, parse_auction_update);
-// create_parse_impl!(OrderCancelMsg, parse_order_cancel);
+create_parse_impl!(OrderCancelMsg, parse_order_cancel);
 // create_parse_impl!(OrderExecutedMsg, parse_order_executed);
 // create_parse_impl!(RetailPriceImproveMsg, parse_retail_price_improve);
 // create_parse_impl!(TradeBreakMsg, parse_trade_break);
@@ -303,6 +303,28 @@ pub fn parse_auction_update(input: &str) -> IResult<&str, AuctionUpdateMsg> {
             sellshares,
             indicative_price,
             auction_only_price,
+        },
+    ))
+}
+
+pub fn parse_order_cancel(input: &str) -> IResult<&str, OrderCancelMsg> {
+    let Ok((_1, (timestamp, msg_type, id, shares))) = tuple((
+        parse_chunk::<U8, u32>,
+        char('X'),
+        map_res(take(12usize), from_base36),
+        parse_chunk::<U6, u32>,
+    ))(input) else {
+        // the below too a long while to figure out. why this craziness??
+        return Err(nom::Err::Error(Error::new("parse error", ErrorKind::Fail)));
+    };
+
+    Ok((
+        _1,
+        OrderCancelMsg {
+            timestamp,
+            msg_type,
+            id,
+            shares,
         },
     ))
 }
