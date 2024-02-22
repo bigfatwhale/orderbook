@@ -308,7 +308,7 @@ fn test_limit_order_book() {
         id: 2003,
         price: 10100,
         volume: 300,
-        side: 1,
+        side: 1, 
         part_id: String::from("Acme Corp."),
     };
     let o4 = Order {
