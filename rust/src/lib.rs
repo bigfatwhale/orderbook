@@ -1,5 +1,6 @@
 
 #[macro_use]
+extern crate intmap;
 extern crate nom;
 extern crate typenum;
 extern crate crossbeam;

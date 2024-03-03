@@ -1,10 +1,15 @@
+use nom::sequence::Tuple;
+use nom::Or;
 use pyo3::prelude::*;
+use typenum::assert_type;
 use std::collections::btree_map;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::iter::Rev;
 use std::iter::{IntoIterator, Iterator};
 use std::vec::Vec;
+
+use intmap::IntMap;
 
 #[derive(Clone, Debug)]
 #[pyclass(get_all)]
@@ -38,12 +43,15 @@ pub struct LimitOrderBook {
     id_wheel: u64,
     ask_book: AskBook,
     bid_book: BidBook,
+    order_to_book_price: IntMap<(i8, u64)>,
 }
 
 
 pub trait OrderManager {
     fn add_order(&mut self, order: Order) -> Vec<Execution>;
     fn remove_order(&mut self, order: Order);
+    fn modify(&mut self, order: Order);
+    fn cancel(&mut self, order: Order);
 }
 
 pub trait BestPrice {
@@ -68,6 +76,34 @@ impl OrderManager for PriceBucket {
             self.orders.remove(idx.unwrap());
         }
     }
+
+    fn modify(&mut self, order: Order) {
+
+        let idx = self.orders.iter().position(|x| x.id == order.id);
+
+        if idx.is_some() {
+            let target_order = &mut self.orders[idx.unwrap()];
+            
+            target_order.volume = order.volume;
+            target_order.price = order.price;
+            // TODO: move element to the back of the order list for that price level
+        }
+    }
+
+    fn cancel(&mut self, order: Order) {
+
+        let idx = self.orders.iter().position(|x| x.id == order.id);
+        
+        if idx.is_some() {
+            let target_order = &mut self.orders[idx.unwrap()];
+            assert!(target_order.volume >= order.volume);
+            target_order.volume = order.volume;
+            target_order.price = order.price;
+            // TODO: move element to the back of the order list for that price level
+        }
+
+    }
+
 }
 
 impl PriceBucket {
@@ -130,6 +166,18 @@ macro_rules! expand_book_struct {
                     bucket.remove_order(order);
                 }
             }
+
+            fn modify(&mut self, order: Order) {
+                if let Some(bucket) = self.price_buckets.get_mut(&order.price) {
+                    bucket.modify(order);
+                }
+            }
+        
+            fn cancel(&mut self, order: Order) {
+                if let Some(bucket) = self.price_buckets.get_mut(&order.price) {
+                    bucket.cancel(order);
+                }
+            }
         }
     };
 }
@@ -190,6 +238,7 @@ impl LimitOrderBook {
             id_wheel: 0,
             ask_book: AskBook::new(),
             bid_book: BidBook::new(),
+            order_to_book_price: IntMap::new(),
         }
     }
 
@@ -216,12 +265,13 @@ impl LimitOrderBook {
         }
     }
 
-    fn next_id(&mut self) -> u64 {
+    pub fn next_id(&mut self) -> u64 {
         self.id_wheel += 1;
         self.id_wheel
     }
 
     fn check_and_do_cross_spread_walk<B1: OrderBook, B2: OrderBook>(
+        order_to_book_price: &mut IntMap<(i8, u64)>,
         mut order: Order,
         book: &mut B1,
         opp_book: &mut B2,
@@ -232,17 +282,25 @@ impl LimitOrderBook {
                 LimitOrderBook::cross_spread_walk(&mut order, opp_book, func);
             order.volume = residual_volume;
             for o in orders_to_remove {
+                order_to_book_price.remove(order.id);
                 opp_book.remove_order(o);
             }
+            // if order.volume is still +ve, the can be either there is no cross-spread walk done
+            // or the cross-spread walk only filled part of the volume. In that case we continue to
+            // add the left-over volume in a new order.
+            if order.volume > 0 {
+                order_to_book_price.insert(order.id, (order.side, order.price));
+                let _ = book.add_order(order);
+                
+            }
             return executions;
+        } else {
+            // no spread crossing so just add order to the bid/ask book directly
+            order_to_book_price.insert(order.id, (order.side, order.price));
+            let _ = book.add_order(order);
+            
         }
 
-        // if order.volume is still +ve, the can be either there is no cross-spread walk done
-        // or the cross-spread walk only filled part of the volume. In that case we continue to
-        // add the left-over volume in a new order.
-        if order.volume > 0 {
-            let _ = book.add_order(order);
-        }
         return Vec::new();
     }
 
@@ -322,11 +380,11 @@ impl LimitOrderBook {
 
 impl OrderManager for LimitOrderBook {
     fn add_order(&mut self, mut order: Order) -> Vec<Execution> {
-        order.id = self.next_id();
-
+    
         let executions;
         if order.side == -1 {
             executions = LimitOrderBook::check_and_do_cross_spread_walk(
+                &mut self.order_to_book_price,
                 order,
                 &mut self.ask_book,
                 &mut self.bid_book,
@@ -334,20 +392,41 @@ impl OrderManager for LimitOrderBook {
             );
         } else {
             executions = LimitOrderBook::check_and_do_cross_spread_walk(
+                &mut self.order_to_book_price,
                 order,
                 &mut self.bid_book,
                 &mut self.ask_book,
                 |x, y| x >= y,
             );
         }
+
         executions
     }
 
     fn remove_order(&mut self, order: Order) {
+        self.order_to_book_price.remove(order.id);
         if order.side == -1 {
             self.ask_book.remove_order(order)
         } else {
             self.bid_book.remove_order(order)
         }
     }
+
+    fn modify(&mut self, order: Order) {
+        if order.side == -1 {
+            self.ask_book.modify(order)
+        } else {
+            self.bid_book.modify(order)
+        }
+    }
+
+    fn cancel(&mut self, order: Order) {
+        if order.side == -1 {
+            self.ask_book.cancel(order)
+        } else {
+            self.bid_book.cancel(order)
+        }
+    }
+
+
 }

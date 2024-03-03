@@ -51,6 +51,6 @@ impl LimitOrderBook {
 #[pymodule]
 fn rustpy_orderbook(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<orderbook::Order>()?;
-    // m.add_class::<LimitOrderBook>()?;
+    m.add_class::<LimitOrderBook>()?;
     Ok(())
 }
