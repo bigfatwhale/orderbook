@@ -1,7 +1,6 @@
 use nom::sequence::Tuple;
 use nom::Or;
 use pyo3::prelude::*;
-use typenum::assert_type;
 use std::collections::btree_map;
 use std::collections::BTreeMap;
 use std::error::Error;
@@ -9,6 +8,7 @@ use std::fmt;
 use std::iter::Rev;
 use std::iter::{IntoIterator, Iterator};
 use std::vec::Vec;
+use typenum::assert_type;
 
 use intmap::IntMap;
 
@@ -48,7 +48,6 @@ pub struct LimitOrderBook {
     order_to_book_price: IntMap<(i8, u64)>,
 }
 
-
 pub trait OrderManager {
     fn add_order(&mut self, order: Order) -> Vec<Execution>;
     fn remove_order(&mut self, order: Order);
@@ -80,12 +79,11 @@ impl OrderManager for PriceBucket {
     }
 
     fn modify(&mut self, order: Order) {
-
         let idx = self.orders.iter().position(|x| x.id == order.id);
 
         if idx.is_some() {
             let target_order = &mut self.orders[idx.unwrap()];
-            
+
             target_order.volume = order.volume;
             target_order.price = order.price;
             // TODO: move element to the back of the order list for that price level
@@ -95,7 +93,7 @@ impl OrderManager for PriceBucket {
     fn cancel(&mut self, order: Order) {
         // Cancel: partially or fully cancel some size from a resting order
         let idx = self.orders.iter().position(|x| x.id == order.id);
-        
+
         if idx.is_some() {
             let target_order = &mut self.orders[idx.unwrap()];
             assert!(target_order.volume >= order.volume);
@@ -106,7 +104,6 @@ impl OrderManager for PriceBucket {
             }
         }
     }
-
 }
 
 impl PriceBucket {
@@ -152,14 +149,13 @@ macro_rules! expand_book_struct {
             }
 
             fn get_order_by_id(&self, id: u64, price_bucket: u64) -> Result<Order, Box<dyn Error>> {
-
                 if let Some(ref b) = self.price_buckets.get(&price_bucket) {
-                    let orders: Vec<&Order>  = b.orders.iter().filter(|x| x.id == id).collect();
-                    if let Some(&order)= orders.first() {
+                    let orders: Vec<&Order> = b.orders.iter().filter(|x| x.id == id).collect();
+                    if let Some(&order) = orders.first() {
                         let y = order.clone();
-                        return Ok(y)
+                        return Ok(y);
                     }
-                } 
+                }
                 Err(format!("Order not found"))?
             }
         }
@@ -187,7 +183,7 @@ macro_rules! expand_book_struct {
                     bucket.modify(order);
                 }
             }
-        
+
             fn cancel(&mut self, order: Order) {
                 if let Some(bucket) = self.price_buckets.get_mut(&order.price) {
                     bucket.cancel(order);
@@ -229,7 +225,9 @@ impl BestPrice for AskBook {
     fn best_price(&self) -> u64 {
         // best price for ask is the min price
         for (price, bucket) in self.price_buckets.iter() {
-            if bucket.orders.len() > 0 {return *price}
+            if bucket.orders.len() > 0 {
+                return *price;
+            }
         }
         0
     }
@@ -239,7 +237,9 @@ impl BestPrice for BidBook {
     fn best_price(&self) -> u64 {
         // best price for bid is the max price
         for (price, bucket) in self.price_buckets.iter().rev() {
-            if bucket.orders.len() > 0 {return *price}
+            if bucket.orders.len() > 0 {
+                return *price;
+            }
         }
         0
     }
@@ -293,7 +293,7 @@ impl LimitOrderBook {
             } else {
                 let order = self.ask_book.get_order_by_id(id, *price_level)?;
                 return Ok(order);
-            }            
+            }
         }
         Err(format!("Order not found"))?
     }
@@ -319,14 +319,12 @@ impl LimitOrderBook {
             if order.volume > 0 {
                 order_to_book_price.insert(order.id, (order.side, order.price));
                 let _ = book.add_order(order);
-                
             }
             return executions;
         } else {
             // no spread crossing so just add order to the bid/ask book directly
             order_to_book_price.insert(order.id, (order.side, order.price));
             let _ = book.add_order(order);
-            
         }
 
         return Vec::new();
@@ -407,9 +405,7 @@ impl LimitOrderBook {
 }
 
 impl OrderManager for LimitOrderBook {
-
     fn add_order(&mut self, mut order: Order) -> Vec<Execution> {
-    
         let executions;
         if order.side == -1 {
             executions = LimitOrderBook::check_and_do_cross_spread_walk(
@@ -456,6 +452,4 @@ impl OrderManager for LimitOrderBook {
             self.bid_book.cancel(order)
         }
     }
-
-
 }
