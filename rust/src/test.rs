@@ -391,13 +391,37 @@ fn test_databento() {
     let to1 = Order {id: 0, price: 188780000000, volume: 1, side: 1, part_id: String::from("Acme Corp."), };
     let res = b.add_order(to1);
 
-    
     println!("{:?}", res);
     assert_eq!(res.len(), 1);
     assert_eq!(res[0].buy_order_id, 0);
     assert_eq!(res[0].sell_order_id, 20449);
 
     let order_status = b.get_order_by_id(20449).unwrap();
+    assert_eq!(order_status.id, 20449);
+    assert_eq!(order_status.price, 188780000000);
+    assert_eq!(order_status.volume, 399);
 
+    let to2 = Order {id: 0, price: 188780000000, volume: 3, side: 1, part_id: String::from("Acme Corp."), };
+    let res = b.add_order(to2);
+
+    println!("{:?}", res);
+    assert_eq!(res.len(), 1);
+    assert_eq!(res[0].buy_order_id, 0);
+    assert_eq!(res[0].sell_order_id, 20449);
+
+    let order_status = b.get_order_by_id(20449).unwrap();
+    assert_eq!(order_status.id, 20449);
+    assert_eq!(order_status.price, 188780000000);
+    assert_eq!(order_status.volume, 396);
+
+    // next the rest of teh 396 shares of 20449 is cancelled
+    let co1 = Order {id: 20449, price: 188780000000, volume: 396, side: -1, part_id: String::from("Acme Corp."), };
+    b.cancel(co1);
+
+    let order_status = b.get_order_by_id(20449);
+    assert!(order_status.is_err());
+
+    // now that order is gone, we would have best ask move to a new level of 190870000000
+    assert_eq!(b.best_ask(), 190870000000);
 
 }

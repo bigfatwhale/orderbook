@@ -93,17 +93,18 @@ impl OrderManager for PriceBucket {
     }
 
     fn cancel(&mut self, order: Order) {
-
+        // Cancel: partially or fully cancel some size from a resting order
         let idx = self.orders.iter().position(|x| x.id == order.id);
         
         if idx.is_some() {
             let target_order = &mut self.orders[idx.unwrap()];
             assert!(target_order.volume >= order.volume);
-            target_order.volume = order.volume;
-            target_order.price = order.price;
-            // TODO: move element to the back of the order list for that price level
+            if order.volume == target_order.volume {
+                self.orders.remove(idx.unwrap());
+            } else {
+                target_order.volume = order.volume;
+            }
         }
-
     }
 
 }
@@ -227,11 +228,10 @@ impl PriceBucketIter for BidBook {
 impl BestPrice for AskBook {
     fn best_price(&self) -> u64 {
         // best price for ask is the min price
-        if let Some(&price) = self.price_buckets.keys().nth(0) {
-            price
-        } else {
-            0
+        for (price, bucket) in self.price_buckets.iter() {
+            if bucket.orders.len() > 0 {return *price}
         }
+        0
     }
 }
 
