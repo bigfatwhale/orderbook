@@ -424,4 +424,10 @@ fn test_databento() {
     // now that order is gone, we would have best ask move to a new level of 190870000000
     assert_eq!(b.best_ask(), 190870000000);
 
+    // next we cancel the whole of 20441...
+    let o1 = Order {id: 20441, price: 188560000000, volume: 400, side: 1, part_id: String::from("Acme Corp."), };
+    b.cancel(o1);
+    assert_eq!(b.best_bid(), 186330000000);
+
+
 }

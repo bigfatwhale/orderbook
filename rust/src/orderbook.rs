@@ -238,11 +238,10 @@ impl BestPrice for AskBook {
 impl BestPrice for BidBook {
     fn best_price(&self) -> u64 {
         // best price for bid is the max price
-        if let Some(&price) = self.price_buckets.keys().last() {
-            price
-        } else {
-            0
+        for (price, bucket) in self.price_buckets.iter().rev() {
+            if bucket.orders.len() > 0 {return *price}
         }
+        0
     }
 }
 
