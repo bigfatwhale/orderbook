@@ -362,3 +362,42 @@ fn test_limit_order_book() {
 
     assert_eq!(b.ask_volume_at_price_level(10200), 100);
 }
+
+#[test]
+fn test_databento() {
+
+
+    let mut b = LimitOrderBook::new();
+
+    let o1 = Order {id: 20441, price: 188560000000, volume: 400, side: 1, part_id: String::from("Acme Corp."), };
+    let o2 = Order {id: 20449, price: 188780000000, volume: 400, side: -1, part_id: String::from("Acme Corp."), };
+    let o3 = Order {id: 21489, price: 186330000000, volume: 529, side: 1, part_id: String::from("Acme Corp."), };
+    let o4 = Order {id: 21925, price: 190870000000, volume: 529, side: -1, part_id: String::from("Acme Corp."), };
+
+    b.add_order(o1);
+    b.add_order(o2);
+    b.add_order(o3);
+    b.add_order(o4);
+
+    assert_eq!(b.best_bid(), 188560000000);
+    assert_eq!(b.best_ask(), 188780000000);
+
+    // snapshot of order book
+    // bid        186.33, 188.56[-------] 188.78, 190.87                ask
+
+    // next will be a bid that cross the spread. it will be a sequence of T, F, C (trade, fill, cancel) rows in the data
+    // we simulate but sending corresponding order with id 0 (it won't get added anyway so 0 id is fine)
+
+    let to1 = Order {id: 0, price: 188780000000, volume: 1, side: 1, part_id: String::from("Acme Corp."), };
+    let res = b.add_order(to1);
+
+    
+    println!("{:?}", res);
+    assert_eq!(res.len(), 1);
+    assert_eq!(res[0].buy_order_id, 0);
+    assert_eq!(res[0].sell_order_id, 20449);
+
+    let order_status = b.get_order_by_id(20449).unwrap();
+
+
+}

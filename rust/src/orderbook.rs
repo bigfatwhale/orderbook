@@ -4,6 +4,7 @@ use pyo3::prelude::*;
 use typenum::assert_type;
 use std::collections::btree_map;
 use std::collections::BTreeMap;
+use std::error::Error;
 use std::fmt;
 use std::iter::Rev;
 use std::iter::{IntoIterator, Iterator};
@@ -26,6 +27,7 @@ pub struct PriceBucket {
     orders: Vec<Order>,
 }
 
+#[derive(Debug)]
 #[pyclass(get_all)]
 pub struct Execution {
     pub volume: u32,
@@ -146,6 +148,18 @@ macro_rules! expand_book_struct {
                 } else {
                     0
                 }
+            }
+
+            fn get_order_by_id(&self, id: u64, price_bucket: u64) -> Result<Order, Box<dyn Error>> {
+
+                if let Some(ref b) = self.price_buckets.get(&price_bucket) {
+                    let orders: Vec<&Order>  = b.orders.iter().filter(|x| x.id == id).collect();
+                    if let Some(&order)= orders.first() {
+                        let y = order.clone();
+                        return Ok(y)
+                    }
+                } 
+                Err(format!("Order not found"))?
             }
         }
 
@@ -270,6 +284,21 @@ impl LimitOrderBook {
         self.id_wheel
     }
 
+    pub fn get_order_by_id(&self, id: u64) -> Result<Order, Box<dyn Error>> {
+        let res = self.order_to_book_price.get(id);
+        if res.is_some() {
+            let (side, price_level) = res.unwrap();
+            if *side == 1 {
+                let order = self.bid_book.get_order_by_id(id, *price_level)?;
+                return Ok(order);
+            } else {
+                let order = self.ask_book.get_order_by_id(id, *price_level)?;
+                return Ok(order);
+            }            
+        }
+        Err(format!("Order not found"))?
+    }
+
     fn check_and_do_cross_spread_walk<B1: OrderBook, B2: OrderBook>(
         order_to_book_price: &mut IntMap<(i8, u64)>,
         mut order: Order,
@@ -379,6 +408,7 @@ impl LimitOrderBook {
 }
 
 impl OrderManager for LimitOrderBook {
+
     fn add_order(&mut self, mut order: Order) -> Vec<Execution> {
     
         let executions;
